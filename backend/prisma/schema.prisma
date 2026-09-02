@@ -1,0 +1,184 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String      @id @default(uuid())
+  email     String      @unique
+  password  String
+  name      String
+  role      String      @default("admin")
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  units     UserUnit[]
+}
+
+model UserUnit {
+  id        String   @id @default(uuid())
+  userId    String
+  vehicleId String?
+  machineId String?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vehicle   Vehicle? @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  machine   Machine? @relation(fields: [machineId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model GpsDevice {
+  id            String    @id @default(uuid())
+  imei          String    @unique
+  model         String
+  simNumber     String?
+  isActive      Boolean   @default(true)
+  lastReportAt  DateTime?
+  vehicleId     String?   @unique
+  machineId     String?   @unique
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  vehicle       Vehicle?  @relation(fields: [vehicleId], references: [id])
+  machine       Machine?  @relation(fields: [machineId], references: [id])
+  positions     GpsPosition[]
+  events        TrackingEvent[]
+}
+
+model Vehicle {
+  id            String       @id @default(uuid())
+  name          String
+  plate         String
+  type          String
+  brand         String?
+  vehicleModel  String?
+  year          Int?
+  color         String?
+  status        String       @default("OFFLINE")
+  isActive      Boolean      @default(true)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  gpsDevice     GpsDevice?
+  userUnits     UserUnit[]
+  workSessions  WorkSession[]
+}
+
+model Machine {
+  id            String       @id @default(uuid())
+  name          String
+  serialNumber  String?
+  type          String
+  brand         String?
+  machineModel  String?
+  year          Int?
+  status        String       @default("OFFLINE")
+  isActive      Boolean      @default(true)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  gpsDevice     GpsDevice?
+  userUnits     UserUnit[]
+  workSessions  WorkSession[]
+}
+
+model GpsPosition {
+  id            String    @id @default(uuid())
+  latitude      Float
+  longitude     Float
+  speed         Float     @default(0)
+  altitude      Float?
+  heading       Float?
+  satellites    Int?
+  ignition      Boolean   @default(false)
+  voltage       Float?
+  odometer      Float?
+  timestamp     DateTime
+  gpsDeviceId   String
+  createdAt     DateTime  @default(now())
+  gpsDevice     GpsDevice @relation(fields: [gpsDeviceId], references: [id], onDelete: Cascade)
+
+  @@index([gpsDeviceId, timestamp])
+  @@index([timestamp])
+}
+
+model IgnitionEvent {
+  id          String   @id @default(uuid())
+  type        String
+  timestamp   DateTime
+  latitude    Float?
+  longitude   Float?
+  vehicleId   String?
+  machineId   String?
+  createdAt   DateTime @default(now())
+
+  @@index([vehicleId, timestamp])
+  @@index([machineId, timestamp])
+}
+
+model Geofence {
+  id          String       @id @default(uuid())
+  name        String
+  type        String
+  color       String       @default("#3B82F6")
+  isActive    Boolean      @default(true)
+  radius      Float?
+  centerLat   Float?
+  centerLng   Float?
+  points      String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  events      GeofenceEvent[]
+}
+
+model GeofenceEvent {
+  id          String   @id @default(uuid())
+  type        String
+  timestamp   DateTime
+  latitude    Float
+  longitude   Float
+  unitName    String
+  unitType    String
+  geofenceId  String
+  createdAt   DateTime @default(now())
+  geofence    Geofence @relation(fields: [geofenceId], references: [id], onDelete: Cascade)
+
+  @@index([geofenceId, timestamp])
+}
+
+model TrackingEvent {
+  id          String    @id @default(uuid())
+  type        String
+  severity    String    @default("INFO")
+  message     String?
+  latitude    Float?
+  longitude   Float?
+  speed       Float?
+  timestamp   DateTime
+  gpsDeviceId String
+  createdAt   DateTime  @default(now())
+  gpsDevice   GpsDevice @relation(fields: [gpsDeviceId], references: [id], onDelete: Cascade)
+
+  @@index([gpsDeviceId, timestamp])
+  @@index([type, timestamp])
+}
+
+model WorkSession {
+  id            String   @id @default(uuid())
+  date          DateTime
+  startTime     DateTime
+  endTime       DateTime?
+  totalHours    Float    @default(0)
+  kilometers    Float    @default(0)
+  idleHours     Float    @default(0)
+  movingHours   Float    @default(0)
+  vehicleId     String?
+  machineId     String?
+  createdAt     DateTime @default(now())
+  vehicle       Vehicle? @relation(fields: [vehicleId], references: [id])
+  machine       Machine? @relation(fields: [machineId], references: [id])
+
+  @@index([vehicleId, date])
+  @@index([machineId, date])
+}

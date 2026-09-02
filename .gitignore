@@ -1,0 +1,32 @@
+# Dependencies
+node_modules/
+
+# Builds
+frontend/dist/
+backend/dist/
+
+# Env
+.env
+*.env
+.env.local
+.env.*.local
+
+# DB
+backend/prisma/dev.db
+backend/prisma/dev.db-journal
+
+# GPS tracker raw captures
+backend/tracker_captures/
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors
+.vscode/
+.idea/
