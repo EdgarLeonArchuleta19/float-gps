@@ -1,5 +1,11 @@
 # Float GPS - Fleet Tracking System
 
+## Flujo de Trabajo (IMPORTANTE)
+- **TODOS los cambios de desarrollo se hacen en la rama `develop`.** Nunca editar `main` directamente.
+- **`main` = producción estable.** Solo se actualiza haciendo **merge de `develop` → `main`** cuando el trabajo está listo y verificado.
+- Producción (Vercel) solo refleja lo que existe en `main`. No se despliega a producción hasta hacer el merge.
+- Para revisar cambios en curso, desplegar una búsqueda/preview desde `develop`, nunca tocar la producción de `main`.
+
 ## Tech Stack
 - **Frontend**: React 18 + Vite + TypeScript + Tailwind CSS
 - **Backend**: Node.js + Express + TypeScript + Prisma ORM
