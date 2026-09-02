@@ -132,8 +132,8 @@ export default function Login() {
         <GpsSignal isDark={isDark} />
 
         {/* Form centered */}
-        <div className="flex-1 flex flex-col items-center justify-center px-6 lg:px-12">
-          <div className="w-full max-w-[360px]">
+        <div className="flex-1 flex flex-col items-center justify-start sm:justify-center px-6 lg:px-12 pt-10 sm:pt-0 pb-6 overflow-y-auto">
+          <div className="w-full max-w-[360px] my-auto">
             {/* Mobile logo */}
             <div className="lg:hidden flex justify-center mb-8 animate-fade-in-up">
               <img src={isDark ? logoDark : logo} alt="Float GPS" className="h-16 w-auto object-contain" />
