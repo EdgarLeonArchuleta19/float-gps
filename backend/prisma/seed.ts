@@ -173,6 +173,7 @@ async function main() {
     { lat: 24.8050, lng: -107.4100, type: 'highway' as const },
   ];
 
+  const allPositions: any[] = [];
   for (const gps of gpsDevices) {
     const route = randomElement(routes);
     for (let day = 0; day < 7; day++) {
@@ -182,11 +183,13 @@ async function main() {
       const dayOffset = randomBetween(-0.02, 0.02);
       const points = randomInt(60, 120);
       const positions = generatePositions(gps.id, route.lat + dayOffset, route.lng + dayOffset, points, date, route.type);
-
       for (const pos of positions) {
-        await prisma.gpsPosition.create({ data: { ...pos, gpsDeviceId: gps.id } });
+        allPositions.push({ ...pos, gpsDeviceId: gps.id });
       }
     }
+  }
+  for (let i = 0; i < allPositions.length; i += 1000) {
+    await prisma.gpsPosition.createMany({ data: allPositions.slice(i, i + 1000) });
   }
 
   console.log('Generating ignition events...');

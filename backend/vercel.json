@@ -1,0 +1,14 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "npm run build:vercel",
+  "installCommand": "npm install",
+  "functions": {
+    "api/index.ts": {
+      "runtime": "@vercel/node@3",
+      "maxDuration": 60
+    }
+  },
+  "env": {
+    "DATABASE_URL": "file:/tmp/prod.db"
+  }
+}
