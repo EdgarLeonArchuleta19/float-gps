@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
     "build": "tsc",
-    "build:vercel": "./node_modules/.bin/tsc && npx prisma generate && ./node_modules/.bin/tsc prisma/seed.ts --outDir dist/prisma --esModuleInterop --skipLibCheck --resolveJsonModule --declaration false --sourceMap false",
+    "build:vercel": "tsc && prisma generate && tsc prisma/seed.ts --outDir dist/prisma --esModuleInterop --skipLibCheck --resolveJsonModule --declaration false --sourceMap false",
     "start": "node dist/index.js",
     "seed": "ts-node prisma/seed.ts"
   },
@@ -18,16 +18,22 @@
     "exceljs": "^4.4.0",
     "pdfkit": "^0.15.0",
     "haversine-distance": "^1.0.4",
-    "typescript": "^5.4.5"
-  },
-  "devDependencies": {
+    "typescript": "^5.4.5",
+    "prisma": "^5.19.0",
+    "@types/node": "^20.14.0",
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
-    "@types/node": "^20.14.0",
-    "@vercel/node": "^3.0.0",
-    "prisma": "^5.19.0",
+    "@vercel/node": "^3.0.0"
+  },
+  "devDependencies": {
     "ts-node": "^10.9.2",
     "ts-node-dev": "^2.0.0"
+  },
+  "allowScripts": {
+    "@prisma/client@5.22.0": true,
+    "@prisma/engines@5.22.0": true,
+    "prisma@5.22.0": true,
+    "esbuild@0.14.47": true
   },
   "prisma": {
     "seed": "ts-node prisma/seed.ts"
