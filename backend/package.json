@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
     "build": "tsc",
-    "build:vercel": "npx tsc && npx prisma generate && npx tsc prisma/seed.ts --outDir dist/prisma --esModuleInterop --skipLibCheck --resolveJsonModule --declaration false --sourceMap false",
+    "build:vercel": "./node_modules/.bin/tsc && npx prisma generate && ./node_modules/.bin/tsc prisma/seed.ts --outDir dist/prisma --esModuleInterop --skipLibCheck --resolveJsonModule --declaration false --sourceMap false",
     "start": "node dist/index.js",
     "seed": "ts-node prisma/seed.ts"
   },
