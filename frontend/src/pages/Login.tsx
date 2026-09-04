@@ -92,7 +92,13 @@ export default function Login() {
   const isDark = darkMode;
 
   React.useEffect(() => {
-    if (formRef.current) formRef.current.scrollTo({ top: 0, left: 0 });
+    const resetScroll = () => {
+      window.scrollTo({ top: 0, left: 0 });
+      if (formRef.current) formRef.current.scrollTo({ top: 0, left: 0 });
+    };
+    resetScroll();
+    window.addEventListener('pageshow', resetScroll);
+    return () => window.removeEventListener('pageshow', resetScroll);
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -137,7 +143,7 @@ export default function Login() {
         <GpsSignal isDark={isDark} />
 
         {/* Form centered */}
-        <div ref={formRef} className="flex-1 flex flex-col items-center justify-start sm:justify-center px-6 lg:px-12 pt-10 sm:pt-0 pb-6 overflow-y-auto">
+        <div ref={formRef} className="flex-1 flex flex-col items-center px-6 lg:px-12 pt-10 sm:pt-0 pb-6 overflow-y-auto">
           <div className="w-full max-w-[360px] my-auto">
             {/* Mobile logo */}
             <div className="lg:hidden flex justify-center mb-8 animate-fade-in-up">
