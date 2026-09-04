@@ -3,8 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { Loader2, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useLayout } from '../context/LayoutContext';
-import logo from '../assets/logo-float.png';
-import logoDark from '../assets/logo-float-black.png';
+import logo from '../assets/logo-floa.png';
+import logoDark from '../assets/logo-floa-black.png';
 
 function OrbitalRings() {
   return (
@@ -119,7 +119,7 @@ export default function Login() {
         <div className="absolute -bottom-28 -right-28 w-80 h-80 rounded-full bg-[#f87203]/10" />
         <OrbitalRings />
         <GpsSignal isDark={false} />
-        <img src={logoDark} alt="Float GPS" className="w-80 h-auto object-contain relative z-10 animate-fade-in-up" />
+        <img src={logoDark} alt="Floa GPS" className="w-80 h-auto object-contain relative z-10 animate-fade-in-up" />
         {/* Rotating gear behind logo */}
         <div className="absolute z-[5] opacity-[0.06] animate-spin-slow">
           <GearIcon className="w-64 h-64 text-white" />
@@ -136,7 +136,7 @@ export default function Login() {
           <div className="w-full max-w-[360px] my-auto">
             {/* Mobile logo */}
             <div className="lg:hidden flex justify-center mb-8 animate-fade-in-up">
-              <img src={isDark ? logoDark : logo} alt="Float GPS" className="h-16 w-auto object-contain" />
+              <img src={isDark ? logoDark : logo} alt="Floa GPS" className="h-16 w-auto object-contain" />
             </div>
 
             <div className="mb-8 animate-fade-in-up animate-delay-1">

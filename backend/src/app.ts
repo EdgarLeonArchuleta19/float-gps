@@ -1,6 +1,8 @@
 import express from 'express';
 import cors from 'cors';
 import { errorHandler } from './middleware/errorHandler';
+import { authRequired, adminRequired } from './middleware/auth';
+import authRoutes from './routes/auth.routes';
 import dashboardRoutes from './routes/dashboard.routes';
 import vehicleRoutes from './routes/vehicle.routes';
 import machineRoutes from './routes/machine.routes';
@@ -16,16 +18,35 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-app.use('/api/dashboard', dashboardRoutes);
-app.use('/api/vehicles', vehicleRoutes);
-app.use('/api/machines', machineRoutes);
-app.use('/api/gps', gpsRoutes);
-app.use('/api/events', eventRoutes);
-app.use('/api/geofences', geofenceRoutes);
-app.use('/api/reports', reportRoutes);
-app.use('/api/users', userRoutes);
+app.get('/', (_req, res) => {
+  res.json({
+    name: 'Floa GPS API',
+    version: '1.0.0',
+    status: 'running',
+    endpoints: ['/api/auth/login', '/api/health', '/api/dashboard', '/api/vehicles', '/api/machines', '/api/gps/:id/positions', '/api/gps/:id/tracking', '/api/events', '/api/geofences', '/api/reports'],
+  });
+});
 
-app.post('/api/commands/engine-stop', (req, res) => {
+app.get('/api', (_req, res) => {
+  res.json({ name: 'Floa GPS API', status: 'running', health: '/api/health' });
+});
+
+app.get('/api/health', (_req, res) => {
+  res.json({ status: 'ok', timestamp: new Date() });
+});
+
+app.use('/api/auth', authRoutes);
+
+app.use('/api/dashboard', authRequired, dashboardRoutes);
+app.use('/api/vehicles', authRequired, vehicleRoutes);
+app.use('/api/machines', authRequired, machineRoutes);
+app.use('/api/gps', authRequired, gpsRoutes);
+app.use('/api/events', authRequired, eventRoutes);
+app.use('/api/geofences', authRequired, geofenceRoutes);
+app.use('/api/reports', authRequired, reportRoutes);
+app.use('/api/users', authRequired, adminRequired, userRoutes);
+
+app.post('/api/commands/engine-stop', authRequired, (req, res) => {
   const { unitId, unitType } = req.body;
   console.log(`Engine stop command sent to ${unitType} ${unitId}`);
   res.json({
@@ -35,24 +56,7 @@ app.post('/api/commands/engine-stop', (req, res) => {
   });
 });
 
-app.get('/api/health', (_req, res) => {
-  res.json({ status: 'ok', timestamp: new Date() });
-});
-
-app.get('/', (_req, res) => {
-  res.json({
-    name: 'Float GPS API',
-    version: '1.0.0',
-    status: 'running',
-    endpoints: ['/api/health', '/api/dashboard', '/api/vehicles', '/api/machines', '/api/gps/:id/positions', '/api/gps/:id/tracking', '/api/events', '/api/geofences', '/api/reports', '/api/tracker/status'],
-  });
-});
-
-app.get('/api', (_req, res) => {
-  res.json({ name: 'Float GPS API', status: 'running', health: '/api/health' });
-});
-
-app.get('/api/tracker/status', (_req, res) => {
+app.get('/api/tracker/status', authRequired, (_req, res) => {
   res.json(trackerState);
 });
 

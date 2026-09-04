@@ -1,10 +1,20 @@
 const API_URL = import.meta.env.VITE_API_URL || '/api';
 
+function authHeaders(): Record<string, string> {
+  const token = localStorage.getItem('gps_token');
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
 async function request<T>(endpoint: string, options?: RequestInit): Promise<T> {
   const res = await fetch(`${API_URL}${endpoint}`, {
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...authHeaders() },
     ...options,
   });
+  if (res.status === 401) {
+    localStorage.removeItem('gps_token');
+    localStorage.removeItem('gps_user');
+    if (!location.hash.includes('/login')) location.hash = '#/login';
+  }
   if (!res.ok) {
     const err = await res.json().catch(() => ({ message: 'Error' }));
     throw new Error(err.message || 'Request failed');
@@ -13,6 +23,12 @@ async function request<T>(endpoint: string, options?: RequestInit): Promise<T> {
 }
 
 export const api = {
+  auth: {
+    login: (email: string, password: string) =>
+      request<{ token: string; user: any }>('/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) }),
+    changePassword: (currentPassword: string, newPassword: string) =>
+      request<any>('/auth/change-password', { method: 'POST', body: JSON.stringify({ currentPassword, newPassword }) }),
+  },
   dashboard: {
     getStats: () => request<any>('/dashboard'),
   },

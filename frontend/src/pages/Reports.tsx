@@ -179,7 +179,7 @@ export default function Reports() {
     doc.rect(0, 0, W, 26, 'F');
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(15); doc.text(meta.title, 14, 12);
-    doc.setFontSize(9); doc.text(`Float GPS · ${formatDate(dateFrom)} a ${formatDate(dateTo)}`, 14, 19);
+    doc.setFontSize(9); doc.text(`Floa GPS · ${formatDate(dateFrom)} a ${formatDate(dateTo)}`, 14, 19);
     doc.setTextColor(60, 60, 60); doc.setFontSize(8);
     let y = 32;
     meta.summary.forEach((line) => { doc.text(line, 14, y); y += 5; });
@@ -197,7 +197,7 @@ export default function Reports() {
     const XLSX = await import('xlsx');
     const meta = getExportData();
     const ws = XLSX.utils.aoa_to_sheet([[meta.title],
-      [`Float GPS · ${formatDate(dateFrom)} a ${formatDate(dateTo)}`], [],
+      [`Floa GPS · ${formatDate(dateFrom)} a ${formatDate(dateTo)}`], [],
       ...meta.summary.map((s) => [s]), [], meta.columns, ...meta.dataRows]);
     ws['!cols'] = meta.columns.map(() => ({ wch: 16 }));
     const wb = XLSX.utils.book_new();
@@ -252,7 +252,7 @@ export default function Reports() {
   const shareSummaryText = (): string => {
     const meta = getExportData();
     return [
-      `*Float GPS — ${meta.title}*`, ...meta.summary, '',
+      `*Floa GPS — ${meta.title}*`, ...meta.summary, '',
       ...(activeTab === 'fleet'
         ? fleetAgg.slice(0, 5).map((u) => `• ${u.unit}: ${formatKm(u.km)} · ${formatHours(u.total)}`)
         : activeTab === 'mileage'
@@ -269,7 +269,7 @@ export default function Reports() {
   const handleShareEmail = () => {
     if (!requireData()) return;
     const meta = getExportData();
-    window.location.href = `mailto:?subject=${encodeURIComponent(`Float GPS — ${meta.title}`)}&body=${encodeURIComponent(shareSummaryText().replace(/\*/g, ''))}`;
+    window.location.href = `mailto:?subject=${encodeURIComponent(`Floa GPS — ${meta.title}`)}&body=${encodeURIComponent(shareSummaryText().replace(/\*/g, ''))}`;
   };
 
   // ===== Línea de resumen del documento (estilo informe, no KPIs) =====

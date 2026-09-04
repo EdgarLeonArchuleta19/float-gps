@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+import bcrypt from 'bcryptjs';
 import { AppError } from '../middleware/errorHandler';
 
 const prisma = new PrismaClient();
@@ -41,10 +42,11 @@ export class UserService {
       throw new AppError('Ya existe un usuario con ese email', 409);
     }
 
-    // Almacenado en texto plano para el demo (igual que el seed admin@demo.com/demo123)
+    // Contraseña protegida con bcrypt
+    const hash = await bcrypt.hash(password, 10);
     const user = await prisma.user.create({
       data: {
-        email, password, name, role,
+        email, password: hash, name, role,
         units: {
           create: [
             ...(data.vehicleIds?.map((vehicleId) => ({ vehicleId })) ?? []),

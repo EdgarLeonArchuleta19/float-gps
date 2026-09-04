@@ -30,7 +30,7 @@ export default function About() {
             <Info className={`w-6 h-6 ${darkMode ? 'text-[#f87203]' : 'text-[#f87203]'}`} />
           </div>
           <div>
-            <h2 className={`text-[15px] font-bold ${darkMode ? 'text-[#f5f5f7]' : 'text-[#1d1d1f]'}`}>Float GPS</h2>
+            <h2 className={`text-[15px] font-bold ${darkMode ? 'text-[#f5f5f7]' : 'text-[#1d1d1f]'}`}>Floa GPS</h2>
             <p className={`text-xs ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>Sistema de rastreo de flotillas</p>
           </div>
         </div>
@@ -55,7 +55,7 @@ export default function About() {
           <h2 className={`text-[15px] font-semibold ${darkMode ? 'text-[#f5f5f7]' : 'text-[#1d1d1f]'}`}>Licencia</h2>
         </div>
         <p className={`text-[13px] leading-relaxed ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-          Float GPS es un software de demostración. Los datos de posición mostrados son simulados para
+          Floa GPS es un software de demostración. Los datos de posición mostrados son simulados para
           fines de evaluación. Uso libre para pruebas internas.
         </p>
       </div>

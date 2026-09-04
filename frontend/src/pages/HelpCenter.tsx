@@ -1,15 +1,15 @@
-import React, { useState, useMemo } from 'react';
+﻿import React, { useState, useMemo } from 'react';
 import { Search, X, ChevronDown, ChevronRight, MessageCircle, Phone, Mail } from 'lucide-react';
 import { useLayout } from '../context/LayoutContext';
 
 const SUPPORT = {
-  company: 'Float GPS',
-  about: 'Rastreo satelital para flotas: monitoreo en tiempo real, geocercas, historial de rutas y reportes de operación.',
-  address: 'Monterrey, Nuevo León',
-  hours: 'Lun a Sáb · 8:00 – 18:00',
-  website: 'www.floatgps.com',
+  company: 'Floa GPS',
+  about: 'Rastreo satelital para flotas: monitoreo en tiempo real, geocercas, historial de rutas y reportes de operaciÃ³n.',
+  address: 'Monterrey, Nuevo LeÃ³n',
+  hours: 'Lun a SÃ¡b Â· 8:00 â€“ 18:00',
+  website: 'www.floagps.com',
   phoneDisplay: '+52 81 0000 0000',
-  email: 'soporte@floatgps.com',
+  email: 'soporte@floagps.com',
 };
 
 const GROUPS = [
@@ -17,16 +17,16 @@ const GROUPS = [
     title: 'Conectividad',
     items: [
       {
-        q: 'Una unidad aparece “Sin señal” u offline',
-        a: 'Verifique que el dispositivo tenga energía (cableado y fusible) y que la SIM tenga datos y saldo activo. Una instalación reciente puede tardar hasta 10 minutos en reportar. Si persiste, contacte a soporte con el IMEI del equipo.',
+        q: 'Una unidad aparece â€œSin seÃ±alâ€ u offline',
+        a: 'Verifique que el dispositivo tenga energÃ­a (cableado y fusible) y que la SIM tenga datos y saldo activo. Una instalaciÃ³n reciente puede tardar hasta 10 minutos en reportar. Si persiste, contacte a soporte con el IMEI del equipo.',
       },
       {
-        q: 'La posición no se actualiza',
-        a: 'Las posiciones llegan según la configuración del dispositivo. Si lleva más de 30 minutos sin reportar con la unidad encendida, revise la cobertura de la SIM o contacte a soporte indicando el nombre de la unidad.',
+        q: 'La posiciÃ³n no se actualiza',
+        a: 'Las posiciones llegan segÃºn la configuraciÃ³n del dispositivo. Si lleva mÃ¡s de 30 minutos sin reportar con la unidad encendida, revise la cobertura de la SIM o contacte a soporte indicando el nombre de la unidad.',
       },
       {
         q: 'El mapa se ve en blanco o no carga',
-        a: 'El mapa usa imágenes en línea; con conexión lenta puede tardar unos segundos. Verifique su internet y vuelva a abrir la sección Mapa.',
+        a: 'El mapa usa imÃ¡genes en lÃ­nea; con conexiÃ³n lenta puede tardar unos segundos. Verifique su internet y vuelva a abrir la secciÃ³n Mapa.',
       },
     ],
   },
@@ -34,8 +34,8 @@ const GROUPS = [
     title: 'Cuenta y acceso',
     items: [
       {
-        q: 'Olvidé mi contraseña o necesito un usuario nuevo',
-        a: 'La contraseña se cambia desde su foto de perfil (Mi cuenta → Cambiar contraseña). Para usuarios nuevos, contacte a soporte con su nombre y empresa.',
+        q: 'OlvidÃ© mi contraseÃ±a o necesito un usuario nuevo',
+        a: 'La contraseÃ±a se cambia desde su foto de perfil (Mi cuenta â†’ Cambiar contraseÃ±a). Para usuarios nuevos, contacte a soporte con su nombre y empresa.',
       },
     ],
   },
@@ -43,8 +43,8 @@ const GROUPS = [
     title: 'Reportes e historial',
     items: [
       {
-        q: 'Los reportes no muestran datos de un día',
-        a: 'Los reportes dependen de que el dispositivo haya reportado ese día. Si el GPS estuvo sin señal no habrá recorrido. Confirme en Rastreo si existieron posiciones antes de contactar a soporte.',
+        q: 'Los reportes no muestran datos de un dÃ­a',
+        a: 'Los reportes dependen de que el dispositivo haya reportado ese dÃ­a. Si el GPS estuvo sin seÃ±al no habrÃ¡ recorrido. Confirme en Rastreo si existieron posiciones antes de contactar a soporte.',
       },
     ],
   },
@@ -76,11 +76,11 @@ export default function HelpCenter() {
 
   return (
     <div className="pb-12 max-w-3xl">
-      {/* Título */}
+      {/* TÃ­tulo */}
       <div className="pt-1 pb-5">
         <h1 className={`text-[24px] font-bold tracking-tight ${titleCls}`}>Ayuda</h1>
         <p className={`text-[13px] mt-0.5 ${subCls}`}>
-          Respuestas rápidas y contacto directo con soporte
+          Respuestas rÃ¡pidas y contacto directo con soporte
         </p>
       </div>
 
@@ -90,12 +90,12 @@ export default function HelpCenter() {
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Buscar en ayuda…"
+          placeholder="Buscar en ayudaâ€¦"
           className={`flex-1 bg-transparent outline-none text-[14px] placeholder:text-gray-400
             ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}
         />
         {query && (
-          <button onClick={() => setQuery('')} aria-label="Limpiar búsqueda" className="p-0.5 -mr-0.5">
+          <button onClick={() => setQuery('')} aria-label="Limpiar bÃºsqueda" className="p-0.5 -mr-0.5">
             <X className={`w-4 h-4 ${darkMode ? 'text-gray-500' : 'text-gray-400'}`} />
           </button>
         )}
@@ -104,7 +104,7 @@ export default function HelpCenter() {
       {/* Temas */}
       {filtered.length === 0 ? (
         <p className={`text-[13px] pt-8 text-center ${subCls}`}>
-          Sin resultados para “{query.trim()}”. Intenta con otra palabra o escríbenos por WhatsApp.
+          Sin resultados para â€œ{query.trim()}â€. Intenta con otra palabra o escrÃ­benos por WhatsApp.
         </p>
       ) : (
         filtered.map((group, gi) => (
@@ -141,10 +141,10 @@ export default function HelpCenter() {
 
       {/* Contacto */}
       <section className="pt-6">
-        <h2 className={`px-1 pb-2 text-[13px] font-semibold ${titleCls}`}>¿Necesitas más ayuda?</h2>
+        <h2 className={`px-1 pb-2 text-[13px] font-semibold ${titleCls}`}>Â¿Necesitas mÃ¡s ayuda?</h2>
         <div className={`rounded-2xl overflow-hidden divide-y ${cell} ${hairline} ${lift}`}>
           <a
-            href={`https://wa.me/${SUPPORT.phoneDisplay.replace(/[^0-9]/g, '')}?text=${encodeURIComponent('Hola, necesito ayuda con Float GPS: ')}`}
+            href={`https://wa.me/${SUPPORT.phoneDisplay.replace(/[^0-9]/g, '')}?text=${encodeURIComponent('Hola, necesito ayuda con Floa GPS: ')}`}
             target="_blank" rel="noreferrer"
             className={`flex items-center gap-3 px-4 min-h-[52px] py-3 transition-colors
               ${darkMode ? 'active:bg-[#1e1e20]' : 'active:bg-black/[0.03]'}`}
@@ -154,7 +154,7 @@ export default function HelpCenter() {
             </span>
             <span className="flex-1 min-w-0">
               <span className={`block text-[13.5px] font-medium ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>WhatsApp</span>
-              <span className="block text-[11.5px] mt-0.5 truncate">Reportar un problema · respuesta en minutos</span>
+              <span className="block text-[11.5px] mt-0.5 truncate">Reportar un problema Â· respuesta en minutos</span>
             </span>
             <ChevronRight className={`w-[18px] h-[18px] flex-shrink-0 ${darkMode ? 'text-gray-600' : 'text-gray-400'}`} />
           </a>
@@ -169,12 +169,12 @@ export default function HelpCenter() {
             <span className="flex-1 min-w-0">
               <span className={`block text-[13.5px] font-medium ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>Llamar</span>
               <span className={`block text-[11.5px] mt-0.5 truncate tabular-nums ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>
-                {SUPPORT.phoneDisplay} · {SUPPORT.hours}
+                {SUPPORT.phoneDisplay} Â· {SUPPORT.hours}
               </span>
             </span>
             <ChevronRight className={`w-[18px] h-[18px] flex-shrink-0 ${darkMode ? 'text-gray-600' : 'text-gray-400'}`} />
           </a>
-          <a href={`mailto:${SUPPORT.email}?subject=${encodeURIComponent('Ayuda con Float GPS')}`}
+          <a href={`mailto:${SUPPORT.email}?subject=${encodeURIComponent('Ayuda con Floa GPS')}`}
             className={`flex items-center gap-3 px-4 min-h-[52px] py-3 transition-colors
               ${darkMode ? 'active:bg-[#1e1e20]' : 'active:bg-black/[0.03]'}`}
           >
@@ -194,7 +194,7 @@ export default function HelpCenter() {
       {/* Pie */}
       <footer className="pt-8 text-center space-y-1">
         <p className={`text-[12px] font-semibold ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>{SUPPORT.company}</p>
-        <p className={`text-[11.5px] ${darkMode ? 'text-gray-600' : 'text-gray-400'}`}>{SUPPORT.address} · {SUPPORT.hours}</p>
+        <p className={`text-[11.5px] ${darkMode ? 'text-gray-600' : 'text-gray-400'}`}>{SUPPORT.address} Â· {SUPPORT.hours}</p>
         <a href={`https://${SUPPORT.website}`} target="_blank" rel="noreferrer"
           className={`inline-block text-[11.5px] hover:underline underline-offset-2 ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>
           {SUPPORT.website}

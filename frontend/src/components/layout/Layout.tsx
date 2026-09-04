@@ -6,8 +6,8 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useLayout } from '../../context/LayoutContext';
-import logo from '../../assets/logo-float.png';
-import logoDark from '../../assets/logo-float-black.png';
+import logo from '../../assets/logo-floa.png';
+import logoDark from '../../assets/logo-floa-black.png';
 
 const navItems = [
   { path: '/dashboard', label: 'Inicio', icon: LayoutDashboard },
@@ -64,7 +64,7 @@ export default function Layout() {
         ${sidebarCollapsed ? 'lg:w-[68px]' : 'lg:w-[200px]'} w-[230px]`}>
 
         <div className={`flex items-center h-16 px-4 border-b ${darkMode ? 'border-[#222]' : 'border-[#f0f0f0]'} ${sidebarCollapsed ? 'lg:justify-center' : 'justify-between'}`}>
-          <img src={darkMode ? logoDark : logo} alt="Float GPS" className="h-8 w-auto object-contain" />
+          <img src={darkMode ? logoDark : logo} alt="Floa GPS" className="h-8 w-auto object-contain" />
           <div className="flex items-center gap-1">
             <button onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
               className={`hidden lg:flex p-1 rounded-md transition-colors ${darkMode ? 'text-gray-600 hover:text-gray-300' : 'text-gray-300 hover:text-gray-500'}`}>
