@@ -39,6 +39,19 @@ app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date() });
 });
 
+app.get('/', (_req, res) => {
+  res.json({
+    name: 'Float GPS API',
+    version: '1.0.0',
+    status: 'running',
+    endpoints: ['/api/health', '/api/dashboard', '/api/vehicles', '/api/machines', '/api/gps/:id/positions', '/api/gps/:id/tracking', '/api/events', '/api/geofences', '/api/reports', '/api/tracker/status'],
+  });
+});
+
+app.get('/api', (_req, res) => {
+  res.json({ name: 'Float GPS API', status: 'running', health: '/api/health' });
+});
+
 app.get('/api/tracker/status', (_req, res) => {
   res.json(trackerState);
 });
