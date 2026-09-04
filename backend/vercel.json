@@ -1,9 +1,6 @@
 {
   "buildCommand": "npm run build:vercel",
   "installCommand": "npm install",
-  "env": {
-    "DATABASE_URL": "file:./dev.db"
-  },
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/index" }
   ]

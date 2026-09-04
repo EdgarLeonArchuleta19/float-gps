@@ -163,7 +163,7 @@ export default function Tracking() {
       <div>
         <h1 className={`text-base font-bold ${darkMode ? 'text-[#f5f5f7]' : 'text-[#1d1d1f]'}`}>Rastreo histórico</h1>
         <p className={`text-[13px] ${darkMode ? 'text-gray-400' : 'text-gray-500'} mt-0.5`}>
-          Compara las rutas de hasta {MAX_UNITS} unidades
+          Busca y compara rutas de la flota
         </p>
       </div>
 

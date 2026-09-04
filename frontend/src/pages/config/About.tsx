@@ -1,5 +1,5 @@
 import React from 'react';
-import { Info, MapPin, Cpu, Database, ShieldCheck } from 'lucide-react';
+import { Info, MapPin, ShieldCheck, Globe, CalendarClock, Languages, KeyRound } from 'lucide-react';
 import SettingsPageHeader from '../../components/SettingsPageHeader';
 import { useLayout } from '../../context/LayoutContext';
 
@@ -37,11 +37,13 @@ export default function About() {
         <div className="mt-2">
           <Row label="Versión" value={APP_VERSION} icon={<Info className="w-4 h-4" />} />
           <Row label="Mapas" value="Leaflet + CartoDB" icon={<MapPin className="w-4 h-4" />} />
-          <Row label="Base de datos" value="SQLite" icon={<Database className="w-4 h-4" />} />
+          <Row label="Zona horaria" value="América/México_City" icon={<Globe className="w-4 h-4" />} />
+          <Row label="Última actualización" value="03/09/2026" icon={<CalendarClock className="w-4 h-4" />} />
+          <Row label="Idioma" value="Español (México)" icon={<Languages className="w-4 h-4" />} />
           <Row
-            label="Backend"
-            value="Express API"
-            icon={<Cpu className="w-4 h-4" />}
+            label="Licencia del producto"
+            value="FLT-DEMO-2026-ABCD"
+            icon={<KeyRound className="w-4 h-4" />}
             last
           />
         </div>

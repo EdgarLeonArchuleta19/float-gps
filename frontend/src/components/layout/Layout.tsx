@@ -124,8 +124,8 @@ export default function Layout() {
         </div>
       </aside>
 
-      <div className="flex-1 flex flex-col min-w-0">
-        <header className={`h-16 flex items-center px-4 flex-shrink-0
+      <div className="flex-1 flex flex-col min-w-0 min-h-0">
+        <header className={`h-16 flex items-center px-4 flex-shrink-0 sticky top-0 z-50
           ${darkMode ? 'bg-[#111111]/80 backdrop-blur-xl border-b border-[#222]' : 'bg-white/80 backdrop-blur-xl border-b border-[#f0f0f0]'}`}>
           <button onClick={toggleSidebar} className="lg:hidden p-1.5 -ml-1.5 rounded-lg text-gray-400 hover:text-gray-600 mr-2">
             <Menu className="w-5 h-5" />
@@ -149,7 +149,7 @@ export default function Layout() {
           </div>
         </header>
 
-        <main className={`flex-1 overflow-auto ${location.pathname === '/live-map' ? '' : 'p-4 lg:p-6'}`}>
+        <main className={`flex-1 ${location.pathname === '/live-map' ? 'overflow-hidden' : 'overflow-auto p-4 lg:p-6'}`}>
           <Outlet />
         </main>
       </div>

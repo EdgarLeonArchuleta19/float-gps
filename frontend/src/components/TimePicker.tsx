@@ -144,7 +144,7 @@ function DialPanel({ darkMode, hour, min, setHour, setMin, apply }: {
   const hour12 = hour % 12 === 0 ? 12 : hour % 12;
 
   const accent = darkMode ? '#f87203' : '#032347';
-  const faceBg = darkMode ? '#1a1a1c' : '#ececed';
+  const faceBg = darkMode ? '#1a1a1c' : '#ffffff';
   const textColor = darkMode ? '#f5f5f7' : '#1d1d1f';
   const dim = darkMode ? '#7a7a7e' : '#9a9aa0';
   const activeChipBg = darkMode ? '#2a2a2c' : '#e2e2e4';

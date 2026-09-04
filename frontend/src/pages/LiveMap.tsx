@@ -174,7 +174,7 @@ export default function LiveMap() {
   }, [mapLayer, darkMode]);
 
   return (
-    <div className="relative h-full flex flex-col">
+    <div className="relative h-full flex flex-col overflow-hidden">
       <div className="flex-1 relative">
         <LeafletMap
           dark={darkMode}
