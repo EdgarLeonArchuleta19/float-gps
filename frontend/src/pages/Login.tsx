@@ -144,7 +144,7 @@ export default function Login() {
 
         {/* Form centered */}
         <div ref={formRef} className="flex-1 flex flex-col items-center px-6 lg:px-12 pt-10 sm:pt-0 pb-6 overflow-y-auto">
-          <div className="w-full max-w-[360px] my-auto">
+          <div className="w-full max-w-[360px] lg:my-auto">
             {/* Mobile logo */}
             <div className="lg:hidden flex justify-center mb-8 animate-fade-in-up">
               <img src={isDark ? logoDark : logo} alt="Floa GPS" className="h-16 w-auto object-contain" />
