@@ -24,12 +24,11 @@ body {
    y no "pegarse" en tablas/scrolls horizontales internos. */
 html,
 body {
-  overscroll-behavior-y: none;
+  overscroll-behavior-x: none;
 }
 
 main {
   -webkit-overflow-scrolling: touch;
-  overscroll-behavior-y: contain;
 }
 
 .overflow-x-auto,
@@ -120,6 +119,15 @@ input[type="time"],
 select {
   -webkit-appearance: none;
   appearance: none;
+}
+
+/* iOS hace zoom automático al enfocar campos con texto menor a 16px:
+   en móvil usamos 16px para que el buscador no "salte". */
+@media (max-width: 767px) {
+  input,
+  textarea {
+    font-size: 16px !important;
+  }
 }
 
 .no-scrollbar {

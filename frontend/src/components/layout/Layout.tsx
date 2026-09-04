@@ -48,7 +48,7 @@ export default function Layout() {
   };
 
   return (
-    <div className={`flex h-screen h-dvh ${darkMode ? 'bg-[#131316]' : 'bg-[#f5f5f7]'} transition-colors duration-300`}>
+    <div className={`flex min-h-dvh ${darkMode ? 'bg-[#131316]' : 'bg-[#f5f5f7]'} transition-colors duration-300`}>
       {sidebarOpen && (
         <div className="fixed inset-0 bg-black/30 z-[1099] backdrop-blur-md lg:hidden" onClick={() => setSidebarOpen(false)} />
       )}
@@ -58,7 +58,7 @@ export default function Layout() {
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
         style={{ transform: sidebarOpen && touchDelta < 0 ? `translateX(${Math.max(touchDelta, -230)}px)` : undefined }}
-        className={`fixed lg:static z-[1100] h-full transition-transform duration-300 flex flex-col
+        className={`fixed z-[1100] h-dvh transition-transform duration-300 flex flex-col lg:self-start lg:sticky lg:top-0
         ${darkMode ? 'bg-[#1b1b1f] border-[#33343c]' : 'bg-white border-[#e5e5e5]'} border-r
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
         ${sidebarCollapsed ? 'lg:w-[68px]' : 'lg:w-[200px]'} w-[230px]`}>
@@ -76,7 +76,7 @@ export default function Layout() {
           </div>
         </div>
 
-        <nav className="flex-1 py-3 px-2 space-y-px overflow-y-auto">
+        <nav className="flex-1 min-h-[200px] py-3 px-2 space-y-px overflow-y-auto">
           {navItems.map((item) => {
             const isActive = location.pathname === item.path || (item.path !== '/dashboard' && location.pathname.startsWith(item.path));
             const Icon = item.icon;
@@ -95,7 +95,7 @@ export default function Layout() {
           })}
         </nav>
 
-        <div className={`p-3 border-t ${darkMode ? 'border-[#33343c]' : 'border-[#f0f0f0]'}`}>
+        <div className={`p-3 border-t flex-shrink-0 ${darkMode ? 'border-[#33343c]' : 'border-[#f0f0f0]'}`}>
           {sidebarCollapsed ? (
             <div className="hidden lg:block">
               <button onClick={logout} className="flex justify-center w-full p-2 text-gray-500 hover:text-red-400 rounded-xl transition-colors">
@@ -124,7 +124,7 @@ export default function Layout() {
         </div>
       </aside>
 
-      <div className="flex-1 flex flex-col min-w-0 min-h-0">
+      <div className="flex-1 flex flex-col min-w-0">
         <header className={`h-16 flex items-center px-4 flex-shrink-0 sticky top-0 z-50
           ${darkMode ? 'bg-[#1b1b1f]/80 backdrop-blur-xl border-b border-[#33343c]' : 'bg-white/80 backdrop-blur-xl border-b border-[#f0f0f0]'}`}>
           <button onClick={toggleSidebar} className="lg:hidden p-1.5 -ml-1.5 rounded-lg text-gray-400 hover:text-gray-600 mr-2">
@@ -149,7 +149,9 @@ export default function Layout() {
           </div>
         </header>
 
-        <main className={`flex-1 ${location.pathname === '/live-map' ? 'overflow-hidden' : 'overflow-y-auto overscroll-y-contain p-4 lg:p-6'}`}>
+        <main className={location.pathname === '/live-map'
+          ? 'h-[calc(100dvh-4rem)] overflow-hidden'
+          : 'flex-1 p-4 lg:p-6 pb-[calc(1rem+env(safe-area-inset-bottom))]'}>
           <Outlet />
         </main>
       </div>
