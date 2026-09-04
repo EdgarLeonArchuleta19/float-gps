@@ -16,7 +16,7 @@ function HealthRing({ percent, size = 80, stroke = 7, darkMode }: { percent: num
   return (
     <svg width={size} height={size} className="transform -rotate-90">
       <circle cx={size / 2} cy={size / 2} r={r}
-        fill="none" stroke={darkMode ? '#222' : '#f0f0f0'} strokeWidth={stroke} />
+        fill="none" stroke={darkMode ? '#33343c' : '#f0f0f0'} strokeWidth={stroke} />
       <circle cx={size / 2} cy={size / 2} r={r}
         fill="none" stroke={color} strokeWidth={stroke}
         strokeDasharray={circ} strokeDashoffset={offset}
@@ -51,7 +51,7 @@ function ActionCard({ icon: Icon, label, to, color, darkMode }: {
 }) {
   return (
     <Link to={to} className={`flex flex-col items-center gap-2.5 p-4 rounded-2xl transition-all active:scale-[0.96]
-      ${darkMode ? 'bg-[#111] hover:bg-[#1a1a1a]' : 'bg-white hover:shadow-sm'}`}>
+      ${darkMode ? 'bg-[#1b1b1f] hover:bg-[#232329]' : 'bg-white hover:shadow-sm'}`}>
       <div className={`w-11 h-11 rounded-xl flex items-center justify-center ${color}`}>
         <Icon className="w-5 h-5" />
       </div>
@@ -93,7 +93,7 @@ export default function Dashboard() {
       </div>
 
       {/* North Star — Vehicles in Motion */}
-      <div className={`relative overflow-hidden rounded-2xl p-5 ${darkMode ? 'bg-[#111]' : 'bg-white'}`}>
+      <div className={`relative overflow-hidden rounded-2xl p-5 ${darkMode ? 'bg-[#1b1b1f]' : 'bg-white'}`}>
         <div className="flex items-start justify-between">
           <div>
             <p className={`text-[12px] font-medium uppercase tracking-wider ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>
@@ -114,7 +114,7 @@ export default function Dashboard() {
           <MiniSparkline data={sparkData1} color={darkMode ? '#555' : '#bbb'} />
         </div>
         {/* Bottom bar */}
-        <div className={`flex gap-1 mt-4 h-1.5 rounded-full overflow-hidden ${darkMode ? 'bg-[#222]' : 'bg-gray-100'}`}>
+        <div className={`flex gap-1 mt-4 h-1.5 rounded-full overflow-hidden ${darkMode ? 'bg-[#33343c]' : 'bg-gray-100'}`}>
           <div className="bg-green-500 rounded-full transition-all duration-700"
             style={{ width: `${(totalMoving / totalUnits) * 100}%` }} />
           <div className="bg-amber-500 rounded-full transition-all duration-700"
@@ -148,7 +148,7 @@ export default function Dashboard() {
       {/* Fleet Health + Quick Actions */}
       <div className="grid grid-cols-2 gap-3">
         {/* Health ring */}
-        <div className={`${darkMode ? 'bg-[#111]' : 'bg-white'} rounded-2xl p-5 flex flex-col items-center justify-center`}>
+        <div className={`${darkMode ? 'bg-[#1b1b1f]' : 'bg-white'} rounded-2xl p-5 flex flex-col items-center justify-center`}>
           <div className="relative">
             <HealthRing percent={healthPercent} size={90} stroke={8} darkMode={darkMode} />
             <div className="absolute inset-0 flex flex-col items-center justify-center">
@@ -161,7 +161,7 @@ export default function Dashboard() {
         </div>
 
         {/* Alerts detail */}
-        <div className={`${darkMode ? 'bg-[#111]' : 'bg-white'} rounded-2xl p-5 flex flex-col`}>
+        <div className={`${darkMode ? 'bg-[#1b1b1f]' : 'bg-white'} rounded-2xl p-5 flex flex-col`}>
           <div className="flex items-center gap-2 mb-3">
             <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-red-500/10">
               <AlertTriangle className="w-3.5 h-3.5 text-red-500" />
@@ -175,7 +175,7 @@ export default function Dashboard() {
               {stats.alertUnits.slice(0, 3).map((u: any) => (
                 <Link to={`/units/${u.id}`} key={u.id}
                   className={`flex items-center gap-2 p-2 rounded-xl transition-colors
-                    ${darkMode ? 'hover:bg-[#1a1a1a]' : 'hover:bg-gray-50'}`}>
+                    ${darkMode ? 'hover:bg-[#232329]' : 'hover:bg-gray-50'}`}>
                   <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${u.status === 'ALERT' ? 'bg-red-500' : 'bg-amber-500'}`} />
                   <span className={`text-[12px] font-medium truncate ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                     {u.name}
@@ -207,7 +207,7 @@ export default function Dashboard() {
       </div>
 
       {/* Activity Feed */}
-      <div className={`${darkMode ? 'bg-[#111]' : 'bg-white'} rounded-2xl`}>
+      <div className={`${darkMode ? 'bg-[#1b1b1f]' : 'bg-white'} rounded-2xl`}>
         <div className="flex items-center justify-between px-5 pt-5 pb-3">
           <h3 className={`text-[13px] font-semibold ${darkMode ? 'text-[#f5f5f7]' : 'text-[#1d1d1f]'}`}>
             Actividad reciente
@@ -217,11 +217,11 @@ export default function Dashboard() {
             Ver todo <ArrowRight className="w-3 h-3" />
           </Link>
         </div>
-        <div className="divide-y divide-gray-100 dark:divide-[#222]">
+        <div className="divide-y divide-gray-100 dark:divide-[#33343c]">
           {stats.recentEvents.slice(0, 6).map((event, i) => (
             <div key={event.id}
               className={`flex items-center gap-3 px-5 py-3 transition-colors
-                ${darkMode ? 'hover:bg-[#1a1a1a]' : 'hover:bg-[#f9f9fb]'}`}>
+                ${darkMode ? 'hover:bg-[#232329]' : 'hover:bg-[#f9f9fb]'}`}>
               <div className="relative">
                 <span className="text-[15px]">{eventTypeIcon(event.type)}</span>
                 {i === 0 && (
@@ -257,7 +257,7 @@ function KPIItem({ label, value, icon: Icon, color, darkMode, spark, sparkColor 
   label: string; value: string; icon: any; color: string; darkMode: boolean; spark?: number[]; sparkColor?: string;
 }) {
   return (
-    <div className={`${darkMode ? 'bg-[#111]' : 'bg-white'} rounded-2xl p-4`}>
+    <div className={`${darkMode ? 'bg-[#1b1b1f]' : 'bg-white'} rounded-2xl p-4`}>
       <div className="flex items-center justify-between mb-3">
         <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${color}`}>
           <Icon className="w-4 h-4" />

@@ -25,12 +25,12 @@ export default function Profile() {
 
   const [logoutModal, setLogoutModal] = useState(false);
 
-  const card = `${darkMode ? 'bg-[#111]' : 'bg-white'} rounded-2xl overflow-hidden`;
+  const card = `${darkMode ? 'bg-[#1b1b1f]' : 'bg-white'} rounded-2xl overflow-hidden`;
   const rowBorder = darkMode ? 'border-[#1e1e20]' : 'border-gray-100';
   const text = darkMode ? 'text-[#f5f5f7]' : 'text-[#1d1d1f]';
   const sub = darkMode ? 'text-gray-500' : 'text-gray-500';
   const inputClass = `w-full px-4 py-2.5 text-[13px] rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-400
-    ${darkMode ? 'bg-[#1a1a1a] text-[#f5f5f7] placeholder-gray-600' : 'bg-[#f5f5f7] text-[#1d1d1f] placeholder-gray-400'}`;
+    ${darkMode ? 'bg-[#232329] text-[#f5f5f7] placeholder-gray-600' : 'bg-[#f5f5f7] text-[#1d1d1f] placeholder-gray-400'}`;
   const labelClass = `block text-xs font-medium ${sub} mb-1.5`;
 
   const handleSaveName = async () => {
@@ -82,14 +82,14 @@ export default function Profile() {
   const roleLabel = user?.role === 'admin' ? 'Administrador' : user?.role === 'operator' ? 'Operador' : 'Usuario';
 
   const actionBtn = `inline-flex items-center justify-center gap-2 px-5 h-[42px] rounded-xl text-[13px] font-medium transition-colors active:scale-[0.99] ${
-    darkMode ? 'bg-[#222] text-gray-200 hover:bg-[#2a2a2a]' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+    darkMode ? 'bg-[#33343c] text-gray-200 hover:bg-[#2a2a2a]' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
   }`;
 
   return (
     <div className="space-y-5 max-w-3xl">
       <div className="flex items-center gap-3">
         <button onClick={() => navigate(-1)}
-          className={`p-2 -ml-2 rounded-lg transition-colors ${darkMode ? 'text-gray-400 hover:text-gray-200 hover:bg-[#1a1a1a]' : 'text-gray-500 hover:text-gray-800 hover:bg-gray-100'}`}>
+          className={`p-2 -ml-2 rounded-lg transition-colors ${darkMode ? 'text-gray-400 hover:text-gray-200 hover:bg-[#232329]' : 'text-gray-500 hover:text-gray-800 hover:bg-gray-100'}`}>
           <ChevronLeft className="w-5 h-5" />
         </button>
         <div>
@@ -101,7 +101,7 @@ export default function Profile() {
       {/* Identidad */}
       <div className={`${card} p-6`}>
         <div className="flex items-center gap-4">
-          <div className={`w-16 h-16 rounded-full flex items-center justify-center flex-shrink-0 ${darkMode ? 'bg-[#1a1a1a]' : 'bg-gray-100'}`}>
+          <div className={`w-16 h-16 rounded-full flex items-center justify-center flex-shrink-0 ${darkMode ? 'bg-[#232329]' : 'bg-gray-100'}`}>
             <span className={`text-2xl font-semibold ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
               {user?.name?.[0]?.toUpperCase() || 'A'}
             </span>
@@ -109,7 +109,7 @@ export default function Profile() {
           <div className="min-w-0">
             <p className={`text-base font-semibold truncate ${text}`}>{user?.name}</p>
             <p className={`text-[13px] truncate ${sub}`}>{user?.email}</p>
-            <span className={`inline-flex items-center gap-1 mt-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium ${darkMode ? 'bg-[#1a1a1a] text-gray-400' : 'bg-gray-100 text-gray-600'}`}>
+            <span className={`inline-flex items-center gap-1 mt-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium ${darkMode ? 'bg-[#232329] text-gray-400' : 'bg-gray-100 text-gray-600'}`}>
               {roleLabel}
             </span>
           </div>
@@ -179,10 +179,10 @@ export default function Profile() {
       {nameModal && (
         <div className="fixed inset-0 z-[1100] flex items-center justify-center px-6">
           <div className="fixed inset-0 bg-black/40" onClick={() => setNameModal(false)} />
-          <div className={`relative w-full max-w-sm rounded-2xl z-10 p-6 ${darkMode ? 'bg-[#151517]' : 'bg-white'}`}>
+          <div className={`relative w-full max-w-sm rounded-2xl z-10 p-6 ${darkMode ? 'bg-[#202024]' : 'bg-white'}`}>
             <div className="flex items-center justify-between mb-4">
               <h3 className={`text-[15px] font-semibold ${text}`}>Editar nombre</h3>
-              <button onClick={() => setNameModal(false)} className={`p-1.5 rounded-lg ${darkMode ? 'text-gray-400 hover:bg-[#222]' : 'text-gray-500 hover:bg-gray-100'}`}>
+              <button onClick={() => setNameModal(false)} className={`p-1.5 rounded-lg ${darkMode ? 'text-gray-400 hover:bg-[#33343c]' : 'text-gray-500 hover:bg-gray-100'}`}>
                 <X className="w-4 h-4" />
               </button>
             </div>
@@ -206,10 +206,10 @@ export default function Profile() {
       {passModal && (
         <div className="fixed inset-0 z-[1100] flex items-center justify-center px-6">
           <div className="fixed inset-0 bg-black/40" onClick={() => setPassModal(false)} />
-          <div className={`relative w-full max-w-sm rounded-2xl z-10 p-6 ${darkMode ? 'bg-[#151517]' : 'bg-white'}`}>
+          <div className={`relative w-full max-w-sm rounded-2xl z-10 p-6 ${darkMode ? 'bg-[#202024]' : 'bg-white'}`}>
             <div className="flex items-center justify-between mb-4">
               <h3 className={`text-[15px] font-semibold ${text}`}>Cambiar contraseña</h3>
-              <button onClick={() => setPassModal(false)} className={`p-1.5 rounded-lg ${darkMode ? 'text-gray-400 hover:bg-[#222]' : 'text-gray-500 hover:bg-gray-100'}`}>
+              <button onClick={() => setPassModal(false)} className={`p-1.5 rounded-lg ${darkMode ? 'text-gray-400 hover:bg-[#33343c]' : 'text-gray-500 hover:bg-gray-100'}`}>
                 <X className="w-4 h-4" />
               </button>
             </div>
@@ -259,12 +259,12 @@ export default function Profile() {
       {logoutModal && (
         <div className="fixed inset-0 z-[1100] flex items-center justify-center px-6">
           <div className="fixed inset-0 bg-black/40" onClick={() => setLogoutModal(false)} />
-          <div className={`relative w-full max-w-sm rounded-2xl z-10 p-6 ${darkMode ? 'bg-[#151517]' : 'bg-white'}`}>
+          <div className={`relative w-full max-w-sm rounded-2xl z-10 p-6 ${darkMode ? 'bg-[#202024]' : 'bg-white'}`}>
             <h3 className={`text-[15px] font-semibold ${text}`}>Cerrar sesión</h3>
             <p className={`text-[13px] mt-2 ${sub}`}>¿Seguro que quieres salir de tu cuenta en este dispositivo?</p>
             <div className="flex gap-3 mt-5">
               <button onClick={() => setLogoutModal(false)}
-                className={`flex-1 h-[42px] rounded-xl text-[13px] font-medium transition-colors ${darkMode ? 'bg-[#222] text-gray-300 hover:bg-[#333]' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
+                className={`flex-1 h-[42px] rounded-xl text-[13px] font-medium transition-colors ${darkMode ? 'bg-[#33343c] text-gray-300 hover:bg-[#3c3d46]' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
                 Cancelar
               </button>
               <button onClick={handleLogout}

@@ -112,7 +112,7 @@ export default function Login() {
   };
 
   return (
-    <div className={`min-h-dvh flex ${isDark ? 'bg-[#0a0a0a]' : 'bg-white'}`}>
+    <div className={`min-h-dvh flex ${isDark ? 'bg-[#131316]' : 'bg-white'}`}>
       {/* Left panel — desktop 50/50 */}
       <div className="hidden lg:flex lg:w-1/2 flex-col items-center justify-center bg-[#032347] relative overflow-hidden">
         <div className="absolute -top-24 -left-24 w-72 h-72 rounded-full bg-white/[0.03]" />
@@ -166,7 +166,7 @@ export default function Login() {
                   autoCapitalize="none"
                   className={`w-full h-[52px] px-4 rounded-xl text-[15px] outline-none transition-all
                     ${isDark
-                      ? 'bg-[#1a1a1a] text-white placeholder-gray-600 focus:ring-2 focus:ring-[#032347]/30'
+                      ? 'bg-[#232329] text-white placeholder-gray-600 focus:ring-2 focus:ring-[#032347]/30'
                       : 'bg-[#f5f5f7] text-[#1d1d1f] placeholder-gray-400 focus:ring-2 focus:ring-[#032347]/15'}`}
                 />
               </div>
@@ -180,7 +180,7 @@ export default function Login() {
                   autoComplete="current-password"
                   className={`w-full h-[52px] px-4 pr-12 rounded-xl text-[15px] outline-none transition-all
                     ${isDark
-                      ? 'bg-[#1a1a1a] text-white placeholder-gray-600 focus:ring-2 focus:ring-[#032347]/30'
+                      ? 'bg-[#232329] text-white placeholder-gray-600 focus:ring-2 focus:ring-[#032347]/30'
                       : 'bg-[#f5f5f7] text-[#1d1d1f] placeholder-gray-400 focus:ring-2 focus:ring-[#032347]/15'}`}
                 />
                 <button
@@ -217,11 +217,11 @@ export default function Login() {
 
             {/* Divider */}
             <div className="flex items-center gap-4 mt-6 animate-fade-in-up animate-delay-4">
-              <div className={`flex-1 h-px ${isDark ? 'bg-[#222]' : 'bg-gray-100'}`} />
+              <div className={`flex-1 h-px ${isDark ? 'bg-[#33343c]' : 'bg-gray-100'}`} />
               <span className={`text-[12px] font-medium ${isDark ? 'text-gray-600' : 'text-gray-300'}`}>
                 o continuar con
               </span>
-              <div className={`flex-1 h-px ${isDark ? 'bg-[#222]' : 'bg-gray-100'}`} />
+              <div className={`flex-1 h-px ${isDark ? 'bg-[#33343c]' : 'bg-gray-100'}`} />
             </div>
 
             <div className="animate-fade-in-up animate-delay-5">
@@ -229,7 +229,7 @@ export default function Login() {
                 type="button"
                 className={`w-full h-[52px] flex items-center justify-center gap-3 rounded-xl text-[15px] font-medium transition-all active:scale-[0.98] mt-4
                   ${isDark
-                    ? 'bg-[#1a1a1a] text-white hover:bg-[#222]'
+                    ? 'bg-[#232329] text-white hover:bg-[#33343c]'
                     : 'bg-[#f5f5f7] text-[#1d1d1f] hover:bg-[#eee]'}`}
               >
                 <svg className="w-5 h-5" viewBox="0 0 24 24">

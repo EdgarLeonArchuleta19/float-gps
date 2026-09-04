@@ -1,4 +1,4 @@
-# Float GPS - Fleet Tracking System
+# Floa GPS - Fleet Tracking System
 
 ## Flujo de Trabajo (IMPORTANTE)
 - **TODOS los cambios de desarrollo se hacen en la rama `develop`.** Nunca editar `main` directamente.
@@ -9,7 +9,10 @@
 ## Tech Stack
 - **Frontend**: React 18 + Vite + TypeScript + Tailwind CSS
 - **Backend**: Node.js + Express + TypeScript + Prisma ORM
-- **Database**: SQLite (file: `backend/prisma/dev.db`)
+- **Database**: PostgreSQL 
+  - Local dev: `floa-gps` (localhost:5432, user postgres)
+  - Production: Neon (us-east-2)
+- **Backend auth**: JWT + bcrypt (protected routes)
 - **Maps**: Leaflet + CartoDB tiles (no API key needed)
 - **Icons**: lucide-react
 
@@ -18,7 +21,7 @@
 Default Project/
 ├── frontend/          # React app (port 5173)
 │   ├── src/
-│   │   ├── assets/logo-float.png
+│   │   ├── assets/logo-floa.png
 │   │   ├── components/
 │   │   │   ├── layout/Layout.tsx      # Sidebar + header + dark mode
 │   │   │   └── map/LeafletMap.tsx     # Vanilla Leaflet map (no react-leaflet)
@@ -56,9 +59,11 @@ Default Project/
 - **Logo**: `src/assets/logo-float.png` (removebg version)
 
 ### Dark Mode
-- Background: `#0a0a0a`
-- Cards: `#111`
-- Borders: `#222`
+- Background: `#131316` (suave, no negro puro)
+- Cards/Sidebar: `#1b1b1f`
+- Hovers/Inputs: `#232329`
+- Borders: `#33343c`
+- Modals: `#202024` / Active option: `#2a2b31`
 - Active nav (dark): orange accent
 - Active nav (light): navy accent
 
@@ -113,9 +118,9 @@ Default Project/
 - Markers have permanent name tooltip labels
 
 ## Key Decisions
-- Switched from PostgreSQL to SQLite (install issues)
 - Switched from Google Maps to Leaflet (free, no API key)
 - Switched from react-leaflet to vanilla Leaflet (React 18 compat issue)
+- Switched from SQLite to PostgreSQL (Neon prod + Postgres local dev)
 - Removed Events and WorkLog pages (merged into Reports/Bitácora + Notifications)
 - Bottom sheet on map is draggable (touch + mouse) with peek/half/full states
 

@@ -131,7 +131,7 @@ export default function AddVehicle() {
   };
 
   const inputClass = `w-full px-4 py-2.5 text-[13px] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#032347]
-    ${darkMode ? 'bg-[#1a1a1a] text-[#f5f5f7] placeholder-gray-600' : 'bg-[#f5f5f7] text-[#1d1d1f] placeholder-gray-400'}`;
+    ${darkMode ? 'bg-[#232329] text-[#f5f5f7] placeholder-gray-600' : 'bg-[#f5f5f7] text-[#1d1d1f] placeholder-gray-400'}`;
   const labelClass = `block text-xs font-medium mb-1.5 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`;
 
   if (fetching) {
@@ -145,7 +145,7 @@ export default function AddVehicle() {
   return (
     <div className="max-w-lg mx-auto space-y-5">
       <div className="flex items-center gap-3">
-        <button onClick={() => navigate('/fleet')} className={`p-2 rounded-xl ${darkMode ? 'hover:bg-[#1a1a1a]' : 'hover:bg-gray-100'}`}>
+        <button onClick={() => navigate('/fleet')} className={`p-2 rounded-xl ${darkMode ? 'hover:bg-[#232329]' : 'hover:bg-gray-100'}`}>
           <ArrowLeft className={`w-5 h-5 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`} />
         </button>
         <div>
@@ -158,7 +158,7 @@ export default function AddVehicle() {
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className={`${darkMode ? 'bg-[#111]' : 'bg-white'} rounded-2xl p-5 space-y-4`}>
+      <form onSubmit={handleSubmit} className={`${darkMode ? 'bg-[#1b1b1f]' : 'bg-white'} rounded-2xl p-5 space-y-4`}>
         <div>
           <label className={labelClass}>Nombre *</label>
           <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Ej: Toyota Hilux" className={inputClass} required />
@@ -195,7 +195,7 @@ export default function AddVehicle() {
           </div>
         </div>
 
-        <div className={`pt-4 border-t ${darkMode ? 'border-[#242428]' : 'border-gray-100'}`}>
+        <div className={`pt-4 border-t ${darkMode ? 'border-[#34363f]' : 'border-gray-100'}`}>
           <div className="flex items-center gap-2 mb-1">
             <Satellite className={`w-4 h-4 ${darkMode ? 'text-[#f87203]' : 'text-[#032347]'}`} />
             <h3 className={`text-[13px] font-semibold ${darkMode ? 'text-[#f5f5f7]' : 'text-[#1d1d1f]'}`}>Dispositivo GPS</h3>
@@ -229,7 +229,7 @@ export default function AddVehicle() {
               className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-[13px] font-medium transition-all active:scale-[0.98]
                 disabled:opacity-60
                 ${darkMode
-                  ? 'bg-[#1f1f22] text-[#f5f5f7] border border-[#333] hover:bg-[#2a2a2d]'
+                  ? 'bg-[#2a2b31] text-[#f5f5f7] border border-[#3c3d46] hover:bg-[#2a2a2d]'
                   : 'bg-[#f5f5f7] text-[#1d1d1f] border border-gray-200 hover:bg-gray-100'}`}
             >
               <Satellite className="w-4 h-4" /> Probar conexión GPS
@@ -258,14 +258,14 @@ export default function AddVehicle() {
                 </div>
 
                 {/* Pasos de diagnóstico */}
-                <div className={`px-4 pb-4 space-y-1.5 ${darkMode ? 'bg-[#0a0a0a]' : 'bg-white'}`}>
+                <div className={`px-4 pb-4 space-y-1.5 ${darkMode ? 'bg-[#131316]' : 'bg-white'}`}>
                   {testSteps.map((step, i) => {
                     const done = i < scanStep;
                     const active = i === scanStep;
                     return (
                       <div key={i}
                         className={`flex items-center gap-2.5 text-[12px] ${done || active ? (darkMode ? 'text-[#f5f5f7]' : 'text-[#1d1d1f]') : (darkMode ? 'text-gray-600' : 'text-gray-400')}`}>
-                        <span className={`w-4 h-4 flex items-center justify-center rounded-full flex-shrink-0 transition-all ${done ? 'bg-green-500 text-white' : active ? (darkMode ? 'bg-[#f87203]' : 'bg-[#032347]') : (darkMode ? 'bg-[#1f1f22]' : 'bg-gray-100')}`}>
+                        <span className={`w-4 h-4 flex items-center justify-center rounded-full flex-shrink-0 transition-all ${done ? 'bg-green-500 text-white' : active ? (darkMode ? 'bg-[#f87203]' : 'bg-[#032347]') : (darkMode ? 'bg-[#2a2b31]' : 'bg-gray-100')}`}>
                           {done ? <svg className="w-2.5 h-2.5" viewBox="0 0 12 12" fill="none"><path d="M2 6.5L5 9L10 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
                             : active ? <Loader2 className="w-2.5 h-2.5 animate-spin text-white" />
                             : <span className={`w-1 h-1 rounded-full ${darkMode ? 'bg-gray-500' : 'bg-gray-300'}`} />}

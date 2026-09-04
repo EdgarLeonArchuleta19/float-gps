@@ -64,10 +64,10 @@ export default function EngineStop() {
   };
 
   return (
-    <div className={`min-h-full ${darkMode ? 'bg-[#0a0a0a]' : 'bg-[#f5f5f7]'}`}>
+    <div className={`min-h-full ${darkMode ? 'bg-[#131316]' : 'bg-[#f5f5f7]'}`}>
       <div className={`sticky top-0 z-10 px-4 py-3 flex items-center gap-3 backdrop-blur-xl border-b
-        ${darkMode ? 'bg-[#0a0a0a]/80 border-[#222]' : 'bg-[#f5f5f7]/80 border-gray-200'}`}>
-        <button onClick={() => navigate('/live-map')} className={`p-2 rounded-xl transition-colors ${darkMode ? 'hover:bg-[#222] text-gray-400' : 'hover:bg-gray-200 text-gray-500'}`}>
+        ${darkMode ? 'bg-[#131316]/80 border-[#33343c]' : 'bg-[#f5f5f7]/80 border-gray-200'}`}>
+        <button onClick={() => navigate('/live-map')} className={`p-2 rounded-xl transition-colors ${darkMode ? 'hover:bg-[#33343c] text-gray-400' : 'hover:bg-gray-200 text-gray-500'}`}>
           <ArrowLeft className="w-5 h-5" />
         </button>
         <div className="flex-1">
@@ -96,7 +96,7 @@ export default function EngineStop() {
           <Search className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 ${darkMode ? 'text-gray-600' : 'text-gray-400'}`} />
           <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar unidad..."
             className={`w-full pl-10 pr-10 h-[44px] rounded-xl text-[13px] outline-none
-              ${darkMode ? 'bg-[#111] text-white placeholder-gray-600' : 'bg-white text-[#1d1d1f] placeholder-gray-400'}`} />
+              ${darkMode ? 'bg-[#1b1b1f] text-white placeholder-gray-600' : 'bg-white text-[#1d1d1f] placeholder-gray-400'}`} />
           {search && (
             <button onClick={() => setSearch('')} className={`absolute right-3 top-1/2 -translate-y-1/2 ${darkMode ? 'text-gray-600' : 'text-gray-400'}`}>
               <X className="w-4 h-4" />
@@ -110,7 +110,7 @@ export default function EngineStop() {
             <button key={u.id} onClick={() => toggle(u.id)}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors text-left
                 ${selected.has(u.id) ? 'bg-red-500/10 border border-red-500/20'
-                  : darkMode ? 'bg-[#111]' : 'bg-white'}`}>
+                  : darkMode ? 'bg-[#1b1b1f]' : 'bg-white'}`}>
               <div className={`w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 border transition-colors
                 ${selected.has(u.id) ? 'bg-red-500 border-red-500' : darkMode ? 'border-gray-600' : 'border-gray-300'}`}>
                 {selected.has(u.id) && <Check className="w-3 h-3 text-white" />}
@@ -130,7 +130,7 @@ export default function EngineStop() {
       {/* Footer */}
       {selected.size > 0 && (
         <div className={`sticky bottom-0 p-4 border-t backdrop-blur-xl
-          ${darkMode ? 'bg-[#0a0a0a]/80 border-[#222]' : 'bg-[#f5f5f7]/80 border-gray-200'}`}>
+          ${darkMode ? 'bg-[#131316]/80 border-[#33343c]' : 'bg-[#f5f5f7]/80 border-gray-200'}`}>
           <button onClick={() => setShowConfirm(true)}
             className="w-full h-[48px] flex items-center justify-center gap-2 rounded-2xl bg-red-500 text-white text-[14px] font-semibold transition-all active:scale-[0.98]">
             <PowerOff className="w-4 h-4" />
@@ -142,7 +142,7 @@ export default function EngineStop() {
       {/* Confirm modal */}
       {showConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className={`${darkMode ? 'bg-[#111]' : 'bg-white'} rounded-2xl shadow-xl max-w-md w-full p-6`}>
+          <div className={`${darkMode ? 'bg-[#1b1b1f]' : 'bg-white'} rounded-2xl shadow-xl max-w-md w-full p-6`}>
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center">
                 <PowerOff className="w-5 h-5 text-red-500" />
@@ -157,7 +157,7 @@ export default function EngineStop() {
             </p>
             <div className="flex justify-end gap-3">
               <button onClick={() => setShowConfirm(false)}
-                className={`px-4 py-2 text-[13px] font-medium rounded-xl ${darkMode ? 'text-gray-300 bg-[#1a1a1a] hover:bg-[#222]' : 'text-gray-700 bg-[#f5f5f7] hover:bg-gray-200'}`}>
+                className={`px-4 py-2 text-[13px] font-medium rounded-xl ${darkMode ? 'text-gray-300 bg-[#232329] hover:bg-[#33343c]' : 'text-gray-700 bg-[#f5f5f7] hover:bg-gray-200'}`}>
                 Cancelar
               </button>
               <button onClick={handleStop} disabled={sending}

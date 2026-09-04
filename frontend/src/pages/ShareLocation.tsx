@@ -51,11 +51,11 @@ export default function ShareLocation() {
   };
 
   return (
-    <div className={`min-h-full ${darkMode ? 'bg-[#0a0a0a]' : 'bg-[#f5f5f7]'}`}>
+    <div className={`min-h-full ${darkMode ? 'bg-[#131316]' : 'bg-[#f5f5f7]'}`}>
       {/* Header */}
       <div className={`sticky top-0 z-10 px-4 py-3 flex items-center gap-3 backdrop-blur-xl border-b
-        ${darkMode ? 'bg-[#0a0a0a]/80 border-[#222]' : 'bg-[#f5f5f7]/80 border-gray-200'}`}>
-        <button onClick={() => navigate('/live-map')} className={`p-2 rounded-xl transition-colors ${darkMode ? 'hover:bg-[#222] text-gray-400' : 'hover:bg-gray-200 text-gray-500'}`}>
+        ${darkMode ? 'bg-[#131316]/80 border-[#33343c]' : 'bg-[#f5f5f7]/80 border-gray-200'}`}>
+        <button onClick={() => navigate('/live-map')} className={`p-2 rounded-xl transition-colors ${darkMode ? 'hover:bg-[#33343c] text-gray-400' : 'hover:bg-gray-200 text-gray-500'}`}>
           <ArrowLeft className="w-5 h-5" />
         </button>
         <div className="flex-1">
@@ -73,7 +73,7 @@ export default function ShareLocation() {
           <Search className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 ${darkMode ? 'text-gray-600' : 'text-gray-400'}`} />
           <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar unidad..."
             className={`w-full pl-10 pr-10 h-[44px] rounded-xl text-[13px] outline-none
-              ${darkMode ? 'bg-[#111] text-white placeholder-gray-600' : 'bg-white text-[#1d1d1f] placeholder-gray-400'}`} />
+              ${darkMode ? 'bg-[#1b1b1f] text-white placeholder-gray-600' : 'bg-white text-[#1d1d1f] placeholder-gray-400'}`} />
           {search && (
             <button onClick={() => setSearch('')} className={`absolute right-3 top-1/2 -translate-y-1/2 ${darkMode ? 'text-gray-600' : 'text-gray-400'}`}>
               <X className="w-4 h-4" />
@@ -84,7 +84,7 @@ export default function ShareLocation() {
         {/* Select all */}
         <button onClick={toggleAll}
           className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-[13px] font-medium transition-colors
-            ${darkMode ? 'bg-[#111] hover:bg-[#1a1a1a] text-gray-300' : 'bg-white hover:bg-gray-50 text-[#1d1d1f]'}`}>
+            ${darkMode ? 'bg-[#1b1b1f] hover:bg-[#232329] text-gray-300' : 'bg-white hover:bg-gray-50 text-[#1d1d1f]'}`}>
           <div className={`w-5 h-5 rounded-md flex items-center justify-center border
             ${selected.size === filtered.length && filtered.length > 0 ? 'bg-[#032347] border-[#032347]' : darkMode ? 'border-gray-600' : 'border-gray-300'}`}>
             {selected.size === filtered.length && filtered.length > 0 && (
@@ -101,7 +101,7 @@ export default function ShareLocation() {
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors text-left
                 ${selected.has(u.id)
                   ? darkMode ? 'bg-[#032347]/20 border border-[#032347]/30' : 'bg-[#032347]/5 border border-[#032347]/20'
-                  : darkMode ? 'bg-[#111]' : 'bg-white'}`}>
+                  : darkMode ? 'bg-[#1b1b1f]' : 'bg-white'}`}>
               <div className={`w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 border transition-colors
                 ${selected.has(u.id) ? 'bg-[#032347] border-[#032347]' : darkMode ? 'border-gray-600' : 'border-gray-300'}`}>
                 {selected.has(u.id) && <Check className="w-3 h-3 text-white" />}
@@ -121,7 +121,7 @@ export default function ShareLocation() {
       {/* Footer button */}
       {selected.size > 0 && (
         <div className={`sticky bottom-0 p-4 border-t backdrop-blur-xl
-          ${darkMode ? 'bg-[#0a0a0a]/80 border-[#222]' : 'bg-[#f5f5f7]/80 border-gray-200'}`}>
+          ${darkMode ? 'bg-[#131316]/80 border-[#33343c]' : 'bg-[#f5f5f7]/80 border-gray-200'}`}>
           <button onClick={() => { addToast('success', `Compartiendo ubicación de ${selected.size} unidades`); navigate('/live-map'); }}
             className="w-full h-[48px] flex items-center justify-center gap-2 rounded-2xl bg-[#032347] text-white text-[14px] font-semibold transition-all active:scale-[0.98]">
             <Share2 className="w-4 h-4" />

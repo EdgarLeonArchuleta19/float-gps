@@ -30,14 +30,14 @@ function CheckRow({ label, sub, checked, onToggle }: {
       type="button"
       onClick={onToggle}
       className={`w-full flex items-center justify-between gap-2 px-3 py-2 rounded-xl text-left transition-colors
-        ${darkMode ? 'hover:bg-[#1a1a1a]' : 'hover:bg-[#f5f5f7]'}`}
+        ${darkMode ? 'hover:bg-[#232329]' : 'hover:bg-[#f5f5f7]'}`}
     >
       <span className="min-w-0">
         <span className={`block text-[13px] font-medium truncate ${darkMode ? 'text-[#f5f5f7]' : 'text-[#1d1d1f]'}`}>{label}</span>
         {sub && <span className={`block text-[11px] truncate ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>{sub}</span>}
       </span>
       <span className={`w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 transition-colors
-        ${checked ? 'bg-[#032347]' : darkMode ? 'bg-[#222] border border-[#333]' : 'bg-white border border-gray-200'}`}>
+        ${checked ? 'bg-[#032347]' : darkMode ? 'bg-[#33343c] border border-[#3c3d46]' : 'bg-white border border-gray-200'}`}>
         {checked && <Check className="w-3.5 h-3.5 text-white" />}
       </span>
     </button>
@@ -73,7 +73,7 @@ export default function Users() {
   const allMachines = (machinesRes?.data || machinesRes || []) as any[];
 
   const inputClass = `w-full px-4 py-2.5 text-[13px] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#032347]
-    ${darkMode ? 'bg-[#1a1a1a] text-[#f5f5f7] placeholder-gray-600' : 'bg-[#f5f5f7] text-[#1d1d1f] placeholder-gray-400'}`;
+    ${darkMode ? 'bg-[#232329] text-[#f5f5f7] placeholder-gray-600' : 'bg-[#f5f5f7] text-[#1d1d1f] placeholder-gray-400'}`;
   const labelClass = `block text-xs font-medium mb-1.5 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`;
 
   const openModal = () => {
@@ -144,7 +144,7 @@ export default function Users() {
     <div className="space-y-5 max-w-3xl">
       <SettingsPageHeader title="Usuarios" subtitle="Gestiona el acceso al sistema" />
 
-      <div className={`${darkMode ? 'bg-[#111]' : 'bg-white'} rounded-2xl p-5`}>
+      <div className={`${darkMode ? 'bg-[#1b1b1f]' : 'bg-white'} rounded-2xl p-5`}>
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
             <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${darkMode ? 'bg-[#10b981]/15' : 'bg-[#10b981]/10'}`}>
@@ -175,8 +175,8 @@ export default function Users() {
         ) : (
           <div className="space-y-2">
             {users!.map((u) => (
-              <div key={u.id} className={`flex items-center gap-3 p-3 rounded-xl ${darkMode ? 'bg-[#1a1a1a]' : 'bg-[#f8f8f9]'}`}>
-                <div className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 ${darkMode ? 'bg-[#242428]' : 'bg-white'}`}>
+              <div key={u.id} className={`flex items-center gap-3 p-3 rounded-xl ${darkMode ? 'bg-[#232329]' : 'bg-[#f8f8f9]'}`}>
+                <div className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 ${darkMode ? 'bg-[#34363f]' : 'bg-white'}`}>
                   <span className={`text-xs font-semibold ${darkMode ? 'text-gray-300' : 'text-[#032347]'}`}>
                     {(u.name || '?')[0].toUpperCase()}
                   </span>
@@ -185,16 +185,16 @@ export default function Users() {
                   <p className={`text-[13px] font-semibold truncate ${darkMode ? 'text-[#f5f5f7]' : 'text-[#1d1d1f]'}`}>{u.name}</p>
                   <p className={`text-xs truncate ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>{u.email}</p>
                 </div>
-                <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-medium flex-shrink-0 ${ROLE_COLORS[u.role]} ${darkMode && u.role === 'viewer' ? 'bg-[#1f1f22] text-gray-400' : ''}`}>
+                <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-medium flex-shrink-0 ${ROLE_COLORS[u.role]} ${darkMode && u.role === 'viewer' ? 'bg-[#2a2b31] text-gray-400' : ''}`}>
                   {ROLE_LABELS[u.role] || u.role}
                 </span>
-                <span className={`hidden sm:inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full flex-shrink-0 ${darkMode ? 'bg-[#222] text-gray-400' : 'bg-gray-100 text-gray-500'}`}>
+                <span className={`hidden sm:inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full flex-shrink-0 ${darkMode ? 'bg-[#33343c] text-gray-400' : 'bg-gray-100 text-gray-500'}`}>
                   {(u.units || []).length} unidades
                 </span>
                 <button
                   onClick={() => openAccess(u)}
                   className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-medium transition-colors flex-shrink-0 ${
-                    darkMode ? 'text-gray-300 hover:bg-[#222]' : 'text-gray-600 hover:bg-gray-100'
+                    darkMode ? 'text-gray-300 hover:bg-[#33343c]' : 'text-gray-600 hover:bg-gray-100'
                   }`}
                   title="Asignar unidades visibles"
                 >
@@ -216,13 +216,13 @@ export default function Users() {
       {accessUser && (
         <div className="fixed inset-0 z-[1100] flex items-center justify-center px-6 py-8">
           <div className="fixed inset-0 bg-black/50" onClick={() => setAccessUser(null)} />
-          <div className={`relative w-full max-w-xl max-h-[88vh] flex flex-col rounded-2xl z-10 overflow-hidden ${darkMode ? 'bg-[#151517]' : 'bg-white'}`}>
+          <div className={`relative w-full max-w-xl max-h-[88vh] flex flex-col rounded-2xl z-10 overflow-hidden ${darkMode ? 'bg-[#202024]' : 'bg-white'}`}>
             <div className="flex items-center justify-between px-6 pt-5 pb-3">
               <div>
                 <h3 className={`text-[15px] font-semibold ${darkMode ? 'text-white' : 'text-[#1d1d1f]'}`}>Unidades de {accessUser.name}</h3>
                 <p className={`text-xs ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>Selecciona qué vehículos y maquinaria puede ver</p>
               </div>
-              <button onClick={() => setAccessUser(null)} className={`p-1.5 rounded-lg ${darkMode ? 'text-gray-400 hover:bg-[#222]' : 'text-gray-500 hover:bg-gray-100'}`}>
+              <button onClick={() => setAccessUser(null)} className={`p-1.5 rounded-lg ${darkMode ? 'text-gray-400 hover:bg-[#33343c]' : 'text-gray-500 hover:bg-gray-100'}`}>
                 <X className="w-4 h-4" />
               </button>
             </div>
@@ -244,7 +244,7 @@ export default function Users() {
                 ) : allVehicles.length === 0 ? (
                   <p className={`text-xs py-3 ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>No hay vehículos registrados</p>
                 ) : (
-                  <div className={`max-h-52 overflow-y-auto rounded-xl p-1 ${darkMode ? 'bg-[#1a1a1a]' : 'bg-[#f8f8f9]'}`}>
+                  <div className={`max-h-52 overflow-y-auto rounded-xl p-1 ${darkMode ? 'bg-[#232329]' : 'bg-[#f8f8f9]'}`}>
                     {allVehicles.map((v) => (
                       <CheckRow
                         key={v.id}
@@ -274,7 +274,7 @@ export default function Users() {
                 ) : allMachines.length === 0 ? (
                   <p className={`text-xs py-3 ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>No hay maquinaria registrada</p>
                 ) : (
-                  <div className={`max-h-52 overflow-y-auto rounded-xl p-1 ${darkMode ? 'bg-[#1a1a1a]' : 'bg-[#f8f8f9]'}`}>
+                  <div className={`max-h-52 overflow-y-auto rounded-xl p-1 ${darkMode ? 'bg-[#232329]' : 'bg-[#f8f8f9]'}`}>
                     {allMachines.map((m) => (
                       <CheckRow
                         key={m.id}
@@ -289,10 +289,10 @@ export default function Users() {
               </div>
             </div>
 
-            <div className="flex gap-3 px-6 py-4 border-t ${darkMode ? 'border-[#242428]' : 'border-gray-100'}">
+            <div className="flex gap-3 px-6 py-4 border-t ${darkMode ? 'border-[#34363f]' : 'border-gray-100'}">
               <button
                 onClick={() => setAccessUser(null)}
-                className={`flex-1 h-[42px] rounded-xl text-[13px] font-medium transition-colors ${darkMode ? 'bg-[#222] text-gray-300 hover:bg-[#333]' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+                className={`flex-1 h-[42px] rounded-xl text-[13px] font-medium transition-colors ${darkMode ? 'bg-[#33343c] text-gray-300 hover:bg-[#3c3d46]' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
               >
                 Cancelar
               </button>
@@ -311,10 +311,10 @@ export default function Users() {
       {modalOpen && (
         <div className="fixed inset-0 z-[1100] flex items-center justify-center px-6">
           <div className="fixed inset-0 bg-black/50" onClick={() => setModalOpen(false)} />
-          <div className={`relative w-full max-w-md rounded-2xl z-10 p-6 ${darkMode ? 'bg-[#151517]' : 'bg-white'}`}>
+          <div className={`relative w-full max-w-md rounded-2xl z-10 p-6 ${darkMode ? 'bg-[#202024]' : 'bg-white'}`}>
             <div className="flex items-center justify-between mb-4">
               <h3 className={`text-[15px] font-semibold ${darkMode ? 'text-white' : 'text-[#1d1d1f]'}`}>Nuevo usuario</h3>
-              <button onClick={() => setModalOpen(false)} className={`p-1.5 rounded-lg ${darkMode ? 'text-gray-400 hover:bg-[#222]' : 'text-gray-500 hover:bg-gray-100'}`}>
+              <button onClick={() => setModalOpen(false)} className={`p-1.5 rounded-lg ${darkMode ? 'text-gray-400 hover:bg-[#33343c]' : 'text-gray-500 hover:bg-gray-100'}`}>
                 <X className="w-4 h-4" />
               </button>
             </div>
@@ -351,7 +351,7 @@ export default function Users() {
                       className={`flex-1 py-2 rounded-xl text-[12px] font-medium transition-colors
                         ${form.role === r.key
                           ? 'bg-[#032347] text-white'
-                          : darkMode ? 'bg-[#1f1f22] text-gray-400' : 'bg-gray-100 text-gray-500'}`}
+                          : darkMode ? 'bg-[#2a2b31] text-gray-400' : 'bg-gray-100 text-gray-500'}`}
                     >
                       {r.label}
                     </button>
@@ -379,14 +379,14 @@ export default function Users() {
       {confirmDelete && (
         <div className="fixed inset-0 z-[1100] flex items-center justify-center px-6">
           <div className="fixed inset-0 bg-black/50" onClick={() => setConfirmDelete(null)} />
-          <div className={`relative w-full max-w-sm p-6 rounded-2xl z-10 ${darkMode ? 'bg-[#151517]' : 'bg-white'}`}>
+          <div className={`relative w-full max-w-sm p-6 rounded-2xl z-10 ${darkMode ? 'bg-[#202024]' : 'bg-white'}`}>
             <h3 className={`text-[15px] font-semibold ${darkMode ? 'text-white' : 'text-[#1d1d1f]'}`}>Eliminar usuario</h3>
             <p className={`text-[13px] mt-2 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
               ¿Seguro que quieres eliminar a <span className="font-semibold">{confirmDelete.name}</span>? No se podrá acceder con esta cuenta.
             </p>
             <div className="flex gap-3 mt-5">
               <button onClick={() => setConfirmDelete(null)}
-                className={`flex-1 h-[42px] rounded-xl text-[13px] font-medium transition-colors ${darkMode ? 'bg-[#222] text-gray-300 hover:bg-[#333]' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
+                className={`flex-1 h-[42px] rounded-xl text-[13px] font-medium transition-colors ${darkMode ? 'bg-[#33343c] text-gray-300 hover:bg-[#3c3d46]' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
                 Cancelar
               </button>
               <button onClick={() => handleDelete(confirmDelete)}

@@ -73,7 +73,7 @@ export default function Config() {
         </p>
       </div>
 
-      <div className={`${darkMode ? 'bg-[#111]' : 'bg-white'} rounded-2xl overflow-hidden`}>
+      <div className={`${darkMode ? 'bg-[#1b1b1f]' : 'bg-white'} rounded-2xl overflow-hidden`}>
         {categories.map((cat, i) => {
           const Icon = cat.icon;
           return (
@@ -81,8 +81,8 @@ export default function Config() {
               key={cat.path}
               onClick={() => navigate(cat.path)}
               className={`w-full flex items-center gap-3 px-4 py-3.5 text-left transition-colors
-                ${darkMode ? (i !== categories.length - 1 ? 'border-b border-[#222]/50' : '') : (i !== categories.length - 1 ? 'border-b border-gray-100' : '')}
-                ${darkMode ? 'hover:bg-[#1a1a1a]' : 'hover:bg-[#f8f8f9]'}`}
+                ${darkMode ? (i !== categories.length - 1 ? 'border-b border-[#33343c]/50' : '') : (i !== categories.length - 1 ? 'border-b border-gray-100' : '')}
+                ${darkMode ? 'hover:bg-[#232329]' : 'hover:bg-[#f8f8f9]'}`}
             >
               <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${iconColors[cat.label]}`}>
                 {Icon}

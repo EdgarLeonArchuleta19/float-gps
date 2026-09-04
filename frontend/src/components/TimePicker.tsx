@@ -10,7 +10,7 @@ interface TimePickerProps {
 }
 
 const inputBg = (dark: boolean) =>
-  dark ? 'bg-[#1a1a1a] text-[#f5f5f7]' : 'bg-white text-[#1d1d1f]';
+  dark ? 'bg-[#232329] text-[#f5f5f7]' : 'bg-white text-[#1d1d1f]';
 
 const pad = (n: number) => String(n).padStart(2, '0');
 
@@ -86,7 +86,7 @@ export default function TimePicker({ value, onChange, label }: TimePickerProps) 
         onClick={openPicker}
         className={`w-full flex items-center gap-2 px-3 py-2.5 text-[13px] rounded-xl border text-left transition-colors active:scale-[0.99]
           ${darkMode
-            ? 'border-[#333] hover:border-[#444] ' + inputBg(darkMode)
+            ? 'border-[#3c3d46] hover:border-[#444] ' + inputBg(darkMode)
             : 'border-gray-200 hover:border-gray-300 ' + inputBg(darkMode)}`}
       >
         <Clock className={`w-4 h-4 flex-shrink-0 ${darkMode ? 'text-[#f87203]' : 'text-[#032347]'}`} />
@@ -104,7 +104,7 @@ export default function TimePicker({ value, onChange, label }: TimePickerProps) 
             role="dialog" aria-modal="true"
             className={`lg:hidden fixed z-[1000] inset-0 m-auto h-max max-h-[90vh] overflow-y-auto no-scrollbar
               w-[92vw] max-w-[360px] rounded-2xl shadow-2xl border animate-fade-in
-              ${darkMode ? 'bg-[#151517] border-[#242428]' : 'bg-white border-gray-100'}`}
+              ${darkMode ? 'bg-[#202024] border-[#34363f]' : 'bg-white border-gray-100'}`}
           >
             <div className="px-5 py-4">{panel}</div>
           </div>
@@ -114,7 +114,7 @@ export default function TimePicker({ value, onChange, label }: TimePickerProps) 
             className={`hidden lg:block absolute z-[999] left-0 w-[320px]
               ${place === 'above' ? 'bottom-full mb-2' : 'top-full mt-2'}
               rounded-2xl shadow-xl border
-              ${darkMode ? 'bg-[#151517] border-[#242428]' : 'bg-white border-gray-100'}`}
+              ${darkMode ? 'bg-[#202024] border-[#34363f]' : 'bg-white border-gray-100'}`}
           >
             <div className="px-5 py-4">{panel}</div>
           </div>
@@ -247,7 +247,7 @@ function DialPanel({ darkMode, hour, min, setHour, setMin, apply }: {
       />
 
       {/* Footer */}
-      <div className="flex items-center justify-end gap-2 pt-3 mt-3 border-t" style={{ borderColor: darkMode ? '#242428' : '#f0f0f0' }}>
+      <div className="flex items-center justify-end gap-2 pt-3 mt-3 border-t" style={{ borderColor: darkMode ? '#34363f' : '#f0f0f0' }}>
         <button
           onClick={apply}
           className="px-4 py-1.5 text-[13px] font-semibold rounded-lg transition-opacity hover:opacity-80"

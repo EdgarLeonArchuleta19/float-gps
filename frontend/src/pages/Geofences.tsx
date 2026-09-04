@@ -73,7 +73,7 @@ export default function Geofences() {
         )}
       </div>
 
-      <div className={`${darkMode ? 'bg-[#111]' : 'bg-white'} rounded-2xl`}>
+      <div className={`${darkMode ? 'bg-[#1b1b1f]' : 'bg-white'} rounded-2xl`}>
         {list.length === 0 ? (
           <div className={`text-center py-16 ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>
             <Shield className="w-10 h-10 mx-auto mb-2" />
@@ -81,9 +81,9 @@ export default function Geofences() {
           </div>
         ) : (
           <>
-            <div className={`${darkMode ? 'divide-y divide-[#222]' : 'divide-y divide-gray-100'}`}>
+            <div className={`${darkMode ? 'divide-y divide-[#33343c]' : 'divide-y divide-gray-100'}`}>
               {paginated.map((g) => (
-                <div key={g.id} className={`flex items-center gap-3 px-4 py-4 transition-colors ${darkMode ? 'hover:bg-[#1a1a1a]' : 'hover:bg-[#f5f5f7]'}`}>
+                <div key={g.id} className={`flex items-center gap-3 px-4 py-4 transition-colors ${darkMode ? 'hover:bg-[#232329]' : 'hover:bg-[#f5f5f7]'}`}>
                   <div
                     className="w-3 h-3 rounded-full flex-shrink-0"
                     style={{ backgroundColor: g.color || '#f87203' }}
@@ -104,7 +104,7 @@ export default function Geofences() {
                     <div className="relative">
                       <button
                         onClick={(e) => { e.stopPropagation(); setMenuOpen(menuOpen === g.id ? null : g.id); }}
-                        className={`p-1.5 rounded-lg transition-colors ${darkMode ? 'hover:bg-[#222] text-gray-500' : 'hover:bg-gray-100 text-gray-400'}`}
+                        className={`p-1.5 rounded-lg transition-colors ${darkMode ? 'hover:bg-[#33343c] text-gray-500' : 'hover:bg-gray-100 text-gray-400'}`}
                       >
                         <svg className="w-4 h-4" viewBox="0 0 16 16" fill="currentColor">
                           <circle cx="8" cy="3" r="1.5" />
@@ -116,11 +116,11 @@ export default function Geofences() {
                         <>
                           <div className="fixed inset-0 z-40" onClick={() => setMenuOpen(null)} />
                           <div className={`absolute right-0 top-full mt-1 w-36 rounded-xl shadow-xl z-50 py-1 overflow-hidden
-                            ${darkMode ? 'bg-[#1a1a1a] border border-[#333]' : 'bg-white border border-gray-100'}`}>
+                            ${darkMode ? 'bg-[#232329] border border-[#3c3d46]' : 'bg-white border border-gray-100'}`}>
                             <button
                               onClick={(e) => { e.stopPropagation(); setMenuOpen(null); navigate(`/geofences/edit/${g.id}`); }}
                               className={`w-full text-left px-3 py-2.5 text-[13px] flex items-center gap-2 transition-colors
-                                ${darkMode ? 'text-gray-400 hover:bg-[#222]' : 'text-gray-600 hover:bg-gray-50'}`}
+                                ${darkMode ? 'text-gray-400 hover:bg-[#33343c]' : 'text-gray-600 hover:bg-gray-50'}`}
                             >
                               <Pencil className="w-3.5 h-3.5" />
                               Editar
@@ -156,7 +156,7 @@ export default function Geofences() {
       {confirmDelete && (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-6">
           <div className="fixed inset-0 bg-black/40" onClick={() => setConfirmDelete(null)} />
-          <div className={`relative w-full max-w-sm p-6 rounded-2xl z-10 ${darkMode ? 'bg-[#1a1a1a]' : 'bg-white'}`}>
+          <div className={`relative w-full max-w-sm p-6 rounded-2xl z-10 ${darkMode ? 'bg-[#232329]' : 'bg-white'}`}>
             <h3 className={`text-[15px] font-semibold ${darkMode ? 'text-white' : 'text-[#1d1d1f]'}`}>Eliminar "{confirmDelete.name}"</h3>
             <p className={`text-[13px] mt-2 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
               Esta acción no se puede deshacer. Se eliminará permanentemente.
@@ -165,7 +165,7 @@ export default function Geofences() {
               <button
                 onClick={() => setConfirmDelete(null)}
                 className={`flex-1 h-[42px] rounded-xl text-[13px] font-medium transition-colors
-                  ${darkMode ? 'bg-[#222] text-gray-300 hover:bg-[#333]' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+                  ${darkMode ? 'bg-[#33343c] text-gray-300 hover:bg-[#3c3d46]' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
               >
                 Cancelar
               </button>

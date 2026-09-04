@@ -214,7 +214,7 @@ export default function UnitDetail() {
             <div className="min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
                 <h1 className={`text-base font-bold ${darkMode ? 'text-[#f5f5f7]' : 'text-[#1d1d1f]'}`}>{unit.name}</h1>
-                <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${darkMode ? 'bg-[#1a1a1a] text-gray-300' : statusColor(unit.status)}`}>
+                <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${darkMode ? 'bg-[#232329] text-gray-300' : statusColor(unit.status)}`}>
                   {statusLabel(unit.status)}
                 </span>
               </div>
@@ -227,25 +227,25 @@ export default function UnitDetail() {
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className={`${darkMode ? 'bg-[#111]' : 'bg-white'} rounded-2xl p-4`}>
+        <div className={`${darkMode ? 'bg-[#1b1b1f]' : 'bg-white'} rounded-2xl p-4`}>
           <p className={`text-[11px] ${darkMode ? 'text-gray-500' : 'text-gray-400'} mb-1`}>Velocidad actual</p>
           <p className={`text-[15px] font-bold ${darkMode ? 'text-[#f5f5f7]' : 'text-[#1d1d1f]'}`}>
             {unit.currentPosition?.speed ?? 0} km/h
           </p>
         </div>
-        <div className={`${darkMode ? 'bg-[#111]' : 'bg-white'} rounded-2xl p-4`}>
+        <div className={`${darkMode ? 'bg-[#1b1b1f]' : 'bg-white'} rounded-2xl p-4`}>
           <p className={`text-[11px] ${darkMode ? 'text-gray-500' : 'text-gray-400'} mb-1`}>Voltaje</p>
           <p className={`text-[15px] font-bold ${darkMode ? 'text-[#f5f5f7]' : 'text-[#1d1d1f]'}`}>
             {unit.currentPosition?.voltage ? `${unit.currentPosition.voltage}V` : '—'}
           </p>
         </div>
-        <div className={`${darkMode ? 'bg-[#111]' : 'bg-white'} rounded-2xl p-4`}>
+        <div className={`${darkMode ? 'bg-[#1b1b1f]' : 'bg-white'} rounded-2xl p-4`}>
           <p className={`text-[11px] ${darkMode ? 'text-gray-500' : 'text-gray-400'} mb-1`}>Estado GPS</p>
           <p className={`text-[15px] font-bold ${darkMode ? 'text-[#f5f5f7]' : 'text-[#1d1d1f]'}`}>
             {unit.gpsDevice ? (unit.currentPosition ? 'En línea' : 'Sin señal') : 'Sin GPS'}
           </p>
         </div>
-        <div className={`${darkMode ? 'bg-[#111]' : 'bg-white'} rounded-2xl p-4`}>
+        <div className={`${darkMode ? 'bg-[#1b1b1f]' : 'bg-white'} rounded-2xl p-4`}>
           <p className={`text-[11px] ${darkMode ? 'text-gray-500' : 'text-gray-400'} mb-1`}>Encendido</p>
           <div className="flex items-center gap-1.5">
             {unit.currentPosition?.ignition ? (
@@ -257,8 +257,8 @@ export default function UnitDetail() {
         </div>
       </div>
 
-      <div className={`${darkMode ? 'bg-[#111]' : 'bg-white'} rounded-2xl`}>
-        <div className={`flex overflow-x-auto ${darkMode ? 'border-b border-[#222]' : 'border-b border-gray-100'}`}>
+      <div className={`${darkMode ? 'bg-[#1b1b1f]' : 'bg-white'} rounded-2xl`}>
+        <div className={`flex overflow-x-auto ${darkMode ? 'border-b border-[#33343c]' : 'border-b border-gray-100'}`}>
           {tabs.map((tab) => (
             <button
               key={tab.key}
@@ -303,7 +303,7 @@ export default function UnitDetail() {
                   </div>
                   <div>
                     <p className={`${darkMode ? 'text-gray-400' : 'text-gray-500'} mb-1`}>Estado</p>
-                    <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${darkMode ? 'bg-[#1a1a1a] text-gray-300' : statusColor(unit.status)}`}>
+                    <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${darkMode ? 'bg-[#232329] text-gray-300' : statusColor(unit.status)}`}>
                       {statusLabel(unit.status)}
                     </span>
                   </div>
@@ -314,7 +314,7 @@ export default function UnitDetail() {
                 <p className={`text-[12px] font-semibold mb-3 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Dispositivo GPS</p>
                 {unit.gpsDevice ? (
                   <>
-                    <div className={`${darkMode ? 'bg-[#1a1a1a]' : 'bg-[#f5f5f7]'} rounded-xl p-3.5`}>
+                    <div className={`${darkMode ? 'bg-[#232329]' : 'bg-[#f5f5f7]'} rounded-xl p-3.5`}>
                       <div className="flex items-center gap-2 mb-3">
                         <span className="w-2 h-2 rounded-full bg-green-500 flex-shrink-0" />
                         <p className={`text-[12px] font-semibold ${darkMode ? 'text-[#f5f5f7]' : 'text-[#1d1d1f]'}`}>
@@ -352,7 +352,7 @@ export default function UnitDetail() {
                           </button>
                           <button onClick={() => setConfirmUnlink(false)}
                             className={`flex-1 h-[38px] rounded-xl text-[12px] font-medium transition-colors
-                              ${darkMode ? 'bg-[#1a1a1a] text-gray-300 hover:bg-[#222]' : 'bg-[#f0f0f0] text-gray-600 hover:bg-gray-200'}`}>
+                              ${darkMode ? 'bg-[#232329] text-gray-300 hover:bg-[#33343c]' : 'bg-[#f0f0f0] text-gray-600 hover:bg-gray-200'}`}>
                             Cancelar
                           </button>
                         </>
@@ -360,7 +360,7 @@ export default function UnitDetail() {
                         <>
                           <button onClick={() => setGpsSheetOpen(true)}
                             className={`flex-1 h-[38px] rounded-xl text-[12px] font-semibold transition-colors flex items-center justify-center gap-1.5
-                              ${darkMode ? 'bg-[#1a1a1a] text-gray-200 hover:bg-[#222]' : 'bg-[#032347]/10 text-[#032347] hover:bg-[#032347]/15'}`}>
+                              ${darkMode ? 'bg-[#232329] text-gray-200 hover:bg-[#33343c]' : 'bg-[#032347]/10 text-[#032347] hover:bg-[#032347]/15'}`}>
                             <Satellite className="w-3.5 h-3.5" /> Cambiar GPS
                           </button>
                           <button onClick={() => setConfirmUnlink(true)}
@@ -375,7 +375,7 @@ export default function UnitDetail() {
                 ) : (
                   <button onClick={() => setGpsSheetOpen(true)}
                     className={`w-full border-2 border-dashed rounded-xl p-6 flex flex-col items-center gap-2 transition-all active:scale-[0.99]
-                      ${darkMode ? 'border-[#333] hover:border-[#f87203]/50' : 'border-gray-300 hover:border-[#032347]/50'}`}>
+                      ${darkMode ? 'border-[#3c3d46] hover:border-[#f87203]/50' : 'border-gray-300 hover:border-[#032347]/50'}`}>
                     <Satellite className={`w-6 h-6 ${darkMode ? 'text-gray-600' : 'text-gray-400'}`} />
                     <p className={`text-[13px] font-medium ${darkMode ? 'text-gray-300' : 'text-[#1d1d1f]'}`}>
                       Esta unidad no tiene GPS vinculado
@@ -390,21 +390,21 @@ export default function UnitDetail() {
               <div>
                 <p className={`text-[12px] font-semibold mb-3 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Resumen del día ({dateFrom})</p>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  <div className={`${darkMode ? 'bg-[#1a1a1a]' : 'bg-[#f5f5f7]'} rounded-xl p-3`}>
+                  <div className={`${darkMode ? 'bg-[#232329]' : 'bg-[#f5f5f7]'} rounded-xl p-3`}>
                     <p className={`text-[10px] ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>Km recorridos</p>
                     <p className={`text-[14px] font-bold ${darkMode ? 'text-[#f5f5f7]' : 'text-[#1d1d1f]'}`}>{formatKm(unit.todaySession?.kilometers ?? unit.kmToday ?? 0)}</p>
                   </div>
-                  <div className={`${darkMode ? 'bg-[#1a1a1a]' : 'bg-[#f5f5f7]'} rounded-xl p-3`}>
+                  <div className={`${darkMode ? 'bg-[#232329]' : 'bg-[#f5f5f7]'} rounded-xl p-3`}>
                     <p className={`text-[10px] ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>Tiempo encendido</p>
                     <p className={`text-[14px] font-bold ${darkMode ? 'text-[#f5f5f7]' : 'text-[#1d1d1f]'}`}>
                       {unit.todaySession?.totalHours != null ? formatHours(unit.todaySession.totalHours) : '—'}
                     </p>
                   </div>
-                  <div className={`${darkMode ? 'bg-[#1a1a1a]' : 'bg-[#f5f5f7]'} rounded-xl p-3`}>
+                  <div className={`${darkMode ? 'bg-[#232329]' : 'bg-[#f5f5f7]'} rounded-xl p-3`}>
                     <p className={`text-[10px] ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>Vel. promedio</p>
                     <p className={`text-[14px] font-bold ${darkMode ? 'text-[#f5f5f7]' : 'text-[#1d1d1f]'}`}>{avgSpeed} km/h</p>
                   </div>
-                  <div className={`${darkMode ? 'bg-[#1a1a1a]' : 'bg-[#f5f5f7]'} rounded-xl p-3`}>
+                  <div className={`${darkMode ? 'bg-[#232329]' : 'bg-[#f5f5f7]'} rounded-xl p-3`}>
                     <p className={`text-[10px] ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>Vel. máxima</p>
                     <p className={`text-[14px] font-bold ${darkMode ? 'text-[#f5f5f7]' : 'text-[#1d1d1f]'}`}>{maxSpeed} km/h</p>
                   </div>
@@ -414,19 +414,19 @@ export default function UnitDetail() {
               <div>
                 <p className={`text-[12px] font-semibold mb-3 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Estadísticas del período</p>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  <div className={`${darkMode ? 'bg-[#1a1a1a]' : 'bg-[#f5f5f7]'} rounded-xl p-3`}>
+                  <div className={`${darkMode ? 'bg-[#232329]' : 'bg-[#f5f5f7]'} rounded-xl p-3`}>
                     <p className={`text-[10px] ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>Posiciones</p>
                     <p className={`text-[14px] font-bold ${darkMode ? 'text-[#f5f5f7]' : 'text-[#1d1d1f]'}`}>{positions?.length || 0}</p>
                   </div>
-                  <div className={`${darkMode ? 'bg-[#1a1a1a]' : 'bg-[#f5f5f7]'} rounded-xl p-3`}>
+                  <div className={`${darkMode ? 'bg-[#232329]' : 'bg-[#f5f5f7]'} rounded-xl p-3`}>
                     <p className={`text-[10px] ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>Km período</p>
                     <p className={`text-[14px] font-bold ${darkMode ? 'text-[#f5f5f7]' : 'text-[#1d1d1f]'}`}>{formatKm(totalKm)}</p>
                   </div>
-                  <div className={`${darkMode ? 'bg-[#1a1a1a]' : 'bg-[#f5f5f7]'} rounded-xl p-3`}>
+                  <div className={`${darkMode ? 'bg-[#232329]' : 'bg-[#f5f5f7]'} rounded-xl p-3`}>
                     <p className={`text-[10px] ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>Encendidos</p>
                     <p className={`text-[14px] font-bold ${darkMode ? 'text-[#f5f5f7]' : 'text-[#1d1d1f]'}`}>{engineOnCount}</p>
                   </div>
-                  <div className={`${darkMode ? 'bg-[#1a1a1a]' : 'bg-[#f5f5f7]'} rounded-xl p-3`}>
+                  <div className={`${darkMode ? 'bg-[#232329]' : 'bg-[#f5f5f7]'} rounded-xl p-3`}>
                     <p className={`text-[10px] ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>Alertas</p>
                     <p className={`text-[14px] font-bold ${darkMode ? 'text-[#f5f5f7]' : 'text-[#1d1d1f]'}`}>{alertCount}</p>
                   </div>
@@ -435,7 +435,7 @@ export default function UnitDetail() {
 
               <div>
                 <p className={`text-[12px] font-semibold mb-3 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Última posición</p>
-                <div className={`${darkMode ? 'bg-[#1a1a1a]' : 'bg-[#f5f5f7]'} rounded-xl p-3`}>
+                <div className={`${darkMode ? 'bg-[#232329]' : 'bg-[#f5f5f7]'} rounded-xl p-3`}>
                   <p className={`text-[13px] font-medium ${darkMode ? 'text-[#f5f5f7]' : 'text-[#1d1d1f]'}`}>
                     {unit.currentPosition
                       ? `${unit.currentPosition.latitude.toFixed(5)}, ${unit.currentPosition.longitude.toFixed(5)}`
@@ -468,15 +468,15 @@ export default function UnitDetail() {
                   </div>
 
                   <div className="grid grid-cols-3 gap-3">
-                    <div className={`${darkMode ? 'bg-[#1a1a1a]' : 'bg-[#f5f5f7]'} rounded-xl p-3 text-center`}>
+                    <div className={`${darkMode ? 'bg-[#232329]' : 'bg-[#f5f5f7]'} rounded-xl p-3 text-center`}>
                       <p className={`text-[10px] ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>Km recorridos</p>
                       <p className={`text-[14px] font-bold ${darkMode ? 'text-[#f5f5f7]' : 'text-[#1d1d1f]'}`}>{formatKm(totalKm)}</p>
                     </div>
-                    <div className={`${darkMode ? 'bg-[#1a1a1a]' : 'bg-[#f5f5f7]'} rounded-xl p-3 text-center`}>
+                    <div className={`${darkMode ? 'bg-[#232329]' : 'bg-[#f5f5f7]'} rounded-xl p-3 text-center`}>
                       <p className={`text-[10px] ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>Puntos</p>
                       <p className={`text-[14px] font-bold ${darkMode ? 'text-[#f5f5f7]' : 'text-[#1d1d1f]'}`}>{positions?.length || 0}</p>
                     </div>
-                    <div className={`${darkMode ? 'bg-[#1a1a1a]' : 'bg-[#f5f5f7]'} rounded-xl p-3 text-center`}>
+                    <div className={`${darkMode ? 'bg-[#232329]' : 'bg-[#f5f5f7]'} rounded-xl p-3 text-center`}>
                       <p className={`text-[10px] ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>Vel. máxima</p>
                       <p className={`text-[14px] font-bold ${darkMode ? 'text-[#f5f5f7]' : 'text-[#1d1d1f]'}`}>{maxSpeed} km/h</p>
                     </div>
@@ -485,7 +485,7 @@ export default function UnitDetail() {
                   <div className="overflow-x-auto">
                     <table className="w-full text-[13px]">
                       <thead>
-                        <tr className={darkMode ? 'border-b border-[#222]' : 'border-b border-gray-100'}>
+                        <tr className={darkMode ? 'border-b border-[#33343c]' : 'border-b border-gray-100'}>
                           <th className={`text-left px-3 py-2 font-medium ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Hora</th>
                           <th className={`text-left px-3 py-2 font-medium ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Lat</th>
                           <th className={`text-left px-3 py-2 font-medium ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Lng</th>
@@ -495,7 +495,7 @@ export default function UnitDetail() {
                       </thead>
                       <tbody>
                         {(positions || []).slice().reverse().slice(0, 50).map((p) => (
-                          <tr key={p.id} className={darkMode ? 'border-b border-[#222]/50' : 'border-b border-gray-50'}>
+                          <tr key={p.id} className={darkMode ? 'border-b border-[#33343c]/50' : 'border-b border-gray-50'}>
                             <td className={`px-3 py-2 ${darkMode ? 'text-gray-300' : 'text-gray-700'} text-xs`}>{formatDateTime(p.timestamp)}</td>
                             <td className={`px-3 py-2 ${darkMode ? 'text-gray-400' : 'text-gray-600'} font-mono text-xs`}>{p.latitude.toFixed(5)}</td>
                             <td className={`px-3 py-2 ${darkMode ? 'text-gray-400' : 'text-gray-600'} font-mono text-xs`}>{p.longitude.toFixed(5)}</td>
@@ -534,7 +534,7 @@ export default function UnitDetail() {
                 <>
                   <div className="space-y-2">
                     {paginatedEvents.map((ev: any) => (
-                      <div key={ev.id} className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${darkMode ? 'bg-[#1a1a1a]' : 'bg-[#f5f5f7]'}`}>
+                      <div key={ev.id} className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${darkMode ? 'bg-[#232329]' : 'bg-[#f5f5f7]'}`}>
                         <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${eventBg(ev.type)}`}>
                           {eventIcon(ev.type)}
                         </div>
@@ -648,15 +648,15 @@ function LinkGpsSheet({ unitId, unitType, unitName, darkMode, onClose, onLinked 
     <>
       <div className="fixed inset-0 z-[200] bg-black/40 backdrop-blur-sm" onClick={onClose} />
       <div className={`fixed z-[210] inset-x-0 bottom-0 sm:inset-0 sm:m-auto sm:w-[420px] sm:h-fit rounded-t-2xl sm:rounded-2xl flex flex-col shadow-2xl max-h-[85dvh]
-        ${darkMode ? 'bg-[#111] border border-[#333]' : 'bg-white border border-gray-200'}`}>
+        ${darkMode ? 'bg-[#1b1b1f] border border-[#3c3d46]' : 'bg-white border border-gray-200'}`}>
         {/* Header */}
-        <div className={`flex items-center justify-between px-4 py-3.5 border-b ${darkMode ? 'border-[#222]' : 'border-gray-100'}`}>
+        <div className={`flex items-center justify-between px-4 py-3.5 border-b ${darkMode ? 'border-[#33343c]' : 'border-gray-100'}`}>
           <div>
             <h2 className={`text-[14px] font-semibold ${darkMode ? 'text-white' : 'text-[#1d1d1f]'}`}>Vincular GPS</h2>
             <p className={`text-[11px] ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>a {unitName}</p>
           </div>
           <button onClick={onClose} className={`w-7 h-7 rounded-full flex items-center justify-center transition-colors
-            ${darkMode ? 'hover:bg-[#222] text-gray-400' : 'hover:bg-gray-100 text-gray-500'}`}>
+            ${darkMode ? 'hover:bg-[#33343c] text-gray-400' : 'hover:bg-gray-100 text-gray-500'}`}>
             <X className="w-3.5 h-3.5" />
           </button>
         </div>
@@ -671,7 +671,7 @@ function LinkGpsSheet({ unitId, unitType, unitName, darkMode, onClose, onLinked 
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Buscar por IMEI o modelo..."
               className={`w-full pl-10 pr-9 h-[38px] rounded-xl text-[13px] outline-none
-                ${darkMode ? 'bg-[#1a1a1a] text-white placeholder-gray-600' : 'bg-[#f5f5f7] text-[#1d1d1f] placeholder-gray-400'}`}
+                ${darkMode ? 'bg-[#232329] text-white placeholder-gray-600' : 'bg-[#f5f5f7] text-[#1d1d1f] placeholder-gray-400'}`}
             />
             {search && (
               <button onClick={() => setSearch('')} className={`absolute right-2.5 top-1/2 -translate-y-1/2 ${darkMode ? 'text-gray-600' : 'text-gray-400'}`}>
@@ -699,9 +699,9 @@ function LinkGpsSheet({ unitId, unitType, unitName, darkMode, onClose, onLinked 
                     className={`w-full flex items-center gap-3 px-3.5 py-3 rounded-xl border text-left transition-all
                       ${isSel
                         ? 'border-[#032347] bg-[#032347]/5'
-                        : darkMode ? 'border-[#222] hover:border-[#333]' : 'border-gray-100 hover:border-gray-300'}`}>
+                        : darkMode ? 'border-[#33343c] hover:border-[#3c3d46]' : 'border-gray-100 hover:border-gray-300'}`}>
                     <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0
-                      ${isSel ? 'bg-[#032347] text-white' : darkMode ? 'bg-[#1a1a1a] text-gray-400' : 'bg-[#f5f5f7] text-gray-500'}`}>
+                      ${isSel ? 'bg-[#032347] text-white' : darkMode ? 'bg-[#232329] text-gray-400' : 'bg-[#f5f5f7] text-gray-500'}`}>
                       <Satellite className="w-4 h-4" />
                     </div>
                     <div className="flex-1 min-w-0">
@@ -729,11 +729,11 @@ function LinkGpsSheet({ unitId, unitType, unitName, darkMode, onClose, onLinked 
                 placeholder="Escribe el IMEI completo"
                 inputMode="numeric"
                 className={`flex-1 h-[38px] px-3.5 rounded-xl text-[12px] font-mono outline-none
-                  ${darkMode ? 'bg-[#1a1a1a] text-white placeholder-gray-600' : 'bg-[#f5f5f7] text-[#1d1d1f] placeholder-gray-400'}`}
+                  ${darkMode ? 'bg-[#232329] text-white placeholder-gray-600' : 'bg-[#f5f5f7] text-[#1d1d1f] placeholder-gray-400'}`}
               />
               <button onClick={handleImeiLookup}
                 className={`h-[38px] px-4 rounded-xl text-[12px] font-medium transition-colors
-                  ${darkMode ? 'bg-[#1a1a1a] text-gray-200 hover:bg-[#222]' : 'bg-[#f0f0f0] text-gray-600 hover:bg-gray-200'}`}>
+                  ${darkMode ? 'bg-[#232329] text-gray-200 hover:bg-[#33343c]' : 'bg-[#f0f0f0] text-gray-600 hover:bg-gray-200'}`}>
                 Buscar
               </button>
             </div>
@@ -742,7 +742,7 @@ function LinkGpsSheet({ unitId, unitType, unitName, darkMode, onClose, onLinked 
         </div>
 
         {/* Footer */}
-        <div className={`px-4 py-3 border-t ${darkMode ? 'border-[#222]' : 'border-gray-100'}`}
+        <div className={`px-4 py-3 border-t ${darkMode ? 'border-[#33343c]' : 'border-gray-100'}`}
           style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}>
           <button
             onClick={handleLink}
@@ -762,7 +762,7 @@ function LinkGpsSheet({ unitId, unitType, unitName, darkMode, onClose, onLinked 
 
 function KPISmall({ icon: Icon, label, value, color, darkMode }: { icon: any; label: string; value: string; color: string; darkMode: boolean }) {
   return (
-    <div className={`${darkMode ? 'bg-[#111]' : 'bg-white'} rounded-2xl p-4 transition-colors`}>
+    <div className={`${darkMode ? 'bg-[#1b1b1f]' : 'bg-white'} rounded-2xl p-4 transition-colors`}>
       <div className="flex items-center gap-2.5">
         <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${color}`}>
           <Icon className="w-4 h-4" />

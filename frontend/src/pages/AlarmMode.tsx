@@ -56,10 +56,10 @@ export default function AlarmMode() {
   ];
 
   return (
-    <div className={`min-h-full ${darkMode ? 'bg-[#0a0a0a]' : 'bg-[#f5f5f7]'}`}>
+    <div className={`min-h-full ${darkMode ? 'bg-[#131316]' : 'bg-[#f5f5f7]'}`}>
       <div className={`sticky top-0 z-10 px-4 py-3 flex items-center gap-3 backdrop-blur-xl border-b
-        ${darkMode ? 'bg-[#0a0a0a]/80 border-[#222]' : 'bg-[#f5f5f7]/80 border-gray-200'}`}>
-        <button onClick={() => navigate('/live-map')} className={`p-2 rounded-xl transition-colors ${darkMode ? 'hover:bg-[#222] text-gray-400' : 'hover:bg-gray-200 text-gray-500'}`}>
+        ${darkMode ? 'bg-[#131316]/80 border-[#33343c]' : 'bg-[#f5f5f7]/80 border-gray-200'}`}>
+        <button onClick={() => navigate('/live-map')} className={`p-2 rounded-xl transition-colors ${darkMode ? 'hover:bg-[#33343c] text-gray-400' : 'hover:bg-gray-200 text-gray-500'}`}>
           <ArrowLeft className="w-5 h-5" />
         </button>
         <div className="flex-1">
@@ -70,10 +70,10 @@ export default function AlarmMode() {
 
       <div className="p-4 space-y-4">
         {/* Global toggle */}
-        <div className={`rounded-2xl p-5 ${darkMode ? 'bg-[#111]' : 'bg-white'}`}>
+        <div className={`rounded-2xl p-5 ${darkMode ? 'bg-[#1b1b1f]' : 'bg-white'}`}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${alarmActive ? 'bg-red-500/15' : darkMode ? 'bg-[#1a1a1a]' : 'bg-gray-100'}`}>
+              <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${alarmActive ? 'bg-red-500/15' : darkMode ? 'bg-[#232329]' : 'bg-gray-100'}`}>
                 {alarmActive ? <Bell className="w-6 h-6 text-red-500" /> : <BellOff className={`w-6 h-6 ${darkMode ? 'text-gray-500' : 'text-gray-400'}`} />}
               </div>
               <div>
@@ -84,7 +84,7 @@ export default function AlarmMode() {
               </div>
             </div>
             <button onClick={() => { setAlarmActive(!alarmActive); addToast(alarmActive ? 'info' : 'success', alarmActive ? 'Alarma desactivada' : 'Alarma activada'); }}
-              className={`w-14 h-8 rounded-full p-1 transition-colors ${alarmActive ? 'bg-red-500' : darkMode ? 'bg-[#333]' : 'bg-gray-200'}`}>
+              className={`w-14 h-8 rounded-full p-1 transition-colors ${alarmActive ? 'bg-red-500' : darkMode ? 'bg-[#3c3d46]' : 'bg-gray-200'}`}>
               <div className={`w-6 h-6 rounded-full bg-white shadow transition-transform ${alarmActive ? 'translate-x-6' : 'translate-x-0'}`} />
             </button>
           </div>
@@ -96,8 +96,8 @@ export default function AlarmMode() {
           {features.map((f, i) => {
             const Icon = f.icon;
             return (
-              <div key={i} className={`flex items-center gap-4 px-4 py-4 rounded-2xl ${darkMode ? 'bg-[#111]' : 'bg-white'}`}>
-                <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${darkMode ? 'bg-[#1a1a1a]' : 'bg-[#f5f5f7]'}`}>
+              <div key={i} className={`flex items-center gap-4 px-4 py-4 rounded-2xl ${darkMode ? 'bg-[#1b1b1f]' : 'bg-white'}`}>
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${darkMode ? 'bg-[#232329]' : 'bg-[#f5f5f7]'}`}>
                   <Icon className="w-5 h-5 text-[#f87203]" />
                 </div>
                 <div className="flex-1 min-w-0">
@@ -131,7 +131,7 @@ export default function AlarmMode() {
             <Search className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 ${darkMode ? 'text-gray-600' : 'text-gray-400'}`} />
             <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar unidad..."
               className={`w-full pl-10 pr-10 h-[44px] rounded-xl text-[13px] outline-none
-                ${darkMode ? 'bg-[#111] text-white placeholder-gray-600' : 'bg-white text-[#1d1d1f] placeholder-gray-400'}`} />
+                ${darkMode ? 'bg-[#1b1b1f] text-white placeholder-gray-600' : 'bg-white text-[#1d1d1f] placeholder-gray-400'}`} />
             {search && (
               <button onClick={() => setSearch('')} className={`absolute right-3 top-1/2 -translate-y-1/2 ${darkMode ? 'text-gray-600' : 'text-gray-400'}`}>
                 <X className="w-4 h-4" />
@@ -145,7 +145,7 @@ export default function AlarmMode() {
               <button key={u.id} onClick={() => toggle(u.id)}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors text-left
                   ${selected.has(u.id) ? darkMode ? 'bg-red-500/10 border border-red-500/20' : 'bg-red-50 border border-red-100'
-                    : darkMode ? 'bg-[#111]' : 'bg-white'}`}>
+                    : darkMode ? 'bg-[#1b1b1f]' : 'bg-white'}`}>
                 <div className={`w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 border transition-colors
                   ${selected.has(u.id) ? 'bg-red-500 border-red-500' : darkMode ? 'border-gray-600' : 'border-gray-300'}`}>
                   {selected.has(u.id) && <Check className="w-3 h-3 text-white" />}
@@ -163,7 +163,7 @@ export default function AlarmMode() {
         </div>
 
         {/* Info */}
-        <div className={`rounded-2xl p-4 ${darkMode ? 'bg-[#111]' : 'bg-white'}`}>
+        <div className={`rounded-2xl p-4 ${darkMode ? 'bg-[#1b1b1f]' : 'bg-white'}`}>
           <p className={`text-[12px] ${darkMode ? 'text-gray-500' : 'text-gray-400'} leading-relaxed`}>
             Las alertas se enviarán como notificaciones push a tu dispositivo para las unidades seleccionadas.
           </p>
@@ -173,7 +173,7 @@ export default function AlarmMode() {
       {/* Footer */}
       {selected.size > 0 && (
         <div className={`sticky bottom-0 p-4 border-t backdrop-blur-xl
-          ${darkMode ? 'bg-[#0a0a0a]/80 border-[#222]' : 'bg-[#f5f5f7]/80 border-gray-200'}`}>
+          ${darkMode ? 'bg-[#131316]/80 border-[#33343c]' : 'bg-[#f5f5f7]/80 border-gray-200'}`}>
           <button onClick={() => { addToast('success', `Alarma configurada para ${selected.size} unidades`); navigate('/live-map'); }}
             className={`w-full h-[48px] flex items-center justify-center gap-2 rounded-2xl text-[14px] font-semibold transition-all active:scale-[0.98]
               ${alarmActive ? 'bg-red-500 text-white' : 'bg-[#032347] text-white'}`}>

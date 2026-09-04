@@ -22,7 +22,7 @@ interface UnitSelectorSheetProps {
 
 const inputBg = (dark: boolean) =>
   dark
-    ? 'bg-[#1a1a1a] text-[#f5f5f7] placeholder-gray-500'
+    ? 'bg-[#232329] text-[#f5f5f7] placeholder-gray-500'
     : 'bg-[#f5f5f7] text-[#1d1d1f] placeholder-gray-400';
 
 export default function UnitSelectorSheet({
@@ -92,8 +92,8 @@ export default function UnitSelectorSheet({
         onClick={() => onToggle(u)}
         className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-left text-[13px] transition-colors
           ${active
-            ? darkMode ? 'bg-[#1a1a1a]' : 'bg-[#f0f0f0]'
-            : darkMode ? 'hover:bg-[#1a1a1a]' : 'hover:bg-gray-50'}`}
+            ? darkMode ? 'bg-[#232329]' : 'bg-[#f0f0f0]'
+            : darkMode ? 'hover:bg-[#232329]' : 'hover:bg-gray-50'}`}
       >
         <span
           className={`w-[18px] h-[18px] rounded-md border flex-shrink-0 flex items-center justify-center transition-all
@@ -106,7 +106,7 @@ export default function UnitSelectorSheet({
           {u.name}
         </span>
         {!u.gpsDeviceId && (
-          <span className={`text-[10px] flex-shrink-0 px-1.5 py-0.5 rounded-full ${darkMode ? 'bg-[#222] text-gray-500' : 'bg-gray-100 text-gray-400'}`}>
+          <span className={`text-[10px] flex-shrink-0 px-1.5 py-0.5 rounded-full ${darkMode ? 'bg-[#33343c] text-gray-500' : 'bg-gray-100 text-gray-400'}`}>
             sin GPS
           </span>
         )}
@@ -129,13 +129,13 @@ export default function UnitSelectorSheet({
       <div
         className={`absolute inset-x-0 bottom-0 sm:inset-x-auto sm:right-0 sm:top-0 sm:bottom-0 sm:w-[420px] sm:max-w-[92vw]
           flex flex-col transition-transform duration-300 ease-out shadow-2xl
-          ${darkMode ? 'bg-[#0d0d0d] border-[#222]' : 'bg-white border-gray-100'}
+          ${darkMode ? 'bg-[#16161a] border-[#33343c]' : 'bg-white border-gray-100'}
           sm:border-l
           ${open ? 'translate-y-0 sm:translate-x-0' : 'translate-y-full sm:translate-y-0 sm:translate-x-full'}`}
       >
         {/* Handle (mobile only) */}
         <div className="sm:hidden flex justify-center pt-2.5 pb-1 flex-shrink-0">
-          <span className={`w-10 h-1 rounded-full ${darkMode ? 'bg-[#333]' : 'bg-gray-300'}`} />
+          <span className={`w-10 h-1 rounded-full ${darkMode ? 'bg-[#3c3d46]' : 'bg-gray-300'}`} />
         </div>
 
         {/* Header */}
@@ -152,7 +152,7 @@ export default function UnitSelectorSheet({
             {selectedCount > 0 && (
               <button
                 onClick={onClear}
-                className={`text-[11px] font-medium px-2 py-1 rounded-lg transition-colors ${darkMode ? 'text-red-400 hover:bg-[#1a1a1a]' : 'text-red-500 hover:bg-red-50'}`}
+                className={`text-[11px] font-medium px-2 py-1 rounded-lg transition-colors ${darkMode ? 'text-red-400 hover:bg-[#232329]' : 'text-red-500 hover:bg-red-50'}`}
               >
                 Limpiar
               </button>
@@ -160,7 +160,7 @@ export default function UnitSelectorSheet({
             <button
               onClick={onClose}
               aria-label="Cerrar"
-              className={`p-2 rounded-xl transition-colors ${darkMode ? 'hover:bg-[#1a1a1a] text-gray-400' : 'hover:bg-gray-100 text-gray-500'}`}
+              className={`p-2 rounded-xl transition-colors ${darkMode ? 'hover:bg-[#232329] text-gray-400' : 'hover:bg-gray-100 text-gray-500'}`}
             >
               <ChevronDown className="w-5 h-5 sm:hidden" />
               <span className="hidden sm:block text-[13px] font-medium">Cerrar</span>
@@ -194,13 +194,13 @@ export default function UnitSelectorSheet({
               className={`px-3 py-1.5 rounded-full text-[12px] font-medium transition-colors
                 ${group === key
                   ? darkMode ? 'bg-white text-[#032347]' : 'bg-[#032347] text-white'
-                  : darkMode ? 'bg-[#1a1a1a] text-gray-400 hover:text-white' : 'bg-[#f0f0f0] text-gray-500 hover:text-[#1d1d1f]'}`}
+                  : darkMode ? 'bg-[#232329] text-gray-400 hover:text-white' : 'bg-[#f0f0f0] text-gray-500 hover:text-[#1d1d1f]'}`}
             >
               {label}
             </button>
           ))}
           {atLimit && selectedCount > 0 && (
-            <span className={`ml-auto self-center text-[10px] px-1.5 py-0.5 rounded-full font-medium ${darkMode ? 'bg-[#1a1a1a] text-gray-500' : 'bg-gray-100 text-gray-400'}`}>
+            <span className={`ml-auto self-center text-[10px] px-1.5 py-0.5 rounded-full font-medium ${darkMode ? 'bg-[#232329] text-gray-500' : 'bg-gray-100 text-gray-400'}`}>
               máx {max}
             </span>
           )}
@@ -236,7 +236,7 @@ export default function UnitSelectorSheet({
         </div>
 
         {/* Footer CTA */}
-        <div className={`p-3 flex-shrink-0 border-t ${darkMode ? 'border-[#222]' : 'border-gray-100'}`}>
+        <div className={`p-3 flex-shrink-0 border-t ${darkMode ? 'border-[#33343c]' : 'border-gray-100'}`}>
           <button
             onClick={onClose}
             className="w-full flex items-center justify-center gap-2 px-4 py-3 text-[14px] font-semibold rounded-xl bg-[#032347] text-white hover:bg-[#02335a] active:scale-[0.99] transition-all"

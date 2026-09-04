@@ -11,7 +11,7 @@ export default function SettingsPageHeader({ title, subtitle }: { title: string;
     <div className="flex items-center gap-3">
       <button
         onClick={() => navigate('/config')}
-        className={`p-2 rounded-xl transition-colors ${darkMode ? 'hover:bg-[#1a1a1a]' : 'hover:bg-gray-100'}`}
+        className={`p-2 rounded-xl transition-colors ${darkMode ? 'hover:bg-[#232329]' : 'hover:bg-gray-100'}`}
         aria-label="Volver a ajustes"
       >
         <ChevronLeft className={`w-5 h-5 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`} />

@@ -22,7 +22,7 @@ export default function Zone() {
   const [units, setUnits] = useState<'km' | 'mi'>('km');
   const [speedUnit, setSpeedUnit] = useState<'kmh' | 'mph'>('kmh');
 
-  const card = `${darkMode ? 'bg-[#111]' : 'bg-white'} rounded-2xl p-5`;
+  const card = `${darkMode ? 'bg-[#1b1b1f]' : 'bg-white'} rounded-2xl p-5`;
   const labelClass = `block text-xs font-medium mb-1.5 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`;
 
   const persist = (v: string) => {
@@ -47,7 +47,7 @@ export default function Zone() {
             value={timezone}
             onChange={(e) => persist(e.target.value)}
             className={`w-full px-4 py-2.5 text-[13px] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#032347] appearance-none
-              ${darkMode ? 'bg-[#1a1a1a] text-[#f5f5f7]' : 'bg-[#f5f5f7] text-[#1d1d1f]'}`}
+              ${darkMode ? 'bg-[#232329] text-[#f5f5f7]' : 'bg-[#f5f5f7] text-[#1d1d1f]'}`}
           >
             {TIMEZONES.map((t) => <option key={t} value={t}>{t.replace('_', ' ')}</option>)}
           </select>
@@ -64,7 +64,7 @@ export default function Zone() {
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className={labelClass}>Distancia</label>
-            <div className="flex gap-1 p-1 rounded-xl bg-[#f5f5f7] dark:bg-[#1f1f22]">
+            <div className="flex gap-1 p-1 rounded-xl bg-[#f5f5f7] dark:bg-[#2a2b31]">
               {[
                 { key: 'km', label: 'Km' },
                 { key: 'mi', label: 'Mi' },
@@ -82,7 +82,7 @@ export default function Zone() {
           </div>
           <div>
             <label className={labelClass}>Velocidad</label>
-            <div className="flex gap-1 p-1 rounded-xl bg-[#f5f5f7] dark:bg-[#1f1f22]">
+            <div className="flex gap-1 p-1 rounded-xl bg-[#f5f5f7] dark:bg-[#2a2b31]">
               {[
                 { key: 'kmh', label: 'km/h' },
                 { key: 'mph', label: 'mph' },
@@ -126,7 +126,7 @@ export default function Zone() {
             </button>
           ))}
         </div>
-        <div className={`mt-4 pt-4 border-t flex items-center gap-2 ${darkMode ? 'border-[#242428]' : 'border-gray-100'}`}>
+        <div className={`mt-4 pt-4 border-t flex items-center gap-2 ${darkMode ? 'border-[#34363f]' : 'border-gray-100'}`}>
           <Shield className={`w-4 h-4 ${darkMode ? 'text-gray-500' : 'text-gray-400'}`} />
           <p className={`text-[11px] ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>
             Ajuste de seguridad básica por ahora; próximamente autenticación real por sesión.

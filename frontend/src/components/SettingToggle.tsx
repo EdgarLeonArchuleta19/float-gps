@@ -12,7 +12,7 @@ export default function SettingToggle({ icon, label, description, checked, onCha
   const { darkMode } = useLayout();
 
   return (
-    <div className={`flex items-center justify-between py-3 ${!last ? (darkMode ? 'border-b border-[#222]/50' : 'border-b border-gray-100') : ''}`}>
+    <div className={`flex items-center justify-between py-3 ${!last ? (darkMode ? 'border-b border-[#33343c]/50' : 'border-b border-gray-100') : ''}`}>
       <div className="flex items-center gap-3 min-w-0">
         <div className={darkMode ? 'text-gray-400' : 'text-gray-500'}>{icon}</div>
         <div className="min-w-0">

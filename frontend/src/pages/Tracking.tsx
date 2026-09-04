@@ -154,7 +154,7 @@ export default function Tracking() {
     ? okResults.find((r) => r.unit.id === selectedUnitId) ?? null
     : null;
 
-  const cardClass = `${darkMode ? 'bg-[#111]' : 'bg-white'} rounded-2xl transition-colors`;
+  const cardClass = `${darkMode ? 'bg-[#1b1b1f]' : 'bg-white'} rounded-2xl transition-colors`;
   const labelClass = `block text-xs font-medium ${darkMode ? 'text-gray-400' : 'text-gray-500'} mb-1`;
 
   return (
@@ -170,7 +170,7 @@ export default function Tracking() {
       <div className="flex flex-col lg:flex-row gap-4 lg:gap-5 items-start">
         {/* Panel de filtros (una sola tarjeta compacta) */}
         <div className="w-full lg:w-[340px] flex-shrink-0 lg:sticky lg:top-4">
-          <div className={`${cardClass} p-3.5 sm:p-4 divide-y ${darkMode ? 'divide-[#222]' : 'divide-gray-100'}`}>
+          <div className={`${cardClass} p-3.5 sm:p-4 divide-y ${darkMode ? 'divide-[#33343c]' : 'divide-gray-100'}`}>
             {/* Fecha y horario */}
             <div className="pb-3.5">
               <div className="grid grid-cols-1 gap-2.5">
@@ -194,10 +194,10 @@ export default function Tracking() {
                 className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-left text-[13px] border-2 transition-all active:scale-[0.99]
                   ${selectedUnits.length > 0
                     ? darkMode ? 'border-[#f87203]/60 bg-[#f87203]/5' : 'border-[#f87203]/50 bg-[#f87203]/5'
-                    : darkMode ? 'border-[#333] bg-transparent hover:border-gray-500' : 'border-gray-200 bg-transparent hover:border-gray-300'}`}
+                    : darkMode ? 'border-[#3c3d46] bg-transparent hover:border-gray-500' : 'border-gray-200 bg-transparent hover:border-gray-300'}`}
               >
                 <span className={`flex items-center justify-center w-5 h-5 rounded-full text-[11px] font-bold flex-shrink-0
-                  ${selectedUnits.length > 0 ? 'bg-[#f87203] text-white' : darkMode ? 'bg-[#222] text-gray-400' : 'bg-[#f0f0f0] text-gray-500'}`}>
+                  ${selectedUnits.length > 0 ? 'bg-[#f87203] text-white' : darkMode ? 'bg-[#33343c] text-gray-400' : 'bg-[#f0f0f0] text-gray-500'}`}>
                   {selectedUnits.length}
                 </span>
                 <span className={`flex-1 truncate font-medium ${selectedUnits.length > 0 ? (darkMode ? 'text-[#f5f5f7]' : 'text-[#1d1d1f]') : (darkMode ? 'text-gray-300' : 'text-gray-600')}`}>
@@ -252,7 +252,7 @@ export default function Tracking() {
           {/* Instrucción o detalle de la unidad seleccionada en el mapa */}
           {okResults.length > 0 && !fetching && !activeResult && (
             <div className={`flex items-center gap-2.5 px-3.5 py-3 rounded-xl border border-dashed
-              ${darkMode ? 'border-[#333] text-gray-500' : 'border-gray-300 text-gray-500'}`}>
+              ${darkMode ? 'border-[#3c3d46] text-gray-500' : 'border-gray-300 text-gray-500'}`}>
               <MousePointerClick className="w-[18px] h-[18px] flex-shrink-0" />
               <p className="text-[12.5px]">
                 Toca un punto del mapa — o su etiqueta de color — para ver el detalle de esa unidad
@@ -270,7 +270,7 @@ export default function Tracking() {
                     {activeResult.unit.name}
                   </p>
                   <button onClick={() => setSelectedUnitId(null)} aria-label="Cerrar detalle"
-                    className={`p-1.5 rounded-lg transition-colors ${darkMode ? 'hover:bg-[#222] text-gray-500' : 'hover:bg-gray-100 text-gray-400'}`}>
+                    className={`p-1.5 rounded-lg transition-colors ${darkMode ? 'hover:bg-[#33343c] text-gray-500' : 'hover:bg-gray-100 text-gray-400'}`}>
                     <X className="w-4 h-4" />
                   </button>
                 </div>
@@ -354,14 +354,14 @@ export default function Tracking() {
           {/* Tabla detallada: sigue a la unidad seleccionada en el mapa */}
           {activeResult && !fetching && (
             <div className={`${cardClass} overflow-x-auto`}>
-              <div className={`px-4 py-2.5 border-b ${darkMode ? 'border-[#222]' : 'border-gray-100'}`}>
+              <div className={`px-4 py-2.5 border-b ${darkMode ? 'border-[#33343c]' : 'border-gray-100'}`}>
                 <p className={`text-[12px] font-semibold ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
                   Posiciones · {activeResult.unit.name}
                 </p>
               </div>
               <table className="w-full text-[13px]">
                 <thead>
-                  <tr className={darkMode ? 'border-b border-[#222]' : 'border-b border-gray-100'}>
+                  <tr className={darkMode ? 'border-b border-[#33343c]' : 'border-b border-gray-100'}>
                     <th className={`text-left px-4 py-3 font-medium ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Hora</th>
                     <th className={`text-left px-4 py-3 font-medium ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Lat</th>
                     <th className={`text-left px-4 py-3 font-medium ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Lng</th>
@@ -371,7 +371,7 @@ export default function Tracking() {
                 </thead>
                 <tbody>
                   {activeResult.data!.positions.map((p) => (
-                    <tr key={p.id} className={darkMode ? 'border-b border-[#222]/50' : 'border-b border-gray-50'}>
+                    <tr key={p.id} className={darkMode ? 'border-b border-[#33343c]/50' : 'border-b border-gray-50'}>
                       <td className={`px-4 py-2 ${darkMode ? 'text-[#f5f5f7]' : 'text-[#1d1d1f]'} text-xs`}>{new Date(p.timestamp).toLocaleTimeString('es-MX')}</td>
                       <td className={`px-4 py-2 ${darkMode ? 'text-gray-400' : 'text-gray-600'} font-mono text-xs`}>{p.latitude.toFixed(5)}</td>
                       <td className={`px-4 py-2 ${darkMode ? 'text-gray-400' : 'text-gray-600'} font-mono text-xs`}>{p.longitude.toFixed(5)}</td>
@@ -394,7 +394,7 @@ export default function Tracking() {
 
       {/* Barra de acción fija (móvil) */}
       <div className={`lg:hidden fixed bottom-0 inset-x-0 z-[1050] px-4 pt-3 pb-[calc(16px+env(safe-area-inset-bottom))] backdrop-blur-xl border-t
-        ${darkMode ? 'bg-[#0a0a0a]/90 border-[#222]' : 'bg-white/90 border-gray-200'}`}>
+        ${darkMode ? 'bg-[#131316]/90 border-[#33343c]' : 'bg-white/90 border-gray-200'}`}>
         <button onClick={handleSearch} disabled={fetching || selectedUnits.length === 0}
           className="w-full flex items-center justify-center gap-2 px-4 py-3 text-[14px] font-semibold rounded-xl bg-[#032347] text-white hover:bg-[#02335a] active:scale-[0.99] transition-all disabled:opacity-50 disabled:cursor-not-allowed">
           {fetching ? <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" /> : <Play className="w-4 h-4" />}

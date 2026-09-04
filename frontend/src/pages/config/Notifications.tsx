@@ -31,7 +31,7 @@ export default function Notifications() {
     <div className="space-y-5 max-w-3xl">
       <SettingsPageHeader title="Notificaciones" subtitle="Controla las alertas del sistema" />
 
-      <div className={`${darkMode ? 'bg-[#111]' : 'bg-white'} rounded-2xl p-5`}>
+      <div className={`${darkMode ? 'bg-[#1b1b1f]' : 'bg-white'} rounded-2xl p-5`}>
         <div className="flex items-center gap-3 mb-4">
           <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${darkMode ? 'bg-[#3b82f6]/15' : 'bg-[#3b82f6]/10'}`}>
             <Bell className={`w-5 h-5 ${darkMode ? 'text-[#3b82f6]' : 'text-[#3b82f6]'}`} />
@@ -72,7 +72,7 @@ export default function Notifications() {
         </div>
       </div>
 
-      <div className={`${darkMode ? 'bg-[#111]' : 'bg-white'} rounded-2xl p-5`}>
+      <div className={`${darkMode ? 'bg-[#1b1b1f]' : 'bg-white'} rounded-2xl p-5`}>
         <div className="flex items-center gap-3 mb-4">
           <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${darkMode ? 'bg-[#8b5cf6]/15' : 'bg-[#8b5cf6]/10'}`}>
             <RefreshCw className={`w-5 h-5 ${darkMode ? 'text-[#8b5cf6]' : 'text-[#8b5cf6]'}`} />

@@ -61,10 +61,10 @@ export default function VehicleList() {
   ];
 
   return (
-    <div className={`min-h-full ${darkMode ? 'bg-[#0a0a0a]' : 'bg-[#f5f5f7]'}`}>
+    <div className={`min-h-full ${darkMode ? 'bg-[#131316]' : 'bg-[#f5f5f7]'}`}>
       <div className={`sticky top-0 z-10 px-4 py-3 flex items-center gap-3 backdrop-blur-xl border-b
-        ${darkMode ? 'bg-[#0a0a0a]/80 border-[#222]' : 'bg-[#f5f5f7]/80 border-gray-200'}`}>
-        <button onClick={() => navigate('/live-map')} className={`p-2 rounded-xl transition-colors ${darkMode ? 'hover:bg-[#222] text-gray-400' : 'hover:bg-gray-200 text-gray-500'}`}>
+        ${darkMode ? 'bg-[#131316]/80 border-[#33343c]' : 'bg-[#f5f5f7]/80 border-gray-200'}`}>
+        <button onClick={() => navigate('/live-map')} className={`p-2 rounded-xl transition-colors ${darkMode ? 'hover:bg-[#33343c] text-gray-400' : 'hover:bg-gray-200 text-gray-500'}`}>
           <ArrowLeft className="w-5 h-5" />
         </button>
         <div className="flex-1">
@@ -79,7 +79,7 @@ export default function VehicleList() {
           <Search className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 ${darkMode ? 'text-gray-600' : 'text-gray-400'}`} />
           <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar por nombre o placa..."
             className={`w-full pl-10 pr-10 h-[44px] rounded-xl text-[13px] outline-none
-              ${darkMode ? 'bg-[#111] text-white placeholder-gray-600' : 'bg-white text-[#1d1d1f] placeholder-gray-400'}`} />
+              ${darkMode ? 'bg-[#1b1b1f] text-white placeholder-gray-600' : 'bg-white text-[#1d1d1f] placeholder-gray-400'}`} />
           {search && (
             <button onClick={() => setSearch('')} className={`absolute right-3 top-1/2 -translate-y-1/2 ${darkMode ? 'text-gray-600' : 'text-gray-400'}`}>
               <X className="w-4 h-4" />
@@ -94,7 +94,7 @@ export default function VehicleList() {
               className={`flex-shrink-0 px-4 py-2 rounded-full text-[12px] font-medium transition-all
                 ${filter === f.key
                   ? 'bg-[#032347] text-white'
-                  : darkMode ? 'bg-[#111] text-gray-400' : 'bg-white text-gray-500'}`}>
+                  : darkMode ? 'bg-[#1b1b1f] text-gray-400' : 'bg-white text-gray-500'}`}>
               {f.label}
             </button>
           ))}
@@ -105,7 +105,7 @@ export default function VehicleList() {
           {filtered.map((u) => (
             <button key={u.id} onClick={() => navigate(`/units/${u.id}`)}
               className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-colors text-left
-                ${darkMode ? 'bg-[#111] hover:bg-[#1a1a1a]' : 'bg-white hover:bg-gray-50'}`}>
+                ${darkMode ? 'bg-[#1b1b1f] hover:bg-[#232329]' : 'bg-white hover:bg-gray-50'}`}>
               <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: markerColor(u.status) }} />
               <div className="min-w-0 flex-1">
                 <p className={`text-[13px] font-medium ${darkMode ? 'text-white' : 'text-[#1d1d1f]'} truncate`}>{u.name}</p>

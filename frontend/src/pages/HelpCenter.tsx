@@ -55,8 +55,8 @@ export default function HelpCenter() {
   const [query, setQuery] = useState('');
   const [openKey, setOpenKey] = useState<string | null>(null);
 
-  const cell = darkMode ? 'bg-[#151517] border border-[#242428]' : 'bg-white border border-black/[0.06]';
-  const hairline = darkMode ? 'divide-[#242428]' : 'divide-black/[0.05]';
+  const cell = darkMode ? 'bg-[#202024] border border-[#34363f]' : 'bg-white border border-black/[0.06]';
+  const hairline = darkMode ? 'divide-[#34363f]' : 'divide-black/[0.05]';
   const lift = darkMode ? '' : 'shadow-[0_1px_3px_rgba(16,24,40,0.05)]';
   const titleCls = darkMode ? 'text-[#f5f5f7]' : 'text-[#1d1d1f]';
   const subCls = darkMode ? 'text-gray-500' : 'text-gray-400';

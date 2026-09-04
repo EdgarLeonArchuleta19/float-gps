@@ -19,7 +19,7 @@ const MONTHS = [
 const MONTHS_SHORT = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
 
 const inputBg = (dark: boolean) =>
-  dark ? 'bg-[#1a1a1a] text-[#f5f5f7]' : 'bg-white text-[#1d1d1f]';
+  dark ? 'bg-[#232329] text-[#f5f5f7]' : 'bg-white text-[#1d1d1f]';
 
 function toDate(iso: string): Date | null {
   if (!iso) return null;
@@ -143,7 +143,7 @@ export default function DatePicker({ value, onChange, label, min, max }: DatePic
         onClick={openPicker}
         className={`w-full flex items-center gap-2 px-3 py-2.5 text-[13px] rounded-xl border text-left transition-colors active:scale-[0.99]
           ${darkMode
-            ? 'border-[#333] hover:border-[#444] ' + inputBg(darkMode)
+            ? 'border-[#3c3d46] hover:border-[#444] ' + inputBg(darkMode)
             : 'border-gray-200 hover:border-gray-300 ' + inputBg(darkMode)}`}
       >
         <Calendar className={`w-4 h-4 flex-shrink-0 ${darkMode ? 'text-[#f87203]' : 'text-[#032347]'}`} />
@@ -163,7 +163,7 @@ export default function DatePicker({ value, onChange, label, min, max }: DatePic
             role="dialog" aria-modal="true"
             className={`lg:hidden fixed z-[1000] inset-0 m-auto h-max max-h-[86vh] overflow-y-auto no-scrollbar
               w-[92vw] max-w-[320px] rounded-2xl shadow-2xl border animate-fade-in
-              ${darkMode ? 'bg-[#151517] border-[#242428]' : 'bg-white border-gray-100'}`}
+              ${darkMode ? 'bg-[#202024] border-[#34363f]' : 'bg-white border-gray-100'}`}
           >
             <div className="px-5 py-5">
               <CalendarGrid
@@ -187,7 +187,7 @@ export default function DatePicker({ value, onChange, label, min, max }: DatePic
                 maxYear={maxYear}
                 darkMode={darkMode}
                 accent={accent}
-                padCls={`${darkMode ? 'hover:bg-[#1f1f22]' : 'hover:bg-[#f2f2f3]'} text-[#8a8a8e]`}
+                padCls={`${darkMode ? 'hover:bg-[#2a2b31]' : 'hover:bg-[#f2f2f3]'} text-[#8a8a8e]`}
               />
             </div>
           </div>
@@ -198,7 +198,7 @@ export default function DatePicker({ value, onChange, label, min, max }: DatePic
               left-0 w-[280px]
               ${place === 'above' ? 'bottom-full mb-2' : 'top-full mt-2'}
               rounded-2xl shadow-xl border
-              ${darkMode ? 'bg-[#151517] border-[#242428]' : 'bg-white border-gray-100'}`}
+              ${darkMode ? 'bg-[#202024] border-[#34363f]' : 'bg-white border-gray-100'}`}
           >
             <div className="px-5 py-4">
               <CalendarGrid
@@ -222,7 +222,7 @@ export default function DatePicker({ value, onChange, label, min, max }: DatePic
                 maxYear={maxYear}
                 darkMode={darkMode}
                 accent={accent}
-                padCls={`${darkMode ? 'hover:bg-[#1f1f22]' : 'hover:bg-[#f2f2f3]'} text-[#8a8a8e]`}
+                padCls={`${darkMode ? 'hover:bg-[#2a2b31]' : 'hover:bg-[#f2f2f3]'} text-[#8a8a8e]`}
               />
             </div>
           </div>
@@ -261,7 +261,7 @@ function CalendarGrid(props: {
     toIso, onPick, onToday, maxYear, darkMode, accent, padCls,
   } = props;
 
-  const navBtn = `w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${darkMode ? 'text-gray-400 hover:bg-[#1f1f22]' : 'text-gray-500 hover:bg-[#f2f2f3]'}`;
+  const navBtn = `w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${darkMode ? 'text-gray-400 hover:bg-[#2a2b31]' : 'text-gray-500 hover:bg-[#f2f2f3]'}`;
 
   return (
     <div>
@@ -302,7 +302,7 @@ function CalendarGrid(props: {
               );
             })}
           </div>
-          <div className={`mt-3 pt-3 border-t ${darkMode ? 'border-[#242428]' : 'border-gray-100'}`}>
+          <div className={`mt-3 pt-3 border-t ${darkMode ? 'border-[#34363f]' : 'border-gray-100'}`}>
             <button onClick={onToday}
               className="w-full py-1.5 text-[12px] rounded-lg transition-colors hover:opacity-70"
               style={{ color: accent, fontWeight: 500 }}>

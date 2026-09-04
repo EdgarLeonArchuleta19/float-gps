@@ -294,8 +294,8 @@ export default function Reports() {
     return [`${rows.length} registros`, `${formatKm(rows.reduce((s, r) => s + (r.kilometers ?? 0), 0))} acumulados`];
   }, [loading, activeTab, fleetAgg, mileageAgg, rows, events, totalKmAll]);
 
-  const inputBg = darkMode ? 'bg-[#1a1a1a] text-[#f5f5f7]' : 'bg-white text-[#1d1d1f] border border-gray-200';
-  const card = darkMode ? 'bg-[#111] border border-[#222]' : 'bg-white border border-gray-200';
+  const inputBg = darkMode ? 'bg-[#232329] text-[#f5f5f7]' : 'bg-white text-[#1d1d1f] border border-gray-200';
+  const card = darkMode ? 'bg-[#1b1b1f] border border-[#33343c]' : 'bg-white border border-gray-200';
 
   const presets = [
     { key: 'today', label: 'Hoy' }, { key: '7d', label: '7 días' }, { key: '30d', label: '30 días' },
@@ -318,8 +318,8 @@ export default function Reports() {
                 title={TAB_META[key].desc}
                 className={`px-3 py-1.5 rounded-lg text-[12.5px] font-medium whitespace-nowrap flex-shrink-0 transition-colors
                   ${activeTab === key
-                    ? darkMode ? 'bg-white text-[#111]' : 'bg-[#032347] text-white'
-                    : darkMode ? 'text-gray-400 hover:bg-[#1a1a1a]' : 'text-gray-500 hover:bg-gray-100'}`}>
+                    ? darkMode ? 'bg-white text-[#1b1b1f]' : 'bg-[#032347] text-white'
+                    : darkMode ? 'text-gray-400 hover:bg-[#232329]' : 'text-gray-500 hover:bg-gray-100'}`}>
                 {TAB_META[key].label}
               </button>
             ))}
@@ -327,13 +327,13 @@ export default function Reports() {
           <div className="hidden lg:flex items-center gap-1.5 flex-shrink-0">
             <ActionBtn darkMode={darkMode} onClick={handleExportExcel} icon={FileSpreadsheet} label="Excel" />
             <ActionBtn darkMode={darkMode} onClick={() => handleExportPdf()} icon={Download} label="PDF" />
-            <span className={`w-px h-5 ${darkMode ? 'bg-[#222]' : 'bg-gray-200'}`} />
+            <span className={`w-px h-5 ${darkMode ? 'bg-[#33343c]' : 'bg-gray-200'}`} />
             <IconBtn darkMode={darkMode} onClick={() => handleNativeShare('pdf')} icon={Share2} title="Compartir PDF" />
             <IconBtn darkMode={darkMode} onClick={handleShareWhatsApp} icon={MessageCircle} title="Enviar resumen por WhatsApp" />
             <IconBtn darkMode={darkMode} onClick={handleShareEmail} icon={Mail} title="Enviar resumen por correo" />
           </div>
         </div>
-        <div className={`h-px ${darkMode ? 'bg-[#222]' : 'bg-gray-100'}`} />
+        <div className={`h-px ${darkMode ? 'bg-[#33343c]' : 'bg-gray-100'}`} />
         <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5">
           <span className={`text-[10px] font-semibold uppercase tracking-wider flex-shrink-0 px-0.5 ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>Periodo</span>
           {presets.map((p) => (
@@ -341,7 +341,7 @@ export default function Reports() {
               className={`px-2.5 py-1 rounded-md text-[11.5px] font-medium whitespace-nowrap flex-shrink-0 transition-colors border
                 ${periodKey === p.key
                   ? darkMode ? 'border-gray-300 text-white' : 'border-[#032347] text-[#032347]'
-                  : darkMode ? 'border-[#222] text-gray-500 hover:text-gray-300' : 'border-transparent text-gray-400 hover:text-gray-600 hover:bg-gray-50'}`}>
+                  : darkMode ? 'border-[#33343c] text-gray-500 hover:text-gray-300' : 'border-transparent text-gray-400 hover:text-gray-600 hover:bg-gray-50'}`}>
               {p.label}
             </button>
           ))}
@@ -373,7 +373,7 @@ export default function Reports() {
             </p>
           )}
         </div>
-        <div className={`h-px ${darkMode ? 'bg-[#222]' : 'bg-gray-100'}`} />
+        <div className={`h-px ${darkMode ? 'bg-[#33343c]' : 'bg-gray-100'}`} />
 
         {/* Contenido */}
         {loading ? (
@@ -412,7 +412,7 @@ export default function Reports() {
                   })}
                 </tbody>
                 <tfoot>
-                  <tr className={`border-t ${darkMode ? 'border-[#333]' : 'border-gray-200'}`}>
+                  <tr className={`border-t ${darkMode ? 'border-[#3c3d46]' : 'border-gray-200'}`}>
                     <Th darkMode={darkMode} align="left">Total</Th>
                     <Th darkMode={darkMode}>{formatKm(fleetAgg.reduce((s, u) => s + u.km, 0))}</Th>
                     <Th darkMode={darkMode} className="hidden sm:table-cell">{formatHours(fleetAgg.reduce((s, u) => s + u.total, 0))}</Th>
@@ -431,7 +431,7 @@ export default function Reports() {
           mileageAgg.length === 0
             ? <Empty darkMode={darkMode} text="Sin kilometraje registrado en el periodo." />
             : (
-              <div className={`divide-y ${darkMode ? 'divide-[#222]' : 'divide-gray-100'}`}>
+              <div className={`divide-y ${darkMode ? 'divide-[#33343c]' : 'divide-gray-100'}`}>
                 <div className={`grid grid-cols-[28px_1fr_auto] gap-x-3 px-4 py-2 text-[10px] font-semibold uppercase tracking-wider ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>
                   <span>#</span><span>Unidad</span><span>Km</span>
                 </div>
@@ -440,7 +440,7 @@ export default function Reports() {
                     <span className={`text-[12px] font-semibold tabular-nums ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>{String(i + 1).padStart(2, '0')}</span>
                     <div className="min-w-0">
                       <p className={`text-[13px] font-medium truncate ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>{u.unit}</p>
-                      <div className={`mt-1 h-[3px] rounded-full ${darkMode ? 'bg-[#1a1a1a]' : 'bg-gray-100'}`}>
+                      <div className={`mt-1 h-[3px] rounded-full ${darkMode ? 'bg-[#232329]' : 'bg-gray-100'}`}>
                         <div className="h-full rounded-full" style={{ width: `${Math.max((u.km / maxKm) * 100, 1.5)}%`, background: i === 0 ? '#f87203' : '#032347', opacity: i === 0 ? 1 : 0.25 + 0.75 * (1 - i / mileageAgg.length) }} />
                       </div>
                     </div>
@@ -482,8 +482,8 @@ export default function Reports() {
                           <Td darkMode={darkMode}>{formatHours(t)}</Td>
                           <Td darkMode={darkMode} className="hidden sm:table-cell">{formatHours(r.movingHours ?? 0)}</Td>
                           <Td darkMode={darkMode} className="hidden sm:table-cell">{formatHours(r.idleHours ?? 0)}</Td>
-                          <td className={`hidden md:table-cell px-3 py-2.5 border-t ${darkMode ? 'border-[#222]' : 'border-gray-100'}`}>
-                            <div className={`flex h-[6px] w-full max-w-[140px] rounded-full overflow-hidden ${darkMode ? 'bg-[#1a1a1a]' : 'bg-gray-200'}`} title={`${mv}% movimiento`}>
+                          <td className={`hidden md:table-cell px-3 py-2.5 border-t ${darkMode ? 'border-[#33343c]' : 'border-gray-100'}`}>
+                            <div className={`flex h-[6px] w-full max-w-[140px] rounded-full overflow-hidden ${darkMode ? 'bg-[#232329]' : 'bg-gray-200'}`} title={`${mv}% movimiento`}>
                               <div style={{ width: `${mv}%`, background: '#032347' }} />
                             </div>
                             <span className={`mt-1 inline-block text-[10.5px] tabular-nums ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>{mv}% activo</span>
@@ -530,7 +530,7 @@ export default function Reports() {
                   </table>
                 </div>
 
-                <div className={`border-t ${darkMode ? 'border-[#222]' : 'border-gray-100'}`}>
+                <div className={`border-t ${darkMode ? 'border-[#33343c]' : 'border-gray-100'}`}>
                   <Pagination page={page} totalItems={rows.length} pageSize={pageSize}
                     onPageSizeChange={setPageSize} onPageChange={setPage} />
                 </div>
@@ -544,14 +544,14 @@ export default function Reports() {
             : (
               <>
                 <div className="relative px-4 py-4">
-                  <div className={`absolute left-[27px] top-6 bottom-6 w-px ${darkMode ? 'bg-[#222]' : 'bg-gray-200'}`} />
+                  <div className={`absolute left-[27px] top-6 bottom-6 w-px ${darkMode ? 'bg-[#33343c]' : 'bg-gray-200'}`} />
                   <div className="space-y-3.5">
                     {pagedEvents.map((evt: any, i: number) => {
                       const m = eventMeta(evt.type);
                       return (
                         <div key={evt.id || i} className="relative flex items-start gap-3">
                           <span className="relative z-10 mt-1 w-2 h-2 rounded-full flex-shrink-0 ring-4"
-                            style={{ background: m.dot, '--tw-ring-color': darkMode ? '#111' : '#fff' } as React.CSSProperties} />
+                            style={{ background: m.dot, '--tw-ring-color': darkMode ? '#1b1b1f' : '#fff' } as React.CSSProperties} />
                           <div className="min-w-0 flex-1">
                             <p className={`text-[13px] font-medium ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>{m.label}</p>
                             <p className={`text-[11.5px] mt-0.5 ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>
@@ -566,7 +566,7 @@ export default function Reports() {
                     })}
                   </div>
                 </div>
-                <div className={`border-t ${darkMode ? 'border-[#222]' : 'border-gray-100'}`}>
+                <div className={`border-t ${darkMode ? 'border-[#33343c]' : 'border-gray-100'}`}>
                   <Pagination page={page} totalItems={events.length} pageSize={pageSize}
                     onPageSizeChange={setPageSize} onPageChange={setPage} />
                 </div>
@@ -575,7 +575,7 @@ export default function Reports() {
         )}
       </div>
       <div className={`lg:hidden fixed bottom-0 inset-x-0 z-[1050] px-3 pt-2.5 pb-[calc(12px+env(safe-area-inset-bottom))] backdrop-blur-xl border-t flex gap-2
-        ${darkMode ? 'bg-[#0a0a0a]/90 border-[#222]' : 'bg-white/90 border-gray-200'}`}>
+        ${darkMode ? 'bg-[#131316]/90 border-[#33343c]' : 'bg-white/90 border-gray-200'}`}>
         <MAction darkMode={darkMode} onClick={handleExportExcel} icon={FileSpreadsheet} label="Excel" />
         <MAction darkMode={darkMode} onClick={() => handleExportPdf()} icon={Download} label="PDF" />
         <MAction darkMode={darkMode} onClick={() => handleNativeShare('pdf')} icon={Share2} label="Compartir" primary />
@@ -592,7 +592,7 @@ function Th({ children, darkMode, align, className = '' }: {
   return (
     <th className={`px-3 py-2 text-[10px] font-semibold uppercase tracking-wider border-b
       ${align === 'left' ? 'text-left' : 'text-right'} ${className}
-      ${darkMode ? 'text-gray-500 border-[#222]' : 'text-gray-400 border-gray-100'}`}>
+      ${darkMode ? 'text-gray-500 border-[#33343c]' : 'text-gray-400 border-gray-100'}`}>
       {children}
     </th>
   );
@@ -605,7 +605,7 @@ function Td({ children, darkMode, bold, align, className = '' }: {
     <td className={`px-3 py-2.5 border-b
       ${align === 'left' ? 'text-left' : 'text-right'}
       ${bold ? `font-medium ${darkMode ? 'text-gray-100' : 'text-gray-800'}` : darkMode ? 'text-gray-300' : 'text-gray-600'}
-      ${darkMode ? 'border-[#222]' : 'border-gray-50'} ${className}`}>
+      ${darkMode ? 'border-[#33343c]' : 'border-gray-50'} ${className}`}>
       {children}
     </td>
   );
@@ -626,7 +626,7 @@ function ActionBtn({ darkMode, onClick, icon: Icon, label }: {
   return (
     <button onClick={onClick}
       className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium border transition-colors
-        ${darkMode ? 'border-[#333] text-gray-200 hover:bg-[#1a1a1a]' : 'border-gray-200 text-gray-700 hover:bg-gray-50'}`}>
+        ${darkMode ? 'border-[#3c3d46] text-gray-200 hover:bg-[#232329]' : 'border-gray-200 text-gray-700 hover:bg-gray-50'}`}>
       <Icon className="w-3.5 h-3.5" /> {label}
     </button>
   );
@@ -638,7 +638,7 @@ function IconBtn({ darkMode, onClick, icon: Icon, title }: {
   return (
     <button onClick={onClick} title={title} aria-label={title}
       className={`p-2 rounded-lg border transition-colors
-        ${darkMode ? 'border-[#333] text-gray-300 hover:bg-[#1a1a1a]' : 'border-gray-200 text-gray-500 hover:bg-gray-50 hover:text-gray-800'}`}>
+        ${darkMode ? 'border-[#3c3d46] text-gray-300 hover:bg-[#232329]' : 'border-gray-200 text-gray-500 hover:bg-gray-50 hover:text-gray-800'}`}>
       <Icon className="w-4 h-4" />
     </button>
   );
@@ -652,7 +652,7 @@ function MAction({ darkMode, onClick, icon: Icon, label, primary }: {
       className={`flex-1 inline-flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-[12px] font-semibold transition-colors active:scale-[0.98]
         ${primary
           ? 'bg-[#032347] text-white'
-          : darkMode ? 'bg-[#1a1a1a] text-gray-200' : 'bg-[#f5f5f7] text-gray-800'}`}>
+          : darkMode ? 'bg-[#232329] text-gray-200' : 'bg-[#f5f5f7] text-gray-800'}`}>
       <Icon className="w-4 h-4" /> {label}
     </button>
   );

@@ -191,18 +191,18 @@ export default function LiveMap() {
         <div className="absolute right-3 top-[72px] z-[50] flex flex-col gap-2">
           <button onClick={handleLocate} title="Mi ubicación"
             className={`w-[40px] h-[40px] rounded-full flex items-center justify-center shadow-lg transition-all active:scale-95
-              ${darkMode ? 'bg-[#111]/90 backdrop-blur-xl text-gray-300 hover:bg-[#222]' : 'bg-white/90 backdrop-blur-xl text-gray-600 hover:bg-gray-50'}`}>
+              ${darkMode ? 'bg-[#1b1b1f]/90 backdrop-blur-xl text-gray-300 hover:bg-[#33343c]' : 'bg-white/90 backdrop-blur-xl text-gray-600 hover:bg-gray-50'}`}>
             <Navigation className="w-[18px] h-[18px]" />
           </button>
           <button onClick={handleRecenter} title="Centrar mapa"
             className={`w-[40px] h-[40px] rounded-full flex items-center justify-center shadow-lg transition-all active:scale-95
-              ${darkMode ? 'bg-[#111]/90 backdrop-blur-xl text-gray-300 hover:bg-[#222]' : 'bg-white/90 backdrop-blur-xl text-gray-600 hover:bg-gray-50'}`}>
+              ${darkMode ? 'bg-[#1b1b1f]/90 backdrop-blur-xl text-gray-300 hover:bg-[#33343c]' : 'bg-white/90 backdrop-blur-xl text-gray-600 hover:bg-gray-50'}`}>
             <Crosshair className="w-[18px] h-[18px]" />
           </button>
           <button onClick={handleToggleLayer} title={mapLayer === 'street' ? 'Modo satelital' : 'Modo calle'}
             className={`w-[40px] h-[40px] rounded-full flex items-center justify-center shadow-lg transition-all active:scale-95
               ${mapLayer === 'satellite' ? 'bg-[#032347] text-white'
-                : darkMode ? 'bg-[#111]/90 backdrop-blur-xl text-gray-300 hover:bg-[#222]' : 'bg-white/90 backdrop-blur-xl text-gray-600 hover:bg-gray-50'}`}>
+                : darkMode ? 'bg-[#1b1b1f]/90 backdrop-blur-xl text-gray-300 hover:bg-[#33343c]' : 'bg-white/90 backdrop-blur-xl text-gray-600 hover:bg-gray-50'}`}>
             {mapLayer === 'satellite' ? <Map className="w-[18px] h-[18px]" /> : <Satellite className="w-[18px] h-[18px]" />}
           </button>
         </div>
@@ -215,7 +215,7 @@ export default function LiveMap() {
               <input type="text" value={search} onChange={(e) => setSearch(e.target.value)}
                 placeholder="Buscar por nombre o placa..."
                 className={`w-full pl-11 pr-10 h-[42px] rounded-xl text-[13px] outline-none shadow-lg
-                  ${darkMode ? 'bg-[#111]/90 backdrop-blur-xl text-white placeholder-gray-600' : 'bg-white/90 backdrop-blur-xl text-[#1d1d1f] placeholder-gray-400'}`} />
+                  ${darkMode ? 'bg-[#1b1b1f]/90 backdrop-blur-xl text-white placeholder-gray-600' : 'bg-white/90 backdrop-blur-xl text-[#1d1d1f] placeholder-gray-400'}`} />
               {search && (
                 <button onClick={() => setSearch('')} className={`absolute right-3 top-1/2 -translate-y-1/2 z-10 ${darkMode ? 'text-gray-400 hover:text-gray-200' : 'text-gray-500 hover:text-gray-700'}`}>
                   <X className="w-4 h-4" />
@@ -224,25 +224,25 @@ export default function LiveMap() {
             </div>
             <button onClick={() => setShowGeofences(!showGeofences)}
               className={`h-[42px] w-[42px] flex items-center justify-center rounded-xl shadow-lg transition-all
-                ${showGeofences ? 'bg-[#f87203] text-white' : darkMode ? 'bg-[#111]/90 backdrop-blur-xl text-gray-400' : 'bg-white/90 backdrop-blur-xl text-gray-500'}`}>
+                ${showGeofences ? 'bg-[#f87203] text-white' : darkMode ? 'bg-[#1b1b1f]/90 backdrop-blur-xl text-gray-400' : 'bg-white/90 backdrop-blur-xl text-gray-500'}`}>
               <Shield className="w-4 h-4" />
             </button>
             <div className="relative">
               <button onClick={() => setFilterOpen(!filterOpen)}
                 className={`h-[42px] w-[42px] flex items-center justify-center rounded-xl shadow-lg transition-colors
-                  ${unitFilter !== 'all' ? 'bg-[#f87203] text-white' : darkMode ? 'bg-[#111]/90 backdrop-blur-xl text-gray-400' : 'bg-white/90 backdrop-blur-xl text-gray-500'}`}>
+                  ${unitFilter !== 'all' ? 'bg-[#f87203] text-white' : darkMode ? 'bg-[#1b1b1f]/90 backdrop-blur-xl text-gray-400' : 'bg-white/90 backdrop-blur-xl text-gray-500'}`}>
                 <Filter className="w-4 h-4" />
               </button>
               {filterOpen && (
                 <>
                   <div className="fixed inset-0 z-40" onClick={() => setFilterOpen(false)} />
                   <div className={`absolute right-0 top-full mt-2 w-48 rounded-2xl shadow-xl z-50 py-1 overflow-hidden
-                    ${darkMode ? 'bg-[#1a1a1a] border border-[#333]' : 'bg-white border border-gray-100'}`}>
+                    ${darkMode ? 'bg-[#232329] border border-[#3c3d46]' : 'bg-white border border-gray-100'}`}>
                     {filterOptions.map((f) => (
                       <button key={f.key} onClick={() => { setUnitFilter(f.key); setFilterOpen(false); }}
                         className={`w-full text-left px-4 py-2.5 text-[13px] transition-colors
                           ${unitFilter === f.key ? darkMode ? 'text-[#f87203] bg-[#f87203]/10' : 'text-[#032347] bg-[#032347]/5'
-                            : darkMode ? 'text-gray-400 hover:bg-[#222]' : 'text-gray-600 hover:bg-gray-50'}`}>
+                            : darkMode ? 'text-gray-400 hover:bg-[#33343c]' : 'text-gray-600 hover:bg-gray-50'}`}>
                         {f.label}
                       </button>
                     ))}
@@ -262,7 +262,7 @@ export default function LiveMap() {
       {/* Bottom Bar */}
       <div className={`fixed lg:absolute left-0 right-0 z-[65]`} style={{ bottom: 'max(16px, env(safe-area-inset-bottom))' }}>
         <div className={`mx-auto flex items-center justify-between px-3 sm:px-5 w-[95%] sm:w-[60%] h-[72px] rounded-full shadow-2xl
-          ${darkMode ? 'bg-[#111]/95 backdrop-blur-xl border border-[#333]' : 'bg-white/95 backdrop-blur-xl border border-gray-200 shadow-black/10'}`}>
+          ${darkMode ? 'bg-[#1b1b1f]/95 backdrop-blur-xl border border-[#3c3d46]' : 'bg-white/95 backdrop-blur-xl border border-gray-200 shadow-black/10'}`}>
           {/* Left: Share + Alarm */}
           <button onClick={() => navigate('/live-map/share')}
             className={`w-[44px] h-[44px] sm:w-[48px] sm:h-[48px] rounded-full flex items-center justify-center transition-all active:scale-95 flex-shrink-0
@@ -303,9 +303,9 @@ export default function LiveMap() {
         <>
           <div className="fixed inset-0 z-[70]" onClick={() => { setPanelOpen(false); setSelectedUnit(null); }} />
           <div className={`fixed lg:absolute bottom-[88px] left-1/2 -translate-x-1/2 z-[80] w-[92%] sm:w-[360px] max-h-[55vh] rounded-2xl overflow-hidden flex flex-col shadow-2xl
-            ${darkMode ? 'bg-[#111] border border-[#333]' : 'bg-white border border-gray-200'}`}>
+            ${darkMode ? 'bg-[#1b1b1f] border border-[#3c3d46]' : 'bg-white border border-gray-200'}`}>
             {/* Header */}
-            <div className={`flex items-center justify-between px-4 py-3 border-b ${darkMode ? 'border-[#222]' : 'border-gray-100'}`}>
+            <div className={`flex items-center justify-between px-4 py-3 border-b ${darkMode ? 'border-[#33343c]' : 'border-gray-100'}`}>
               <div>
                 <h2 className={`text-[14px] font-semibold ${darkMode ? 'text-white' : 'text-[#1d1d1f]'}`}>
                   {selectedUnit ? selectedUnit.name : 'Flota'}
@@ -318,23 +318,23 @@ export default function LiveMap() {
               </div>
               <button onClick={() => { setPanelOpen(false); setSelectedUnit(null); }}
                 className={`w-7 h-7 rounded-full flex items-center justify-center transition-colors
-                  ${darkMode ? 'hover:bg-[#222] text-gray-400' : 'hover:bg-gray-100 text-gray-500'}`}>
+                  ${darkMode ? 'hover:bg-[#33343c] text-gray-400' : 'hover:bg-gray-100 text-gray-500'}`}>
                 <X className="w-3.5 h-3.5" />
               </button>
             </div>
 
             {/* Search */}
             {!selectedUnit && (
-              <div className={`px-3 py-2 border-b ${darkMode ? 'border-[#222]' : 'border-gray-100'}`}>
+              <div className={`px-3 py-2 border-b ${darkMode ? 'border-[#33343c]' : 'border-gray-100'}`}>
                 <div className="relative">
                   <Search className={`absolute left-3 top-1/2 -translate-y-1/2 w-[18px] h-[18px] pointer-events-none z-10 ${darkMode ? 'text-gray-300' : 'text-gray-500'}`} />
                   <input type="text" value={search} onChange={(e) => setSearch(e.target.value)}
                     placeholder="Buscar vehículo..."
                     className={`w-full pl-11 pr-9 h-[38px] rounded-xl text-[13px] outline-none transition-all
-                      ${darkMode ? 'bg-[#1a1a1a] text-white placeholder-gray-600 focus:ring-2 focus:ring-[#f87203]/30' : 'bg-[#f5f5f7] text-[#1d1d1f] placeholder-gray-400 focus:ring-2 focus:ring-[#032347]/15'}`} />
+                      ${darkMode ? 'bg-[#232329] text-white placeholder-gray-600 focus:ring-2 focus:ring-[#f87203]/30' : 'bg-[#f5f5f7] text-[#1d1d1f] placeholder-gray-400 focus:ring-2 focus:ring-[#032347]/15'}`} />
                   {search && (
                     <button onClick={() => setSearch('')} className={`absolute right-2.5 top-1/2 -translate-y-1/2 z-10 p-0.5 rounded-full transition-colors
-                      ${darkMode ? 'text-gray-600 hover:text-gray-300 hover:bg-[#222]' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-200'}`}>
+                      ${darkMode ? 'text-gray-600 hover:text-gray-300 hover:bg-[#33343c]' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-200'}`}>
                       <X className="w-3.5 h-3.5" />
                     </button>
                   )}
@@ -344,7 +344,7 @@ export default function LiveMap() {
 
             {/* Filter spinner (when showing list) */}
             {!selectedUnit && (
-              <div className={`flex items-center gap-2 px-3 py-2 border-b ${darkMode ? 'border-[#222]' : 'border-gray-100'}`}>
+              <div className={`flex items-center gap-2 px-3 py-2 border-b ${darkMode ? 'border-[#33343c]' : 'border-gray-100'}`}>
                 <SpinnerSelect
                   prefix="Filtrar:"
                   options={filterOptions}
@@ -363,7 +363,7 @@ export default function LiveMap() {
                 filteredUnits.slice(0, 10).map((u) => (
                   <button key={u.id} onClick={() => { setSelectedUnit(u); setDetailTab('info'); }}
                     className={`w-full flex items-center gap-2.5 px-4 py-2.5 transition-colors text-left border-b
-                      ${darkMode ? 'border-[#222] hover:bg-[#1a1a1a]' : 'border-gray-50 hover:bg-gray-50'}`}>
+                      ${darkMode ? 'border-[#33343c] hover:bg-[#232329]' : 'border-gray-50 hover:bg-gray-50'}`}>
                     <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: markerColor(u.status) }} />
                     <div className="min-w-0 flex-1">
                       <p className={`text-[12px] font-medium ${darkMode ? 'text-white' : 'text-[#1d1d1f]'} truncate`}>{u.name}</p>
@@ -468,7 +468,7 @@ function SelectedUnitDetail({ unit, detailTab, setDetailTab, darkMode, onBack, o
         {(['info', 'bitacora'] as DetailTab[]).map((tab) => (
           <button key={tab} onClick={() => setDetailTab(tab)}
             className={`px-3 py-1.5 rounded-full text-[11px] font-medium transition-all
-              ${detailTab === tab ? 'bg-[#032347] text-white' : darkMode ? 'bg-[#1a1a1a] text-gray-400' : 'bg-[#f0f0f0] text-gray-500'}`}>
+              ${detailTab === tab ? 'bg-[#032347] text-white' : darkMode ? 'bg-[#232329] text-gray-400' : 'bg-[#f0f0f0] text-gray-500'}`}>
             {tab === 'info' ? 'Hoy' : 'Bitácora'}
           </button>
         ))}
@@ -487,7 +487,7 @@ function SelectedUnitDetail({ unit, detailTab, setDetailTab, darkMode, onBack, o
               )}
             </div>
             {loadingRoute ? (
-              <div className={`h-[170px] rounded-xl flex items-center justify-center ${darkMode ? 'bg-[#1a1a1a]' : 'bg-[#f5f5f7]'}`}>
+              <div className={`h-[170px] rounded-xl flex items-center justify-center ${darkMode ? 'bg-[#232329]' : 'bg-[#f5f5f7]'}`}>
                 <Loader2 className={`w-5 h-5 animate-spin ${darkMode ? 'text-gray-500' : 'text-gray-400'}`} />
               </div>
             ) : routePositions.length > 1 && lastRoutePos ? (
@@ -512,7 +512,7 @@ function SelectedUnitDetail({ unit, detailTab, setDetailTab, darkMode, onBack, o
               </>
             ) : (
               <div className={`h-[80px] rounded-xl flex items-center justify-center text-[12px]
-                ${darkMode ? 'bg-[#1a1a1a] text-gray-500' : 'bg-[#f5f5f7] text-gray-400'}`}>
+                ${darkMode ? 'bg-[#232329] text-gray-500' : 'bg-[#f5f5f7] text-gray-400'}`}>
                 {unit.gpsDevice ? 'Sin trayecto registrado hoy' : 'Sin GPS vinculado'}
               </div>
             )}
@@ -530,7 +530,7 @@ function SelectedUnitDetail({ unit, detailTab, setDetailTab, darkMode, onBack, o
           </div>
 
           {/* Today stats grid */}
-          <div className={`rounded-xl p-3 ${darkMode ? 'bg-[#1a1a1a]' : 'bg-[#f5f5f7]'}`}>
+          <div className={`rounded-xl p-3 ${darkMode ? 'bg-[#232329]' : 'bg-[#f5f5f7]'}`}>
             <p className={`text-[10px] font-medium mb-2 ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>Estadísticas de hoy</p>
             <div className="grid grid-cols-2 gap-x-4 gap-y-2.5">
               <div>
@@ -593,7 +593,7 @@ function SelectedUnitDetail({ unit, detailTab, setDetailTab, darkMode, onBack, o
           ) : (
             <div className="space-y-1.5 max-h-[30vh] overflow-y-auto">
               {events.slice(0, 20).map((ev: any) => (
-                <div key={ev.id} className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl ${darkMode ? 'bg-[#1a1a1a]' : 'bg-[#f5f5f7]'}`}>
+                <div key={ev.id} className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl ${darkMode ? 'bg-[#232329]' : 'bg-[#f5f5f7]'}`}>
                   <span className="text-[12px]">{eventIconMap[ev.type] || '⚪'}</span>
                   <div className="flex-1 min-w-0">
                     <p className={`text-[11px] font-medium ${darkMode ? 'text-white' : 'text-[#1d1d1f]'}`}>
@@ -612,7 +612,7 @@ function SelectedUnitDetail({ unit, detailTab, setDetailTab, darkMode, onBack, o
           )}
           {events.length > 20 && (
             <button onClick={() => onNavigate(`/units/${unit.id}`)}
-              className={`w-full py-2 text-[11px] font-medium rounded-xl ${darkMode ? 'bg-[#1a1a1a] text-gray-400' : 'bg-[#f0f0f0] text-gray-500'}`}>
+              className={`w-full py-2 text-[11px] font-medium rounded-xl ${darkMode ? 'bg-[#232329] text-gray-400' : 'bg-[#f0f0f0] text-gray-500'}`}>
               Ver todos ({events.length})
             </button>
           )}

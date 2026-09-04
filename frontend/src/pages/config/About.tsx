@@ -8,10 +8,10 @@ const APP_VERSION = '1.4.0';
 export default function About() {
   const { darkMode } = useLayout();
 
-  const card = `${darkMode ? 'bg-[#111]' : 'bg-white'} rounded-2xl p-5`;
+  const card = `${darkMode ? 'bg-[#1b1b1f]' : 'bg-white'} rounded-2xl p-5`;
 
   const Row = ({ icon, label, value, last }: { icon: React.ReactNode; label: string; value: string; last?: boolean }) => (
-    <div className={`flex items-center gap-3 py-2.5 ${!last ? (darkMode ? 'border-b border-[#222]/50' : 'border-b border-gray-100') : ''}`}>
+    <div className={`flex items-center gap-3 py-2.5 ${!last ? (darkMode ? 'border-b border-[#33343c]/50' : 'border-b border-gray-100') : ''}`}>
       <div className={darkMode ? 'text-gray-500' : 'text-gray-400'}>{icon}</div>
       <div className="flex-1">
         <p className={`text-xs ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>{label}</p>

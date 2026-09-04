@@ -37,7 +37,7 @@ export default function Pagination({ page, totalItems, pageSize, onPageSizeChang
           onClick={() => onPageChange(Math.max(1, page - 1))}
           disabled={page <= 1}
           className={`p-1.5 rounded-lg transition-colors disabled:opacity-30
-            ${darkMode ? 'hover:bg-[#1a1a1a] text-gray-400' : 'hover:bg-gray-100 text-gray-500'}`}
+            ${darkMode ? 'hover:bg-[#232329] text-gray-400' : 'hover:bg-gray-100 text-gray-500'}`}
         >
           <ChevronLeft className="w-4 h-4" />
         </button>
@@ -48,7 +48,7 @@ export default function Pagination({ page, totalItems, pageSize, onPageSizeChang
           onClick={() => onPageChange(Math.min(totalPages, page + 1))}
           disabled={page >= totalPages}
           className={`p-1.5 rounded-lg transition-colors disabled:opacity-30
-            ${darkMode ? 'hover:bg-[#1a1a1a] text-gray-400' : 'hover:bg-gray-100 text-gray-500'}`}
+            ${darkMode ? 'hover:bg-[#232329] text-gray-400' : 'hover:bg-gray-100 text-gray-500'}`}
         >
           <ChevronRight className="w-4 h-4" />
         </button>
@@ -60,7 +60,7 @@ export default function Pagination({ page, totalItems, pageSize, onPageSizeChang
         <button
           onClick={() => setDropdownOpen(!dropdownOpen)}
           className={`flex items-center gap-1 px-2.5 py-1 text-[11px] font-medium rounded-lg transition-colors
-            ${darkMode ? 'bg-[#1a1a1a] text-gray-300 hover:bg-[#222]' : 'bg-[#f5f5f7] text-gray-600 hover:bg-gray-200'}`}
+            ${darkMode ? 'bg-[#232329] text-gray-300 hover:bg-[#33343c]' : 'bg-[#f5f5f7] text-gray-600 hover:bg-gray-200'}`}
         >
           {pageSize}
           <svg className={`w-3 h-3 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} viewBox="0 0 12 12" fill="currentColor">
@@ -71,7 +71,7 @@ export default function Pagination({ page, totalItems, pageSize, onPageSizeChang
           <>
             <div className="fixed inset-0 z-40" onClick={() => setDropdownOpen(false)} />
             <div className={`absolute left-0 bottom-full mb-1 w-16 rounded-xl shadow-xl z-50 py-1 overflow-hidden
-              ${darkMode ? 'bg-[#1a1a1a] border border-[#333]' : 'bg-white border border-gray-100'}`}>
+              ${darkMode ? 'bg-[#232329] border border-[#3c3d46]' : 'bg-white border border-gray-100'}`}>
               {PAGE_SIZES.map((s) => (
                 <button
                   key={s}
@@ -79,7 +79,7 @@ export default function Pagination({ page, totalItems, pageSize, onPageSizeChang
                   className={`w-full text-center px-3 py-2 text-[12px] transition-colors
                     ${pageSize === s
                       ? `${darkMode ? 'text-[#f87203] bg-[#f87203]/10' : 'text-[#032347] bg-[#032347]/5'}`
-                      : `${darkMode ? 'text-gray-400 hover:bg-[#222]' : 'text-gray-600 hover:bg-gray-50'}`
+                      : `${darkMode ? 'text-gray-400 hover:bg-[#33343c]' : 'text-gray-600 hover:bg-gray-50'}`
                     }`}
                 >
                   {s}

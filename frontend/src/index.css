@@ -20,6 +20,24 @@ body {
   letter-spacing: -0.01em;
 }
 
+/* Scroll en móvil: el gesto debe quedarse en el contenedor correcto
+   y no "pegarse" en tablas/scrolls horizontales internos. */
+html,
+body {
+  overscroll-behavior-y: none;
+}
+
+main {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+}
+
+.overflow-x-auto,
+.overflow-x-scroll {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+}
+
 ::-webkit-scrollbar {
   width: 5px;
 }
@@ -70,7 +88,7 @@ body {
 }
 
 .dark .leaflet-container {
-  background: #111;
+  background: #1b1b1f;
 }
 
 .leaflet-popup-content-wrapper {

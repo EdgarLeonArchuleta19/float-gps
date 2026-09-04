@@ -100,7 +100,7 @@ export default function Notifications() {
           onChange={(k) => { setFilter(k as EventFilter); setPage(1); }}
         />
 
-        <div className="h-5 w-px bg-gray-200 dark:bg-[#222]" />
+        <div className="h-5 w-px bg-gray-200 dark:bg-[#33343c]" />
 
         <div className="flex items-center gap-3">
           <DatePicker value={dateFrom} onChange={(v) => { setDateFrom(v); setPage(1); }} />
@@ -114,7 +114,7 @@ export default function Notifications() {
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#032347]" />
         </div>
       ) : events.length === 0 ? (
-        <div className={`${darkMode ? 'bg-[#111]' : 'bg-white'} rounded-2xl text-center py-16 ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+        <div className={`${darkMode ? 'bg-[#1b1b1f]' : 'bg-white'} rounded-2xl text-center py-16 ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>
           <Bell className="w-10 h-10 mx-auto mb-2 opacity-40" />
           <p>No hay notificaciones</p>
         </div>
@@ -123,7 +123,7 @@ export default function Notifications() {
           <div className="space-y-2">
             {paginated.map((evt: any, i: number) => (
               <div key={evt.id || i}
-                className={`${darkMode ? 'bg-[#111] hover:bg-[#1a1a1a]' : 'bg-white hover:bg-[#f5f5f7]'} rounded-2xl px-4 py-3 flex items-start gap-3 transition-all cursor-default`}>
+                className={`${darkMode ? 'bg-[#1b1b1f] hover:bg-[#232329]' : 'bg-white hover:bg-[#f5f5f7]'} rounded-2xl px-4 py-3 flex items-start gap-3 transition-all cursor-default`}>
                 <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${eventBg(evt.type)}`}>
                   {eventIcon(evt.type)}
                 </div>

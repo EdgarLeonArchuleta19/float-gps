@@ -26,7 +26,7 @@ export default function Preferences() {
     <div className="space-y-5 max-w-3xl">
       <SettingsPageHeader title="Preferencias" subtitle="Preferencias generales de la aplicación" />
 
-      <div className={`${darkMode ? 'bg-[#111]' : 'bg-white'} rounded-2xl p-5`}>
+      <div className={`${darkMode ? 'bg-[#1b1b1f]' : 'bg-white'} rounded-2xl p-5`}>
         <div className="flex items-center gap-3 mb-4">
           <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${darkMode ? 'bg-[#8b5cf6]/15' : 'bg-[#8b5cf6]/10'}`}>
             <SlidersHorizontal className={`w-5 h-5 ${darkMode ? 'text-[#8b5cf6]' : 'text-[#8b5cf6]'}`} />
@@ -59,7 +59,7 @@ export default function Preferences() {
         </div>
       </div>
 
-      <div className={`${darkMode ? 'bg-[#111]' : 'bg-white'} rounded-2xl p-5`}>
+      <div className={`${darkMode ? 'bg-[#1b1b1f]' : 'bg-white'} rounded-2xl p-5`}>
         <div className="flex items-center gap-2 mb-4">
           <MapIcon className={`w-4 h-4 ${darkMode ? 'text-[#f87203]' : 'text-[#032347]'}`} />
           <h2 className={`text-[15px] font-semibold ${darkMode ? 'text-[#f5f5f7]' : 'text-[#1d1d1f]'}`}>Vista por defecto del mapa</h2>
