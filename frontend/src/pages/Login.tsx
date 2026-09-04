@@ -85,10 +85,15 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const formRef = React.useRef<HTMLDivElement>(null);
   const { login } = useAuth();
   const navigate = useNavigate();
   const { darkMode } = useLayout();
   const isDark = darkMode;
+
+  React.useEffect(() => {
+    if (formRef.current) formRef.current.scrollTo({ top: 0, left: 0 });
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -132,7 +137,7 @@ export default function Login() {
         <GpsSignal isDark={isDark} />
 
         {/* Form centered */}
-        <div className="flex-1 flex flex-col items-center justify-start sm:justify-center px-6 lg:px-12 pt-10 sm:pt-0 pb-6 overflow-y-auto">
+        <div ref={formRef} className="flex-1 flex flex-col items-center justify-start sm:justify-center px-6 lg:px-12 pt-10 sm:pt-0 pb-6 overflow-y-auto">
           <div className="w-full max-w-[360px] my-auto">
             {/* Mobile logo */}
             <div className="lg:hidden flex justify-center mb-8 animate-fade-in-up">
