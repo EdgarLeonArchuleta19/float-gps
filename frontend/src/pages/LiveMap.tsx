@@ -12,6 +12,7 @@ import { useLayout } from '../context/LayoutContext';
 import { useToast } from '../context/ToastContext';
 import SpinnerSelect from '../components/SpinnerSelect';
 import { Map as MapLibreInstance, Marker } from 'maplibre-gl';
+import { toLngLat } from '../components/map/geo';
 
 type UnitFilter = 'all' | 'vehicles' | 'machines' | 'moving' | 'stopped';
 type DetailTab = 'info' | 'bitacora';
@@ -132,7 +133,7 @@ export default function LiveMap() {
         const map = mapInstanceRef.current;
         if (!map) return;
         const latlng: [number, number] = [pos.coords.latitude, pos.coords.longitude];
-        map.flyTo({ center: latlng, zoom: 15 });
+        map.flyTo({ center: toLngLat(latlng), zoom: 15 });
 
         userMarkerRef.current?.remove();
 
@@ -156,7 +157,9 @@ export default function LiveMap() {
         wrap.appendChild(dotEl);
         wrap.appendChild(label);
 
-        userMarkerRef.current = new Marker({ element: wrap }).setLngLat(latlng).addTo(map);
+        userMarkerRef.current = new Marker({ element: wrap })
+          .setLngLat(toLngLat(latlng))
+          .addTo(map);
       },
       () => {},
       { enableHighAccuracy: true, timeout: 8000 }
@@ -165,7 +168,7 @@ export default function LiveMap() {
 
   const handleRecenter = useCallback(() => {
     if (!mapInstanceRef.current) return;
-    mapInstanceRef.current.flyTo({ center: [24.7994, -107.3940], zoom: 12 });
+    mapInstanceRef.current.flyTo({ center: toLngLat([24.7994, -107.3940]), zoom: 12 });
   }, []);
 
   const handleToggleLayer = useCallback(() => {

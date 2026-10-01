@@ -7,7 +7,16 @@ import {
   StyleSpecification,
 } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import { CircleSpec, EMPTY_GEOJSON, RouteSpec, circlesGeoJson, routesGeoJson } from './geo';
+import {
+  CircleSpec,
+  EMPTY_GEOJSON,
+  RouteSpec,
+  circlesGeoJson,
+  isValidPoint,
+  routesGeoJson,
+  toLngLat,
+  validPoints,
+} from './geo';
 
 export type { CircleSpec };
 export type MapRoute = RouteSpec;
@@ -191,9 +200,11 @@ export default function MapLibreMap({
     if (!map.getSource(ROUTE_LAYER)) return;
 
     const all: MapRoute[] = [];
-    if (data.polyline.length > 1) all.push({ path: data.polyline, color: '#3B82F6' });
+    if (validPoints(data.polyline).length > 1) {
+      all.push({ path: data.polyline, color: '#3B82F6' });
+    }
     data.polylines.forEach((r) => {
-      if (r.path.length > 1) all.push(r);
+      if (validPoints(r.path).length > 1) all.push(r);
     });
 
     (map.getSource(ROUTE_LAYER) as GeoJSONSource | undefined)?.setData(
@@ -210,10 +221,12 @@ export default function MapLibreMap({
     routeMarkersRef.current = [];
 
     all.filter((r) => !r.dashed).forEach((route) => {
+      const path = validPoints(route.path);
+      if (path.length < 2) return;
       routeMarkersRef.current.push(
-        new Marker({ element: dot('#22C55E') }).setLngLat(route.path[0]).addTo(map),
+        new Marker({ element: dot('#22C55E') }).setLngLat(toLngLat(path[0])).addTo(map),
         new Marker({ element: dot('#EF4444') })
-          .setLngLat(route.path[route.path.length - 1])
+          .setLngLat(toLngLat(path[path.length - 1]))
           .addTo(map),
       );
     });
@@ -224,10 +237,10 @@ export default function MapLibreMap({
         ...data.polyline,
         ...data.polylines.flatMap((r) => r.path),
         ...data.circles.map((c) => c.center),
-      ];
+      ].filter(isValidPoint);
       if (points.length > 0) {
         const bounds = new LngLatBounds();
-        points.forEach((p) => bounds.extend(p));
+        points.forEach((p) => bounds.extend(toLngLat(p)));
         map.fitBounds(bounds, { padding: 40, maxZoom: 15, duration: 0 });
       }
     }
@@ -236,7 +249,9 @@ export default function MapLibreMap({
   // Marcadores de unidad: son elementos DOM, sobreviven al cambio de estilo.
   const paintMarkers = (map: MapLibreInstance, list: MapMarker[]) => {
     markersRef.current.forEach((m) => m.remove());
-    markersRef.current = list.map((m) => {
+    markersRef.current = list
+      .filter((m) => isValidPoint(m.position))
+      .map((m) => {
       const el = m.vehicleType === 'machine' ? pin(m.color, MACHINE_SVG) : pin(m.color, VEHICLE_SVG);
 
       if (m.onClick) {
@@ -252,8 +267,10 @@ export default function MapLibreMap({
         'white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,0.2);pointer-events:none;';
       el.appendChild(label);
 
-      return new Marker({ element: el, anchor: 'bottom' }).setLngLat(m.position).addTo(map);
-    });
+      return new Marker({ element: el, anchor: 'bottom' })
+        .setLngLat(toLngLat(m.position))
+        .addTo(map);
+      });
   };
 
   // Creacion del mapa (una sola vez)
@@ -263,7 +280,7 @@ export default function MapLibreMap({
     const map = new MapLibreInstance({
       container: containerRef.current,
       style: styleUrl,
-      center,
+      center: isValidPoint(center) ? toLngLat(center) : toLngLat(CULIACAN),
       zoom,
     });
 

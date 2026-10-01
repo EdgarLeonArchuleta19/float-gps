@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Save, Loader2, MapPin, Search, X } from 'lucide-react';
 import { GeoJSONSource, Map as MapLibreInstance, MapMouseEvent, Marker } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import { circlesGeoJson } from '../components/map/geo';
+import { circlesGeoJson, toLngLat } from '../components/map/geo';
 import { api } from '../services/api';
 import { useToast } from '../context/ToastContext';
 import { useLayout } from '../context/LayoutContext';
@@ -102,7 +102,7 @@ export default function AddGeofence() {
     const map = new MapLibreInstance({
       container: mapDivRef.current,
       style: darkMode ? STYLE_URL.dark : STYLE_URL.light,
-      center: [DEFAULT_CENTER.lat, DEFAULT_CENTER.lng],
+      center: toLngLat([DEFAULT_CENTER.lat, DEFAULT_CENTER.lng]),
       zoom: 13,
     });
 
@@ -110,7 +110,7 @@ export default function AddGeofence() {
     el.style.cssText = `width:18px;height:18px;border-radius:50%;background:${colorRef.current};border:3px solid #fff;box-shadow:0 1px 6px rgba(0,0,0,0.4);cursor:grab;`;
 
     const marker = new Marker({ element: el, draggable: true })
-      .setLngLat([DEFAULT_CENTER.lat, DEFAULT_CENTER.lng])
+      .setLngLat(toLngLat([DEFAULT_CENTER.lat, DEFAULT_CENTER.lng]))
       .addTo(map);
 
     marker.on('dragend', () => {
@@ -159,13 +159,13 @@ export default function AddGeofence() {
     const marker = markerRef.current;
     if (!map || !marker) return;
 
-    marker.setLngLat([center.lat, center.lng]);
+    marker.setLngLat(toLngLat([center.lat, center.lng]));
     colorRef.current = color;
     marker.getElement().style.background = color;
     paintCircle(map);
 
     if (flyOnSyncRef.current) {
-      map.flyTo({ center: [center.lat, center.lng], zoom: 15 });
+      map.flyTo({ center: toLngLat([center.lat, center.lng]), zoom: 15 });
       flyOnSyncRef.current = false;
     }
   }, [center, diameter, color, ready]);
@@ -189,7 +189,7 @@ export default function AddGeofence() {
   const selectResult = (r: NominatimResult) => {
     const c = { lat: parseFloat(r.lat), lng: parseFloat(r.lon) };
     setCenter(c);
-    mapRef.current?.jumpTo({ center: [c.lat, c.lng], zoom: 16 });
+    mapRef.current?.jumpTo({ center: toLngLat([c.lat, c.lng]), zoom: 16 });
     setResults([]);
     setSearchOpen(false);
     setQuery(r.display_name.split(',')[0]);
