@@ -11,7 +11,6 @@ import eventRoutes from './routes/event.routes';
 import geofenceRoutes from './routes/geofence.routes';
 import reportRoutes from './routes/report.routes';
 import userRoutes from './routes/user.routes';
-import { trackerState } from './tracker/server';
 
 const app = express();
 
@@ -54,10 +53,6 @@ app.post('/api/commands/engine-stop', authRequired, (req, res) => {
     message: 'Comando de paro de motor enviado correctamente',
     command: { unitId, unitType, type: 'ENGINE_STOP', timestamp: new Date() },
   });
-});
-
-app.get('/api/tracker/status', authRequired, (_req, res) => {
-  res.json(trackerState);
 });
 
 app.use(errorHandler);

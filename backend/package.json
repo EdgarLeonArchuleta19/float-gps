@@ -8,7 +8,13 @@
     "build": "tsc",
     "build:vercel": "tsc && prisma generate",
     "start": "node dist/index.js",
-    "seed": "ts-node prisma/seed.ts"
+    "seed": "ts-node prisma/seed.ts",
+    "test": "ts-node --transpile-only scripts/test-gt06.ts",
+    "tracker": "ts-node --transpile-only scripts/tracker.ts",
+    "tracker:local": "ts-node --transpile-only scripts/tracker.ts --force-local",
+    "tracker:api": "ts-node --transpile-only scripts/tracker.ts --api",
+    "simulate": "ts-node --transpile-only scripts/simulate-gt06.ts",
+    "typecheck:scripts": "tsc -p tsconfig.scripts.json --noEmit"
   },
   "dependencies": {
     "@prisma/client": "^5.19.0",

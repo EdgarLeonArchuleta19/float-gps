@@ -7,6 +7,6 @@ export const config = {
   databaseUrl: process.env.DATABASE_URL,
   jwtSecret: process.env.JWT_SECRET || 'demo-jwt-secret',
   googleMapsApiKey: process.env.VITE_GOOGLE_MAPS_API_KEY || '',
-  trackerPort: parseInt(process.env.TRACKER_PORT || '12650', 10),
+  trackerPort: parseInt(process.env.TRACKER_PORT || '5001', 10),
   trackerHost: process.env.TRACKER_HOST || '0.0.0.0',
 };
