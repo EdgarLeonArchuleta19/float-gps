@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Shield, Users, Plus, Pencil, Trash2 } from 'lucide-react';
-import LeafletMap from '../components/map/LeafletMap';
+import MapLibreMap from '../components/map/MapLibreMap';
 import { useApi } from '../hooks/useApi';
 import { api } from '../services/api';
 import { Geofence } from '../types';
@@ -67,9 +67,9 @@ export default function Geofences() {
 
       <div className="rounded-2xl overflow-hidden" style={{ height: '350px' }}>
         {circles.length > 0 ? (
-          <LeafletMap dark={darkMode} circles={circles} center={[24.7994, -107.3940]} zoom={12} height="100%" fitBounds />
+          <MapLibreMap dark={darkMode} circles={circles} center={[24.7994, -107.3940]} zoom={12} height="100%" fitBounds />
         ) : (
-          <LeafletMap dark={darkMode} center={[24.7994, -107.3940]} zoom={12} height="100%" />
+          <MapLibreMap dark={darkMode} center={[24.7994, -107.3940]} zoom={12} height="100%" />
         )}
       </div>
 

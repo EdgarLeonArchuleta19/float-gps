@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Save, Loader2, MapPin, Search, X } from 'lucide-react';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
+import { GeoJSONSource, Map as MapLibreInstance, MapMouseEvent, Marker } from 'maplibre-gl';
+import 'maplibre-gl/dist/maplibre-gl.css';
+import { circlesGeoJson } from '../components/map/geo';
 import { api } from '../services/api';
 import { useToast } from '../context/ToastContext';
 import { useLayout } from '../context/LayoutContext';
@@ -10,6 +11,11 @@ import { useLayout } from '../context/LayoutContext';
 const GEOFENCE_TYPES = ['Trabajo', 'Almacén', 'Base', 'Zona restringida', 'Otro'];
 const COLORS = ['#3B82F6', '#22C55E', '#EF4444', '#F59E0B', '#8B5CF6', '#EC4899', '#f87203', '#06B6D4'];
 const DEFAULT_CENTER = { lat: 24.7994, lng: -107.3940 };
+const STYLE_URL = {
+  light: 'https://tiles.openfreemap.org/styles/positron',
+  dark: 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',
+};
+const CIRCLE_LAYER = 'draft-geofence';
 
 interface NominatimResult {
   lat: string;
@@ -38,11 +44,20 @@ export default function AddGeofence() {
   const [searchOpen, setSearchOpen] = useState(false);
 
   const mapDivRef = useRef<HTMLDivElement | null>(null);
-  const mapRef = useRef<L.Map | null>(null);
-  const tileRef = useRef<L.TileLayer | null>(null);
-  const markerRef = useRef<L.Marker | null>(null);
-  const circleRef = useRef<L.Circle | null>(null);
+  const mapRef = useRef<MapLibreInstance | null>(null);
+  const markerRef = useRef<Marker | null>(null);
   const flyOnSyncRef = useRef(false);
+  const colorRef = useRef(color);
+  const [ready, setReady] = useState(false);
+
+  // Radio mostrado: la UI guarda el diametro completo.
+  const radius = Math.max((parseFloat(diameter) || 0) / 2, 10);
+
+  const paintCircle = (map: MapLibreInstance) => {
+    (map.getSource(CIRCLE_LAYER) as GeoJSONSource | undefined)?.setData(
+      circlesGeoJson([{ center: [center.lat, center.lng], radius, color }]),
+    );
+  };
 
   useEffect(() => {
     if (isEdit) {
@@ -62,88 +77,98 @@ export default function AddGeofence() {
     }
   }, [id, isEdit]);
 
+  // Capa del circulo en edicion. MapLibre no tiene circulos, se usa un poligono.
+  const addCircleLayer = (map: MapLibreInstance) => {
+    if (map.getSource(CIRCLE_LAYER)) return;
+    map.addSource(CIRCLE_LAYER, { type: 'geojson', data: circlesGeoJson([]) });
+    map.addLayer({
+      id: CIRCLE_LAYER,
+      type: 'fill',
+      source: CIRCLE_LAYER,
+      paint: { 'fill-color': ['get', 'color'], 'fill-opacity': 0.15 },
+    });
+    map.addLayer({
+      id: `${CIRCLE_LAYER}-line`,
+      type: 'line',
+      source: CIRCLE_LAYER,
+      paint: { 'line-color': ['get', 'color'], 'line-width': 2 },
+    });
+  };
+
   // Init map once
   useEffect(() => {
     if (!mapDivRef.current) return;
-    const map = L.map(mapDivRef.current, { zoomControl: false, attributionControl: false });
-    map.setView([DEFAULT_CENTER.lat, DEFAULT_CENTER.lng], 13);
 
-    const makeIcon = (col: string) => L.divIcon({
-      className: '',
-      html: `<div style="width:18px;height:18px;border-radius:50%;background:${col};border:3px solid #fff;box-shadow:0 1px 6px rgba(0,0,0,0.4);"></div>`,
-      iconSize: [24, 24],
-      iconAnchor: [12, 12],
+    const map = new MapLibreInstance({
+      container: mapDivRef.current,
+      style: darkMode ? STYLE_URL.dark : STYLE_URL.light,
+      center: [DEFAULT_CENTER.lat, DEFAULT_CENTER.lng],
+      zoom: 13,
     });
 
-    const circle = L.circle([DEFAULT_CENTER.lat, DEFAULT_CENTER.lng], {
-      radius: 50,
-      color: color,
-      fillColor: color,
-      fillOpacity: 0.15,
-      weight: 2,
-    }).addTo(map);
-    circleRef.current = circle;
+    const el = document.createElement('div');
+    el.style.cssText = `width:18px;height:18px;border-radius:50%;background:${colorRef.current};border:3px solid #fff;box-shadow:0 1px 6px rgba(0,0,0,0.4);cursor:grab;`;
 
-    const marker = L.marker([DEFAULT_CENTER.lat, DEFAULT_CENTER.lng], {
-      icon: makeIcon(color),
-      draggable: true,
-    }).addTo(map);
-    markerRef.current = marker;
+    const marker = new Marker({ element: el, draggable: true })
+      .setLngLat([DEFAULT_CENTER.lat, DEFAULT_CENTER.lng])
+      .addTo(map);
 
     marker.on('dragend', () => {
-      const p = marker.getLatLng();
+      const p = marker.getLngLat();
       setCenter({ lat: p.lat, lng: p.lng });
     });
 
-    map.on('click', (e: L.LeafletMouseEvent) => {
-      setCenter({ lat: e.latlng.lat, lng: e.latlng.lng });
+    map.on('click', (e: MapMouseEvent) => setCenter({ lat: e.lngLat.lat, lng: e.lngLat.lng }));
+
+    map.on('load', () => {
+      addCircleLayer(map);
+      paintCircle(map);
+      setReady(true);
     });
 
+    markerRef.current = marker;
     mapRef.current = map;
 
     return () => {
+      marker.remove();
       map.remove();
       mapRef.current = null;
       markerRef.current = null;
-      circleRef.current = null;
-      tileRef.current = null;
+      setReady(false);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Tiles follow theme
+  // El tema cambia el estilo completo, y setStyle borra las capas propias
   useEffect(() => {
     const map = mapRef.current;
-    if (!map) return;
-    if (tileRef.current) map.removeLayer(tileRef.current);
-    const url = darkMode
-      ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
-      : 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
-    tileRef.current = L.tileLayer(url, { maxZoom: 19 }).addTo(map);
-  }, [darkMode]);
+    if (!map || !ready) return;
+    setReady(false);
+
+    map.once('styledata', () => {
+      addCircleLayer(map);
+      paintCircle(map);
+      setReady(true);
+    });
+    map.setStyle(darkMode ? STYLE_URL.dark : STYLE_URL.light);
+  }, [darkMode, ready]);
 
   // Sync center / diameter / color -> map objects
   useEffect(() => {
     const map = mapRef.current;
     const marker = markerRef.current;
-    const circle = circleRef.current;
-    if (!map || !marker || !circle) return;
-    const ll: L.LatLngTuple = [center.lat, center.lng];
-    marker.setLatLng(ll);
-    circle.setLatLng(ll);
-    circle.setRadius(Math.max((parseFloat(diameter) || 0) / 2, 10));
-    circle.setStyle({ color, fillColor: color });
-    marker.setIcon(L.divIcon({
-      className: '',
-      html: `<div style="width:18px;height:18px;border-radius:50%;background:${color};border:3px solid #fff;box-shadow:0 1px 6px rgba(0,0,0,0.4);"></div>`,
-      iconSize: [24, 24],
-      iconAnchor: [12, 12],
-    }));
+    if (!map || !marker) return;
+
+    marker.setLngLat([center.lat, center.lng]);
+    colorRef.current = color;
+    marker.getElement().style.background = color;
+    paintCircle(map);
+
     if (flyOnSyncRef.current) {
-      map.setView(ll, 15);
+      map.flyTo({ center: [center.lat, center.lng], zoom: 15 });
       flyOnSyncRef.current = false;
     }
-  }, [center, diameter, color]);
+  }, [center, diameter, color, ready]);
 
   const handleSearch = async (e?: React.FormEvent) => {
     e?.preventDefault();
@@ -164,7 +189,7 @@ export default function AddGeofence() {
   const selectResult = (r: NominatimResult) => {
     const c = { lat: parseFloat(r.lat), lng: parseFloat(r.lon) };
     setCenter(c);
-    mapRef.current?.setView([c.lat, c.lng], 16);
+    mapRef.current?.jumpTo({ center: [c.lat, c.lng], zoom: 16 });
     setResults([]);
     setSearchOpen(false);
     setQuery(r.display_name.split(',')[0]);

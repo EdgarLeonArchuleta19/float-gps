@@ -5,7 +5,7 @@ import {
   Activity, History, AlertTriangle, Car, Wrench, Calendar, Shield, Route, Hash, Thermometer,
   Satellite, Unlink as UnlinkIcon, Search, X, Loader2, Check
 } from 'lucide-react';
-import LeafletMap, { MapMarker } from '../components/map/LeafletMap';
+import MapLibreMap, { MapMarker } from '../components/map/MapLibreMap';
 import { useApi } from '../hooks/useApi';
 import { api } from '../services/api';
 import { Vehicle, Machine, GpsPosition, TrackingEvent, GpsDevice } from '../types';
@@ -447,7 +447,7 @@ export default function UnitDetail() {
                 </div>
                 {currentMarker.length > 0 && (
                   <div className="rounded-2xl overflow-hidden mt-3" style={{ height: '200px' }}>
-                    <LeafletMap dark={darkMode} markers={currentMarker} center={currentMarker[0].position} zoom={14} height="100%" />
+                    <MapLibreMap dark={darkMode} markers={currentMarker} center={currentMarker[0].position} zoom={14} height="100%" />
                   </div>
                 )}
               </div>
@@ -464,7 +464,7 @@ export default function UnitDetail() {
               {routePath.length > 0 ? (
                 <>
                   <div className="rounded-2xl overflow-hidden" style={{ height: '350px' }}>
-                    <LeafletMap dark={darkMode} polyline={routePath} center={routePath[0]} zoom={13} height="100%" />
+                    <MapLibreMap dark={darkMode} polyline={routePath} center={routePath[0]} zoom={13} height="100%" />
                   </div>
 
                   <div className="grid grid-cols-3 gap-3">

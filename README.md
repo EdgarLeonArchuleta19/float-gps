@@ -79,17 +79,20 @@ http://localhost:5173
 
 | Variable | Descripción |
 |---|---|
-| VITE_GOOGLE_MAPS_API_KEY | API key de Google Maps JavaScript |
 | VITE_API_URL | URL de la API backend |
 
-## Google Maps
+## Mapas (MapLibre)
 
-1. Ir a https://console.cloud.google.com
-2. Habilitar "Maps JavaScript API"
-3. Crear una API key
-4. Agregarla en `frontend/.env`
+Los mapas usan MapLibre GL JS, que no requiere API key ni tarjeta de crédito.
 
-Si no se configura, la aplicación funciona con fallback visual sin mapa.
+| Capa | Proveedor |
+|---|---|
+| Calle | OpenFreeMap (Positron) |
+| Oscuro | CartoDB Dark Matter GL |
+| Satélite | CartoDB Satellite GL |
+
+La attribution es obligatoria y MapLibre la muestra por defecto; si se personaliza el
+control, hay que mantener los créditos de OpenFreeMap, OpenStreetMap y CARTO.
 
 ## Arquitectura
 

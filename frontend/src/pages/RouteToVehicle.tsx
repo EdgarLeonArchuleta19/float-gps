@@ -1,14 +1,13 @@
-import React, { useState, useMemo, useRef, useCallback, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Navigation, Search, X, Gauge, Power, PowerOff, Route as RouteIcon } from 'lucide-react';
-import LeafletMap, { MapMarker } from '../components/map/LeafletMap';
+import MapLibreMap, { MapMarker, MapRoute } from '../components/map/MapLibreMap';
 import { useApi } from '../hooks/useApi';
 import { api } from '../services/api';
 import { Vehicle, Machine } from '../types';
 import { markerColor, statusLabel } from '../utils/format';
 import { useLayout } from '../context/LayoutContext';
 import { useToast } from '../context/ToastContext';
-import L from 'leaflet';
 
 export default function RouteToVehicle() {
   const navigate = useNavigate();
@@ -16,8 +15,7 @@ export default function RouteToVehicle() {
   const { addToast } = useToast();
   const [selectedUnit, setSelectedUnit] = useState<any>(null);
   const [search, setSearch] = useState('');
-  const mapInstanceRef = useRef<L.Map | null>(null);
-  const routeLineRef = useRef<L.Polyline | null>(null);
+  const [routePath, setRoutePath] = useState<[number, number][]>([]);
 
   const { data: vehicles } = useApi<any>(async () => api.vehicles.list({ limit: '200' }), []);
   const { data: machines } = useApi<any>(async () => api.machines.list({ limit: '200' }), []);
@@ -51,32 +49,20 @@ export default function RouteToVehicle() {
     id: u.id, position: [u.lat, u.lng], color: markerColor(u.status), name: u.name, vehicleType: u.unitType,
   }));
 
-  const handleMapReady = useCallback((map: L.Map) => { mapInstanceRef.current = map; }, []);
-
   const handleNavigate = (unit: any) => {
     setSelectedUnit(unit);
-    const map = mapInstanceRef.current;
-    if (!map) return;
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          const userLatLng = L.latLng(pos.coords.latitude, pos.coords.longitude);
-          const destLatLng = L.latLng(unit.lat, unit.lng);
-          if (routeLineRef.current) map.removeLayer(routeLineRef.current);
-          routeLineRef.current = L.polyline([userLatLng, destLatLng], {
-            color: '#3B82F6', weight: 4, opacity: 0.85, dashArray: '8 8',
-          }).addTo(map);
-          map.fitBounds(L.latLngBounds([userLatLng, destLatLng]), { padding: [60, 60] });
-        },
-        () => { addToast('error', 'No se pudo obtener tu ubicación'); },
-        { enableHighAccuracy: true, timeout: 8000 }
-      );
-    }
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setRoutePath([
+          [pos.coords.latitude, pos.coords.longitude],
+          [unit.lat, unit.lng],
+        ]);
+      },
+      () => { addToast('error', 'No se pudo obtener tu ubicación'); },
+      { enableHighAccuracy: true, timeout: 8000 }
+    );
   };
-
-  useEffect(() => {
-    return () => { if (routeLineRef.current && mapInstanceRef.current) mapInstanceRef.current.removeLayer(routeLineRef.current); };
-  }, []);
 
   return (
     <div className={`min-h-full flex flex-col ${darkMode ? 'bg-[#131316]' : 'bg-[#f5f5f7]'}`}>
@@ -92,7 +78,15 @@ export default function RouteToVehicle() {
       </div>
 
       <div className="flex-1 relative" style={{ minHeight: '300px' }}>
-        <LeafletMap dark={darkMode} markers={markers} center={[24.7994, -107.3940]} zoom={12} height="300px" onMapReady={handleMapReady} />
+        <MapLibreMap
+          dark={darkMode}
+          markers={markers}
+          polylines={routePath.length === 2 ? [{ path: routePath, color: '#3B82F6', dashed: true } satisfies MapRoute] : []}
+          center={[24.7994, -107.3940]}
+          zoom={12}
+          fitBounds={routePath.length === 2}
+          height="300px"
+        />
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 space-y-2">

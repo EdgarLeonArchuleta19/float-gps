@@ -4,6 +4,7 @@ node_modules/
 # Builds
 frontend/dist/
 backend/dist/
+*.tsbuildinfo
 
 # Env
 .env

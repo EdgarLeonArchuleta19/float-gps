@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { ChevronDown, Play, Gauge, Navigation, Power, Timer, AlertTriangle, X, Route as RouteIcon, MousePointerClick } from 'lucide-react';
-import LeafletMap, { MapMarker, MapRoute } from '../components/map/LeafletMap';
+import MapLibreMap, { MapMarker, MapRoute } from '../components/map/MapLibreMap';
 import DatePicker from '../components/DatePicker';
 import TimePicker from '../components/TimePicker';
 import UnitSelectorSheet, { UnitSelectOption } from '../components/UnitSelectorSheet';
@@ -311,7 +311,7 @@ export default function Tracking() {
           {/* Mapa con leyenda flotante */}
           {routes.length > 0 && !fetching ? (
             <div className="rounded-2xl overflow-hidden relative h-[58vh] sm:h-[440px] lg:h-[520px]" style={{ zIndex: 0 }}>
-              <LeafletMap dark={darkMode} polylines={routes} markers={endMarkers} height="100%" fitBounds />
+              <MapLibreMap dark={darkMode} polylines={routes} markers={endMarkers} height="100%" fitBounds />
               {/* Leyenda de colores sobre el mapa (tappable para ver detalle) */}
               {okResults.length > 1 && (
                 <div className="absolute top-2.5 left-2.5 z-[900] flex flex-wrap gap-1.5 max-w-[75%]">

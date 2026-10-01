@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   Search, X, Filter, Route, Shield, Navigation, Crosshair, Map, Satellite, Share2, Bell, ShoppingCart, Power, PowerOff, Gauge, Info, Zap, Clock, ChevronDown, ChevronRight, ChevronLeft, Loader2, PowerOff as PowerOffIcon
 } from 'lucide-react';
-import LeafletMap, { MapMarker, MapLayerType } from '../components/map/LeafletMap';
+import MapLibreMap, { MapMarker, MapLayerType } from '../components/map/MapLibreMap';
 import { useApi } from '../hooks/useApi';
 import { api } from '../services/api';
 import { Vehicle, Machine, Geofence } from '../types';
@@ -11,7 +11,7 @@ import { markerColor, statusLabel, timeAgo, formatDateTime } from '../utils/form
 import { useLayout } from '../context/LayoutContext';
 import { useToast } from '../context/ToastContext';
 import SpinnerSelect from '../components/SpinnerSelect';
-import L from 'leaflet';
+import { Map as MapLibreInstance, Marker } from 'maplibre-gl';
 
 type UnitFilter = 'all' | 'vehicles' | 'machines' | 'moving' | 'stopped';
 type DetailTab = 'info' | 'bitacora';
@@ -45,10 +45,8 @@ export default function LiveMap() {
   const [detailTab, setDetailTab] = useState<DetailTab>('info');
   const [mapLayer, setMapLayer] = useState<MapLayerType>('street');
   const [panelHeight, setPanelHeight] = useState<number>(0);
-  const mapInstanceRef = useRef<L.Map | null>(null);
-  const tileLayerRef = useRef<L.TileLayer | null>(null);
-  const userMarkerRef = useRef<L.Marker | null>(null);
-  const userCircleRef = useRef<L.Circle | null>(null);
+  const mapInstanceRef = useRef<MapLibreInstance | null>(null);
+  const userMarkerRef = useRef<Marker | null>(null);
 
   const { data: vehicles } = useApi<any>(async () => api.vehicles.list({ limit: '200' }), []);
   const { data: machines } = useApi<any>(async () => api.machines.list({ limit: '200' }), []);
@@ -125,7 +123,7 @@ export default function LiveMap() {
     { key: 'stopped', label: 'Detenidos' },
   ];
 
-  const handleMapReady = useCallback((map: L.Map) => { mapInstanceRef.current = map; }, []);
+  const handleMapReady = useCallback((map: MapLibreInstance) => { mapInstanceRef.current = map; }, []);
 
   const handleLocate = useCallback(() => {
     if (!navigator.geolocation) return;
@@ -133,23 +131,32 @@ export default function LiveMap() {
       (pos) => {
         const map = mapInstanceRef.current;
         if (!map) return;
-        const latlng: L.LatLngTuple = [pos.coords.latitude, pos.coords.longitude];
-        map.setView(latlng, 15, { animate: true });
-        if (userMarkerRef.current) map.removeLayer(userMarkerRef.current);
-        if (userCircleRef.current) map.removeLayer(userCircleRef.current);
-        const userIcon = L.divIcon({
-          className: '',
-          html: `<div style="position:relative;display:flex;align-items:center;justify-content:center;">
-            <div style="width:20px;height:20px;border-radius:50%;background:#3B82F6;border:3px solid white;box-shadow:0 2px 8px rgba(59,130,246,0.5);z-index:2;"></div>
-            <div style="position:absolute;width:40px;height:40px;border-radius:50%;background:rgba(59,130,246,0.15);z-index:1;"></div>
-          </div>`,
-          iconSize: [20, 20],
-          iconAnchor: [10, 10],
-        });
-        userMarkerRef.current = L.marker(latlng, { icon: userIcon }).addTo(map).bindTooltip('Mi ubicación', {
-          permanent: true, direction: 'top', offset: [0, -14], className: 'leaflet-tooltip-custom',
-        });
-        userCircleRef.current = L.circle(latlng, { radius: 50, fillColor: '#3B82F6', fillOpacity: 0.08, color: '#3B82F6', weight: 1, opacity: 0.3 }).addTo(map);
+        const latlng: [number, number] = [pos.coords.latitude, pos.coords.longitude];
+        map.flyTo({ center: latlng, zoom: 15 });
+
+        userMarkerRef.current?.remove();
+
+        const halo = document.createElement('div');
+        halo.style.cssText = 'position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);' +
+          'width:40px;height:40px;border-radius:50%;background:rgba(59,130,246,0.15);pointer-events:none;';
+        const dotEl = document.createElement('div');
+        dotEl.style.cssText = 'position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);' +
+          'width:20px;height:20px;border-radius:50%;background:#3B82F6;border:3px solid white;' +
+          'box-shadow:0 2px 8px rgba(59,130,246,0.5);';
+
+        const label = document.createElement('div');
+        label.textContent = 'Mi ubicación';
+        label.style.cssText = 'position:absolute;bottom:100%;left:50%;transform:translateX(-50%);' +
+          'margin-bottom:4px;background:#fff;color:#111;font-size:11px;font-weight:600;' +
+          'padding:2px 6px;border-radius:6px;white-space:nowrap;pointer-events:none;';
+
+        const wrap = document.createElement('div');
+        wrap.style.cssText = 'position:relative;';
+        wrap.appendChild(halo);
+        wrap.appendChild(dotEl);
+        wrap.appendChild(label);
+
+        userMarkerRef.current = new Marker({ element: wrap }).setLngLat(latlng).addTo(map);
       },
       () => {},
       { enableHighAccuracy: true, timeout: 8000 }
@@ -158,26 +165,19 @@ export default function LiveMap() {
 
   const handleRecenter = useCallback(() => {
     if (!mapInstanceRef.current) return;
-    mapInstanceRef.current.setView([24.7994, -107.3940], 12, { animate: true });
+    mapInstanceRef.current.flyTo({ center: [24.7994, -107.3940], zoom: 12 });
   }, []);
 
   const handleToggleLayer = useCallback(() => {
-    if (!mapInstanceRef.current) return;
-    const map = mapInstanceRef.current;
-    const newLayer = mapLayer === 'street' ? 'satellite' : 'street';
-    setMapLayer(newLayer);
-    if (tileLayerRef.current) map.removeLayer(tileLayerRef.current);
-    const url = newLayer === 'satellite'
-      ? 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
-      : darkMode ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png' : 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
-    tileLayerRef.current = L.tileLayer(url, { maxZoom: 19 }).addTo(map);
-  }, [mapLayer, darkMode]);
+    setMapLayer((prev) => (prev === 'street' ? 'satellite' : 'street'));
+  }, []);
 
   return (
     <div className="relative h-full flex flex-col overflow-hidden">
       <div className="flex-1 relative">
-        <LeafletMap
+        <MapLibreMap
           dark={darkMode}
+          layer={mapLayer}
           markers={markers}
           circles={mapCircles}
           center={[24.7994, -107.3940]}
@@ -493,7 +493,7 @@ function SelectedUnitDetail({ unit, detailTab, setDetailTab, darkMode, onBack, o
             ) : routePositions.length > 1 && lastRoutePos ? (
               <>
                 <div className="rounded-xl overflow-hidden h-[170px]" style={{ zIndex: 0 }}>
-                  <LeafletMap
+                  <MapLibreMap
                     dark={darkMode}
                     polyline={downsampleRoute(routePositions)}
                     markers={[{
