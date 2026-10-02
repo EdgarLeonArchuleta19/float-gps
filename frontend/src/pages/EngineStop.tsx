@@ -80,7 +80,6 @@ export default function EngineStop() {
       </div>
 
       <div className="p-4 space-y-3">
-        {/* Warning */}
         <div className={`rounded-2xl p-4 flex items-start gap-3 ${darkMode ? 'bg-red-500/10 border border-red-500/20' : 'bg-red-50 border border-red-100'}`}>
           <AlertTriangle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
           <div>
@@ -91,7 +90,6 @@ export default function EngineStop() {
           </div>
         </div>
 
-        {/* Search */}
         <div className="relative">
           <Search className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 ${darkMode ? 'text-gray-600' : 'text-gray-400'}`} />
           <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar unidad..."
@@ -104,7 +102,6 @@ export default function EngineStop() {
           )}
         </div>
 
-        {/* List */}
         <div className="space-y-1">
           {filtered.map((u) => (
             <button key={u.id} onClick={() => toggle(u.id)}
@@ -127,7 +124,6 @@ export default function EngineStop() {
         </div>
       </div>
 
-      {/* Footer */}
       {selected.size > 0 && (
         <div className={`sticky bottom-0 p-4 border-t backdrop-blur-xl
           ${darkMode ? 'bg-[#131316]/80 border-[#33343c]' : 'bg-[#f5f5f7]/80 border-gray-200'}`}>
@@ -139,7 +135,6 @@ export default function EngineStop() {
         </div>
       )}
 
-      {/* Confirm modal */}
       {showConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
           <div className={`${darkMode ? 'bg-[#1b1b1f]' : 'bg-white'} rounded-2xl shadow-xl max-w-md w-full p-6`}>

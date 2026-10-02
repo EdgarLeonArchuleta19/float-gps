@@ -119,13 +119,11 @@ export default function UnitSelectorSheet({
       className={`fixed inset-0 z-[1100] transition-opacity duration-300 ${open ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
       aria-hidden={!open}
     >
-      {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
         onClick={onClose}
       />
 
-      {/* Sheet */}
       <div
         className={`absolute inset-x-0 bottom-0 sm:inset-x-auto sm:right-0 sm:top-0 sm:bottom-0 sm:w-[420px] sm:max-w-[92vw]
           flex flex-col transition-transform duration-300 ease-out shadow-2xl
@@ -133,12 +131,10 @@ export default function UnitSelectorSheet({
           sm:border-l
           ${open ? 'translate-y-0 sm:translate-x-0' : 'translate-y-full sm:translate-y-0 sm:translate-x-full'}`}
       >
-        {/* Handle (mobile only) */}
         <div className="sm:hidden flex justify-center pt-2.5 pb-1 flex-shrink-0">
           <span className={`w-10 h-1 rounded-full ${darkMode ? 'bg-[#3c3d46]' : 'bg-gray-300'}`} />
         </div>
 
-        {/* Header */}
         <div className="flex items-center justify-between px-4 pt-3 pb-2 flex-shrink-0">
           <div>
             <h2 className={`text-[15px] font-bold ${darkMode ? 'text-[#f5f5f7]' : 'text-[#1d1d1f]'}`}>
@@ -168,7 +164,6 @@ export default function UnitSelectorSheet({
           </div>
         </div>
 
-        {/* Search */}
         <div className="px-4 pt-1 pb-2.5 flex-shrink-0">
           <div className="relative">
             <Search className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 ${darkMode ? 'text-gray-500' : 'text-gray-400'}`} />
@@ -181,7 +176,6 @@ export default function UnitSelectorSheet({
           </div>
         </div>
 
-        {/* Group tabs */}
         <div className="px-4 pb-2 flex gap-1.5 flex-shrink-0">
           {([
             ['all', 'Todas'],
@@ -206,7 +200,6 @@ export default function UnitSelectorSheet({
           )}
         </div>
 
-        {/* List */}
         <div ref={listRef} className="flex-1 overflow-y-auto overscroll-contain px-2 pb-3 min-h-0">
           {!anyResult && (
             <p className={`text-center text-[12px] py-8 ${darkMode ? 'text-gray-600' : 'text-gray-400'}`}>
@@ -235,7 +228,6 @@ export default function UnitSelectorSheet({
           )}
         </div>
 
-        {/* Footer CTA */}
         <div className={`p-3 flex-shrink-0 border-t ${darkMode ? 'border-[#33343c]' : 'border-gray-100'}`}>
           <button
             onClick={onClose}

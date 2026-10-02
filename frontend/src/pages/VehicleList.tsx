@@ -74,7 +74,6 @@ export default function VehicleList() {
       </div>
 
       <div className="p-4 space-y-3">
-        {/* Search */}
         <div className="relative">
           <Search className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 ${darkMode ? 'text-gray-600' : 'text-gray-400'}`} />
           <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar por nombre o placa..."
@@ -87,7 +86,6 @@ export default function VehicleList() {
           )}
         </div>
 
-        {/* Filter pills */}
         <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
           {filters.map((f) => (
             <button key={f.key} onClick={() => setFilter(f.key)}
@@ -100,7 +98,6 @@ export default function VehicleList() {
           ))}
         </div>
 
-        {/* Vehicle list */}
         <div className="space-y-1">
           {filtered.map((u) => (
             <button key={u.id} onClick={() => navigate(`/units/${u.id}`)}

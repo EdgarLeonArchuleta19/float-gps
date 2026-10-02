@@ -45,8 +45,6 @@ function ScrollToTop() {
 }
 
 function App() {
-  // Opt-in temprano a los cambios de v7. v7_relativeSplatPath solo afecta a
-  // rutas splat con paths relativos, y este proyecto no las usa.
   const routerFuture = {
     v7_startTransition: true,
     v7_relativeSplatPath: true,

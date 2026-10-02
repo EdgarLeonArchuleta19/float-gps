@@ -76,7 +76,6 @@ export default function HelpCenter() {
 
   return (
     <div className="pb-12 max-w-3xl">
-      {/* TÃ­tulo */}
       <div className="pt-1 pb-5">
         <h1 className={`text-[24px] font-bold tracking-tight ${titleCls}`}>Ayuda</h1>
         <p className={`text-[13px] mt-0.5 ${subCls}`}>
@@ -84,7 +83,6 @@ export default function HelpCenter() {
         </p>
       </div>
 
-      {/* Buscador */}
       <div className={`flex items-center gap-2.5 rounded-xl px-3.5 h-11 ${cell} ${lift}`}>
         <Search className={`w-[17px] h-[17px] flex-shrink-0 ${darkMode ? 'text-gray-500' : 'text-gray-400'}`} />
         <input
@@ -101,7 +99,6 @@ export default function HelpCenter() {
         )}
       </div>
 
-      {/* Temas */}
       {filtered.length === 0 ? (
         <p className={`text-[13px] pt-8 text-center ${subCls}`}>
           Sin resultados para â€œ{query.trim()}â€. Intenta con otra palabra o escrÃ­benos por WhatsApp.
@@ -139,7 +136,6 @@ export default function HelpCenter() {
         ))
       )}
 
-      {/* Contacto */}
       <section className="pt-6">
         <h2 className={`px-1 pb-2 text-[13px] font-semibold ${titleCls}`}>Â¿Necesitas mÃ¡s ayuda?</h2>
         <div className={`rounded-2xl overflow-hidden divide-y ${cell} ${hairline} ${lift}`}>
@@ -191,7 +187,6 @@ export default function HelpCenter() {
         </div>
       </section>
 
-      {/* Pie */}
       <footer className="pt-8 text-center space-y-1">
         <p className={`text-[12px] font-semibold ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>{SUPPORT.company}</p>
         <p className={`text-[11.5px] ${darkMode ? 'text-gray-600' : 'text-gray-400'}`}>{SUPPORT.address} Â· {SUPPORT.hours}</p>

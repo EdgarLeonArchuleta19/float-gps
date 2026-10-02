@@ -4,7 +4,7 @@ import { useLayout } from '../context/LayoutContext';
 import { useVerticalPlacement } from '../hooks/useVerticalPlacement';
 
 interface DatePickerProps {
-  value: string; // YYYY-MM-DD
+  value: string;
   onChange: (value: string) => void;
   label?: string;
   min?: string;
@@ -66,7 +66,7 @@ export default function DatePicker({ value, onChange, label, min, max }: DatePic
     const m = viewDate.getMonth();
     const first = new Date(y, m, 1);
     const start = new Date(first);
-    start.setDate(1 - ((first.getDay() + 6) % 7)); // lunes como inicio
+    start.setDate(1 - ((first.getDay() + 6) % 7));
     const cells: (Date | null)[] = [];
     for (let i = 0; i < 42; i++) {
       const d = new Date(start);
@@ -97,7 +97,7 @@ export default function DatePicker({ value, onChange, label, min, max }: DatePic
 
   const setYear = (y: number) => {
     setViewDate(new Date(y, viewDate.getMonth(), 1));
-    setView('months'); // año → meses → luego a días
+    setView('months');
   };
 
   const setMonth = (mIdx: number) => {
@@ -154,11 +154,9 @@ export default function DatePicker({ value, onChange, label, min, max }: DatePic
 
       {open && (
         <>
-          {/* Overlay SOLO móvil */}
           <div className="fixed inset-0 z-[990] lg:hidden bg-black/50 backdrop-blur-sm"
             onClick={() => { setOpen(false); setView('days'); }} />
 
-          {/* MÓVIL: modal centrado */}
           <div
             role="dialog" aria-modal="true"
             className={`lg:hidden fixed z-[1000] inset-0 m-auto h-max max-h-[86vh] overflow-y-auto no-scrollbar
@@ -192,7 +190,6 @@ export default function DatePicker({ value, onChange, label, min, max }: DatePic
             </div>
           </div>
 
-          {/* PC: popover junto al campo */}
           <div
             className={`hidden lg:block absolute z-[999]
               left-0 w-[280px]

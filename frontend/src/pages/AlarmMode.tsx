@@ -69,7 +69,6 @@ export default function AlarmMode() {
       </div>
 
       <div className="p-4 space-y-4">
-        {/* Global toggle */}
         <div className={`rounded-2xl p-5 ${darkMode ? 'bg-[#1b1b1f]' : 'bg-white'}`}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -90,7 +89,6 @@ export default function AlarmMode() {
           </div>
         </div>
 
-        {/* Feature types */}
         <div className="space-y-2">
           <p className={`text-[12px] font-medium px-1 ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>Tipos de alerta</p>
           {features.map((f, i) => {
@@ -117,7 +115,6 @@ export default function AlarmMode() {
           })}
         </div>
 
-        {/* Vehicle checklist */}
         <div className="space-y-2">
           <div className="flex items-center justify-between px-1">
             <p className={`text-[12px] font-medium ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>Seleccionar unidades</p>
@@ -126,7 +123,6 @@ export default function AlarmMode() {
             </button>
           </div>
 
-          {/* Search */}
           <div className="relative">
             <Search className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 ${darkMode ? 'text-gray-600' : 'text-gray-400'}`} />
             <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar unidad..."
@@ -139,7 +135,6 @@ export default function AlarmMode() {
             )}
           </div>
 
-          {/* List */}
           <div className="space-y-1">
             {filtered.map((u) => (
               <button key={u.id} onClick={() => toggle(u.id)}
@@ -162,7 +157,6 @@ export default function AlarmMode() {
           </div>
         </div>
 
-        {/* Info */}
         <div className={`rounded-2xl p-4 ${darkMode ? 'bg-[#1b1b1f]' : 'bg-white'}`}>
           <p className={`text-[12px] ${darkMode ? 'text-gray-500' : 'text-gray-400'} leading-relaxed`}>
             Las alertas se enviarán como notificaciones push a tu dispositivo para las unidades seleccionadas.
@@ -170,7 +164,6 @@ export default function AlarmMode() {
         </div>
       </div>
 
-      {/* Footer */}
       {selected.size > 0 && (
         <div className={`sticky bottom-0 p-4 border-t backdrop-blur-xl
           ${darkMode ? 'bg-[#131316]/80 border-[#33343c]' : 'bg-[#f5f5f7]/80 border-gray-200'}`}>

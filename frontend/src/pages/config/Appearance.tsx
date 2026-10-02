@@ -35,7 +35,6 @@ export default function Appearance() {
                     ? darkMode ? 'border-[#f87203] ring-2 ring-[#f87203]/30' : 'border-[#032347] ring-2 ring-[#032347]/20'
                     : darkMode ? 'border-[#2a2a2d]' : 'border-gray-200'}`}
               >
-                {/* Mini vista previa */}
                 <div className={`${t.bg} px-3 pt-3 pb-2`}>
                   <div className={`${t.card} h-16 rounded-lg border ${darkMode ? 'border-[#34363f]' : 'border-gray-100'} p-2 space-y-1`}>
                     <div className={`h-1.5 w-1/2 rounded-full ${t.key === 'dark' ? 'bg-[#f87203]/70' : 'bg-[#032347]/70'}`} />

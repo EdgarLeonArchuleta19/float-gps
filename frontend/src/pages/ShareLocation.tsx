@@ -52,7 +52,6 @@ export default function ShareLocation() {
 
   return (
     <div className={`min-h-full ${darkMode ? 'bg-[#131316]' : 'bg-[#f5f5f7]'}`}>
-      {/* Header */}
       <div className={`sticky top-0 z-10 px-4 py-3 flex items-center gap-3 backdrop-blur-xl border-b
         ${darkMode ? 'bg-[#131316]/80 border-[#33343c]' : 'bg-[#f5f5f7]/80 border-gray-200'}`}>
         <button onClick={() => navigate('/live-map')} className={`p-2 rounded-xl transition-colors ${darkMode ? 'hover:bg-[#33343c] text-gray-400' : 'hover:bg-gray-200 text-gray-500'}`}>
@@ -68,7 +67,6 @@ export default function ShareLocation() {
       </div>
 
       <div className="p-4 space-y-3">
-        {/* Search */}
         <div className="relative">
           <Search className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 ${darkMode ? 'text-gray-600' : 'text-gray-400'}`} />
           <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar unidad..."
@@ -81,7 +79,6 @@ export default function ShareLocation() {
           )}
         </div>
 
-        {/* Select all */}
         <button onClick={toggleAll}
           className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-[13px] font-medium transition-colors
             ${darkMode ? 'bg-[#1b1b1f] hover:bg-[#232329] text-gray-300' : 'bg-white hover:bg-gray-50 text-[#1d1d1f]'}`}>
@@ -94,7 +91,6 @@ export default function ShareLocation() {
           Seleccionar todas ({filtered.length})
         </button>
 
-        {/* List */}
         <div className="space-y-1">
           {filtered.map((u) => (
             <button key={u.id} onClick={() => toggle(u.id)}
@@ -118,7 +114,6 @@ export default function ShareLocation() {
         </div>
       </div>
 
-      {/* Footer button */}
       {selected.size > 0 && (
         <div className={`sticky bottom-0 p-4 border-t backdrop-blur-xl
           ${darkMode ? 'bg-[#131316]/80 border-[#33343c]' : 'bg-[#f5f5f7]/80 border-gray-200'}`}>

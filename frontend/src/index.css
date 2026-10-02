@@ -20,8 +20,6 @@ body {
   letter-spacing: -0.01em;
 }
 
-/* Scroll en móvil: el gesto debe quedarse en el contenedor correcto
-   y no "pegarse" en tablas/scrolls horizontales internos. */
 html,
 body {
   overscroll-behavior-x: none;
@@ -102,7 +100,6 @@ main {
   line-height: 1.4;
 }
 
-/* Controles nativos de MapLibre, alineados al tema del panel */
 .maplibregl-ctrl-attrib {
   font-size: 10px;
   border-radius: 8px 0 0 0;
@@ -127,8 +124,6 @@ select {
   appearance: none;
 }
 
-/* iOS hace zoom automático al enfocar campos con texto menor a 16px:
-   en móvil usamos 16px para que el buscador no "salte". */
 @media (max-width: 767px) {
   input,
   textarea {
@@ -144,7 +139,6 @@ select {
   display: none;
 }
 
-/* Range slider personalizado (TimePicker) */
 input[type="range"].float-range,
 input[type="range"] {
   -webkit-appearance: none;
@@ -193,7 +187,6 @@ input[type="range"]::-moz-range-thumb {
   background: #f87203;
 }
 
-/* Login animations */
 @keyframes car-drive {
   0% { transform: translateX(-80px) scaleX(1); opacity: 0; }
   5% { opacity: 1; }
@@ -252,7 +245,6 @@ input[type="range"]::-moz-range-thumb {
   animation: spin-slow 40s linear infinite;
 }
 
-/* Scanner de conexión GPS */
 @keyframes radar-spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }

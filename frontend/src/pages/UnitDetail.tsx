@@ -143,7 +143,6 @@ export default function UnitDetail() {
     ? [{ id: unit.id, position: [unit.currentPosition.latitude, unit.currentPosition.longitude], color: markerColor(unit.status), name: unit.name }]
     : [];
 
-  // Historical stats
   const totalKm = useMemo(() => {
     if (!positions || positions.length < 2) return 0;
     let km = 0;
@@ -649,7 +648,6 @@ function LinkGpsSheet({ unitId, unitType, unitName, darkMode, onClose, onLinked 
       <div className="fixed inset-0 z-[200] bg-black/40 backdrop-blur-sm" onClick={onClose} />
       <div className={`fixed z-[210] inset-x-0 bottom-0 sm:inset-0 sm:m-auto sm:w-[420px] sm:h-fit rounded-t-2xl sm:rounded-2xl flex flex-col shadow-2xl max-h-[85dvh]
         ${darkMode ? 'bg-[#1b1b1f] border border-[#3c3d46]' : 'bg-white border border-gray-200'}`}>
-        {/* Header */}
         <div className={`flex items-center justify-between px-4 py-3.5 border-b ${darkMode ? 'border-[#33343c]' : 'border-gray-100'}`}>
           <div>
             <h2 className={`text-[14px] font-semibold ${darkMode ? 'text-white' : 'text-[#1d1d1f]'}`}>Vincular GPS</h2>
@@ -662,7 +660,6 @@ function LinkGpsSheet({ unitId, unitType, unitName, darkMode, onClose, onLinked 
         </div>
 
         <div className="flex-1 overflow-y-auto overscroll-contain px-4 py-3 space-y-3">
-          {/* Search */}
           <div className="relative">
             <Search className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none z-10 ${darkMode ? 'text-gray-600' : 'text-gray-400'}`} />
             <input
@@ -680,7 +677,6 @@ function LinkGpsSheet({ unitId, unitType, unitName, darkMode, onClose, onLinked 
             )}
           </div>
 
-          {/* Device list */}
           {devices === null ? (
             <div className="flex items-center justify-center py-8">
               <Loader2 className={`w-6 h-6 animate-spin ${darkMode ? 'text-gray-500' : 'text-gray-400'}`} />
@@ -717,7 +713,6 @@ function LinkGpsSheet({ unitId, unitType, unitName, darkMode, onClose, onLinked 
             </div>
           )}
 
-          {/* Manual IMEI */}
           <div>
             <p className={`text-[11px] font-medium mb-1.5 ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>¿Tienes el IMEI a la mano?</p>
             <div className="flex gap-2">
@@ -741,7 +736,6 @@ function LinkGpsSheet({ unitId, unitType, unitName, darkMode, onClose, onLinked 
           </div>
         </div>
 
-        {/* Footer */}
         <div className={`px-4 py-3 border-t ${darkMode ? 'border-[#33343c]' : 'border-gray-100'}`}
           style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}>
           <button

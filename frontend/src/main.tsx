@@ -10,8 +10,6 @@ if ('scrollRestoration' in history) {
   history.scrollRestoration = 'manual';
 }
 
-// Fallback: si iOS/celular carga la página ya desplazada (arriba cortado),
-// se recarga una sola vez tras la carga para que inicie desde arriba.
 const navEntry = (performance.getEntriesByType?.('navigation') as any)?.[0];
 const entryType: string = navEntry?.type || 'navigate';
 if (entryType === 'navigate' && !sessionStorage.getItem('floa-first-entry-fixed')) {

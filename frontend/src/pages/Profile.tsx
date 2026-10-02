@@ -98,7 +98,6 @@ export default function Profile() {
         </div>
       </div>
 
-      {/* Identidad */}
       <div className={`${card} p-6`}>
         <div className="flex items-center gap-4">
           <div className={`w-16 h-16 rounded-full flex items-center justify-center flex-shrink-0 ${darkMode ? 'bg-[#232329]' : 'bg-gray-100'}`}>
@@ -116,7 +115,6 @@ export default function Profile() {
         </div>
       </div>
 
-      {/* Cuenta */}
       <div className={card}>
         <div className={`px-4 py-3 border-b ${rowBorder}`}>
           <p className={`text-[11px] font-semibold uppercase tracking-wide ${sub}`}>Cuenta</p>
@@ -148,7 +146,6 @@ export default function Profile() {
         </div>
       </div>
 
-      {/* Seguridad */}
       <div className={card}>
         <div className={`px-4 py-3 border-b ${rowBorder}`}>
           <p className={`text-[11px] font-semibold uppercase tracking-wide ${sub}`}>Seguridad</p>
@@ -164,7 +161,6 @@ export default function Profile() {
         </button>
       </div>
 
-      {/* Sesión */}
       <div className={card}>
         <button onClick={() => setLogoutModal(true)}
           className="w-full flex items-center justify-between px-4 py-3.5 transition-colors hover:bg-red-500/5">
@@ -175,7 +171,6 @@ export default function Profile() {
         </button>
       </div>
 
-      {/* Modal: nombre */}
       {nameModal && (
         <div className="fixed inset-0 z-[1100] flex items-center justify-center px-6">
           <div className="fixed inset-0 bg-black/40" onClick={() => setNameModal(false)} />
@@ -202,7 +197,6 @@ export default function Profile() {
         </div>
       )}
 
-      {/* Modal: contraseña */}
       {passModal && (
         <div className="fixed inset-0 z-[1100] flex items-center justify-center px-6">
           <div className="fixed inset-0 bg-black/40" onClick={() => setPassModal(false)} />
@@ -255,7 +249,6 @@ export default function Profile() {
         </div>
       )}
 
-      {/* Modal: cerrar sesión */}
       {logoutModal && (
         <div className="fixed inset-0 z-[1100] flex items-center justify-center px-6">
           <div className="fixed inset-0 bg-black/40" onClick={() => setLogoutModal(false)} />

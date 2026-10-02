@@ -244,13 +244,11 @@ export default function AddGeofence() {
       </div>
 
       <form onSubmit={handleSubmit} className={`${darkMode ? 'bg-[#1b1b1f]' : 'bg-white'} rounded-2xl p-5 space-y-4`}>
-        {/* Map picker */}
         <div>
           <label className={labelClass}>Ubicación</label>
           <div className={`relative h-[320px] rounded-xl overflow-hidden border ${darkMode ? 'border-[#3c3d46]' : 'border-gray-200'}`}>
             <div ref={mapDivRef} className="absolute inset-0" />
 
-            {/* Street search */}
             <div className="absolute top-2 left-2 right-2 z-[1000]">
               <form onSubmit={handleSearch} className="relative">
                 <Search className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none z-10 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`} />
@@ -288,7 +286,6 @@ export default function AddGeofence() {
               )}
             </div>
 
-            {/* Coords chip */}
             <div className="absolute bottom-2 left-2 right-2 z-[1000] flex justify-center pointer-events-none">
               <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium shadow-lg
                 ${darkMode ? 'bg-[#1b1b1f]/90 backdrop-blur-xl text-gray-300' : 'bg-white/95 backdrop-blur-xl text-gray-700'}`}>

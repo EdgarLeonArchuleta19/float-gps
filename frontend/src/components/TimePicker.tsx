@@ -4,7 +4,7 @@ import { useLayout } from '../context/LayoutContext';
 import { useVerticalPlacement } from '../hooks/useVerticalPlacement';
 
 interface TimePickerProps {
-  value: string; // HH:mm
+  value: string;
   onChange: (value: string) => void;
   label?: string;
 }
@@ -14,7 +14,6 @@ const inputBg = (dark: boolean) =>
 
 const pad = (n: number) => String(n).padStart(2, '0');
 
-// Convierte "HH:mm" (24h) a "h:mm AM/PM" (12h) para mostrar en el input
 function format12(value: string): string {
   const p = (value || '').split(':');
   const h = parseInt(p[0], 10);
@@ -99,7 +98,6 @@ export default function TimePicker({ value, onChange, label }: TimePickerProps) 
         <>
           <div className="fixed inset-0 z-[990] lg:hidden bg-black/50 backdrop-blur-sm" onClick={() => setOpen(false)} />
 
-          {/* MÓVIL: modal */}
           <div
             role="dialog" aria-modal="true"
             className={`lg:hidden fixed z-[1000] inset-0 m-auto h-max max-h-[90vh] overflow-y-auto no-scrollbar
@@ -109,7 +107,6 @@ export default function TimePicker({ value, onChange, label }: TimePickerProps) 
             <div className="px-5 py-4">{panel}</div>
           </div>
 
-          {/* PC: popover junto al campo */}
           <div
             className={`hidden lg:block absolute z-[999] left-0 w-[320px]
               ${place === 'above' ? 'bottom-full mb-2' : 'top-full mt-2'}
@@ -124,9 +121,6 @@ export default function TimePicker({ value, onChange, label }: TimePickerProps) 
   );
 }
 
-// ---------------------------------------------------------------------------
-//  Reloj analógico en escala de grises (solo blanco, negro y grises)
-// ---------------------------------------------------------------------------
 
 const HOURS12 = [12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
 const MIN_TICKS = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55];
@@ -161,14 +155,12 @@ function DialPanel({ darkMode, hour, min, setHour, setMin, apply }: {
 
   return (
     <div>
-      {/* Título contextual */}
       <div className="text-center mb-2">
         <span className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: dim }}>
           {mode === 'hour' ? 'Hora' : 'Minutos'}
         </span>
       </div>
 
-      {/* Header: hora:minuto + AM/PM toggle */}
       <div className="flex items-center justify-center gap-3 pb-3">
         <div className="flex items-center gap-1 text-[30px] font-light tabular-nums tracking-tight" style={{ color: textColor }}>
           <button
@@ -194,7 +186,6 @@ function DialPanel({ darkMode, hour, min, setHour, setMin, apply }: {
           </button>
         </div>
 
-        {/* AM/PM */}
         <div className="flex flex-col text-[12px] font-medium leading-tight" style={{ marginLeft: -8 }}>
           {(['AM', 'PM'] as const).map((p) => {
             const active = (p === 'PM') === isPM;
@@ -217,7 +208,6 @@ function DialPanel({ darkMode, hour, min, setHour, setMin, apply }: {
         </div>
       </div>
 
-      {/* Dial con arrastre de mouse y flechas */}
       <ClockDial
         mode={mode}
         hour12={hour12}
@@ -246,7 +236,6 @@ function DialPanel({ darkMode, hour, min, setHour, setMin, apply }: {
         darkMode={darkMode}
       />
 
-      {/* Footer */}
       <div className="flex items-center justify-end gap-2 pt-3 mt-3 border-t" style={{ borderColor: darkMode ? '#34363f' : '#f0f0f0' }}>
         <button
           onClick={apply}
@@ -289,7 +278,6 @@ function ClockDial({ mode, hour12, min, onSelectHour, onSelectMin, onSelectHourC
     return [CENTER + r * Math.cos(a), CENTER + r * Math.sin(a)];
   };
 
-  // Convierte coordenadas de cliente a coordenadas internas del SVG
   const toLocal = (clientX: number, clientY: number): [number, number] => {
     const svg = svgRef.current;
     if (!svg) return [0, 0];
@@ -299,7 +287,6 @@ function ClockDial({ mode, hour12, min, onSelectHour, onSelectMin, onSelectHourC
     return [(clientX - rect.left) * scaleX, (clientY - rect.top) * scaleY];
   };
 
-  // Determina qué tick está más cerca del ángulo de un punto (para arrastre)
   const selectFromPoint = (clientX: number, clientY: number) => {
     const [px, py] = toLocal(clientX, clientY);
     const angle = Math.atan2(py - CENTER, px - CENTER) + Math.PI / 2;
@@ -365,7 +352,6 @@ function ClockDial({ mode, hour12, min, onSelectHour, onSelectMin, onSelectHourC
         onPointerLeave={handleUp}
         style={{ cursor: 'pointer', touchAction: 'none', outline: 'none' }}
       >
-        {/* Cara del reloj */}
         <circle cx={CENTER} cy={CENTER} r={CENTER - 4} fill={faceBg} />
         <circle
           cx={CENTER} cy={CENTER}
@@ -375,7 +361,6 @@ function ClockDial({ mode, hour12, min, onSelectHour, onSelectMin, onSelectHourC
           strokeWidth={1}
         />
 
-        {/* Guías radiales sutiles (doce divisiones) */}
         {Array.from({ length: 12 }, (_, i) => {
           const [x1, y1] = pos(i, numR + 8);
           const [x2, y2] = pos(i, numR + 16);
@@ -392,7 +377,6 @@ function ClockDial({ mode, hour12, min, onSelectHour, onSelectMin, onSelectHourC
           );
         })}
 
-        {/* Manecilla */}
         <line
           x1={CENTER} y1={CENTER}
           x2={CENTER + handR * Math.cos(handAngle)}
@@ -409,7 +393,6 @@ function ClockDial({ mode, hour12, min, onSelectHour, onSelectMin, onSelectHourC
           fill={accent}
         />
 
-        {/* Números */}
         {(mode === 'hour' ? HOURS12 : MIN_TICKS).map((v, i) => {
           const r = numR;
           const [x, y] = pos(mode === 'hour' ? (v === 12 ? 0 : v) : i, r);
@@ -422,7 +405,6 @@ function ClockDial({ mode, hour12, min, onSelectHour, onSelectMin, onSelectHourC
               key={v}
               className="cursor-pointer"
               onPointerDown={(e) => {
-                // Tocar un número = selección directa
                 e.stopPropagation();
                 const movedBefore = dragRef.current.moved;
                 dragRef.current = { active: true, pid: e.pointerId, startX: e.clientX, startY: e.clientY, moved: movedBefore };
@@ -432,7 +414,6 @@ function ClockDial({ mode, hour12, min, onSelectHour, onSelectMin, onSelectHourC
               }}
               onPointerMove={handleMove}
               onPointerUp={() => {
-                // Click reconocido: no hubo arrastre → en modo hora se avanza a minutos
                 const wasClick = !dragRef.current.moved;
                 handleUp();
                 if (mode === 'hour' && wasClick) {

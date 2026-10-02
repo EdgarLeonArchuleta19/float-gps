@@ -6,6 +6,11 @@
 - Producción (Vercel) solo refleja lo que existe en `main`. No se despliega a producción hasta hacer el merge.
 - Para revisar cambios en curso, desplegar una búsqueda/preview desde `develop`, nunca tocar la producción de `main`.
 
+## Estilo de Código (IMPORTANTE)
+- **No escribir comentarios en el frontend.** Ni de línea (`//`), ni de bloque (`/* */`), ni JSX (`{/* */}`), ni JSDoc. El código debe explicarse solo con nombres claros.
+- Excepciones: las directivas `/// <reference ... />` de `vite-env.d.ts` son obligatorias y se conservan.
+- No agregar código muerto, exports sin usar ni helpers obsoletos: si algo no se usa, se elimina.
+
 ## Tech Stack
 - **Frontend**: React 18 + Vite + TypeScript + Tailwind CSS
 - **Backend**: Node.js + Express + TypeScript + Prisma ORM
@@ -13,7 +18,7 @@
   - Local dev: `floa-gps` (localhost:5432, user postgres)
   - Production: Neon (us-east-2)
 - **Backend auth**: JWT + bcrypt (protected routes)
-- **Maps**: Leaflet + CartoDB tiles (no API key needed)
+- **Maps**: MapLibre GL JS + OpenFreeMap / CartoDB / Esri raster (no API key needed)
 - **Icons**: lucide-react
 
 ## Project Structure
@@ -24,7 +29,7 @@ Default Project/
 │   │   ├── assets/logo-floa.png
 │   │   ├── components/
 │   │   │   ├── layout/Layout.tsx      # Sidebar + header + dark mode
-│   │   │   └── map/LeafletMap.tsx     # Vanilla Leaflet map (no react-leaflet)
+│   │   │   └── map/MapLibreMap.tsx     # Vanilla MapLibre map (no react-leaflet)
 │   │   ├── context/
 │   │   │   ├── AuthContext.tsx         # Login/auth state
 │   │   │   ├── LayoutContext.tsx       # Sidebar + dark mode state
@@ -39,7 +44,7 @@ Default Project/
 │
 ├── backend/           # Express API (port 3001)
 │   ├── prisma/
-│   │   ├── schema.prisma              # SQLite schema
+│   │   ├── schema.prisma              # PostgreSQL schema
 │   │   └── seed.ts                    # Seed: 10 vehicles, 8 machines, 18 GPS, ~7 days positions
 │   └── src/
 │       ├── index.ts                   # Express server entry
@@ -110,16 +115,18 @@ Default Project/
 | GET | `/api/reports/events` | Events report |
 | POST | `/api/commands/engine-stop` | Engine stop command |
 
-## LeafletMap Component
-- Uses vanilla Leaflet with `useRef`/`useEffect` (NOT react-leaflet)
-- Tiles: CartoDB Voyager (light) / CartoDB Dark (dark)
-- Props: `markers`, `polyline`, `circles`, `fitBounds`, `dark`
+## MapLibreMap Component
+- Usa MapLibre GL JS vanilla con `useRef`/`useEffect` (no react-leaflet)
+- Estilos: OpenFreeMap Positron (calle), CartoDB Dark Matter (oscuro), Esri World Imagery inline (satélite)
+- El worker se sirve como asset estático: `scripts/copy-maplibre-worker.cjs` copia `maplibre-gl-worker.mjs` **y sus imports relativos** a `public/`, y `setupMapLibre.ts` lo registra con `setWorkerUrl`
+- Contrato de coordenadas: los props usan `[lat, lng]`; `geo.ts` convierte a `[lng, lat]` en los límites de MapLibre/GeoJSON
+- Al cambiar de estilo se escucha `style.load` y se reagregan overlays; nunca dependas de `styledata` ni de un estado `ready` que se autodesprovoque
+- Props: `markers`, `polyline`, `polylines`, `circles`, `fitBounds`, `dark`, `layer`
 - Markers support `vehicleType: 'vehicle' | 'machine'` for SVG icons
-- Markers have permanent name tooltip labels
 
 ## Key Decisions
-- Switched from Google Maps to Leaflet (free, no API key)
-- Switched from react-leaflet to vanilla Leaflet (React 18 compat issue)
+- Google Maps no es viable sin API key; se usa MapLibre + tiles gratuitos
+- Switched from Leaflet to MapLibre GL JS (mejor control de estilos y rendimiento)
 - Switched from SQLite to PostgreSQL (Neon prod + Postgres local dev)
 - Removed Events and WorkLog pages (merged into Reports/Bitácora + Notifications)
 - Bottom sheet on map is draggable (touch + mouse) with peek/half/full states

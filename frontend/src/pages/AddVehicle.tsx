@@ -110,7 +110,6 @@ export default function AddVehicle() {
     setScanStep(0);
     setTestResult(null);
 
-    // Avanza los pasos de diagnóstico con retardo
     const stepTimers: number[] = [];
     for (let i = 1; i < testSteps.length; i++) {
       stepTimers.push(window.setTimeout(() => setScanStep(i), i * 520));
@@ -120,7 +119,7 @@ export default function AddVehicle() {
       const res = await api.gps.testConnection({ imei: imei.trim() });
       await new Promise((r) => setTimeout(r, testSteps.length * 520 + 200));
       stepTimers.forEach(clearTimeout);
-      setScanStep(testSteps.length); // todos completos
+      setScanStep(testSteps.length);
       setTestState('success');
       setTestResult(res);
     } catch (e: any) {
@@ -237,7 +236,6 @@ export default function AddVehicle() {
 
             {testState === 'scanning' && (
               <div className={`rounded-2xl border overflow-hidden ${darkMode ? 'border-[#2a2a2d] bg-[#0e0e10]' : 'border-gray-100 bg-[#fafafa]'}`}>
-                {/* Radar */}
                 <div className="flex flex-col items-center py-5 relative overflow-hidden">
                   <div className="relative w-16 h-16">
                     <div className="absolute inset-0 rounded-full border-2 animate-pulse-ring" style={{ borderColor: darkMode ? '#f87203' : '#032347' }} />
@@ -257,7 +255,6 @@ export default function AddVehicle() {
                   <p className={`text-[11px] tabular-nums ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>{imei}</p>
                 </div>
 
-                {/* Pasos de diagnóstico */}
                 <div className={`px-4 pb-4 space-y-1.5 ${darkMode ? 'bg-[#131316]' : 'bg-white'}`}>
                   {testSteps.map((step, i) => {
                     const done = i < scanStep;

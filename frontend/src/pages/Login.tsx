@@ -9,17 +9,14 @@ import logoDark from '../assets/logo-floa-black.png';
 function OrbitalRings() {
   return (
     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-      {/* Outer ring - slow */}
       <div className="absolute w-[320px] h-[320px] rounded-full border border-white/[0.04]" style={{ animation: 'spin 30s linear infinite' }}>
         <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 rounded-full bg-[#f87203]/40" />
         <div className="absolute top-1/2 -right-1.5 -translate-y-1/2 w-2 h-2 rounded-full bg-white/20" />
       </div>
-      {/* Mid ring - medium */}
       <div className="absolute w-[240px] h-[240px] rounded-full border border-white/[0.06]" style={{ animation: 'spin 20s linear infinite reverse' }}>
         <div className="absolute -bottom-1 left-1/3 w-2.5 h-2.5 rounded-full bg-white/25" />
         <div className="absolute top-1/4 -left-1 w-2 h-2 rounded-full bg-[#f87203]/30" />
       </div>
-      {/* Inner ring - faster */}
       <div className="absolute w-[160px] h-[160px] rounded-full border border-white/[0.08]" style={{ animation: 'spin 12s linear infinite' }}>
         <div className="absolute -top-1 right-1/4 w-2 h-2 rounded-full bg-white/30" />
       </div>
@@ -124,28 +121,23 @@ export default function Login() {
 
   return (
     <div className={`min-h-dvh flex ${isDark ? 'bg-[#131316]' : 'bg-white'}`}>
-      {/* Left panel — desktop 50/50 */}
       <div className="hidden lg:flex lg:w-1/2 flex-col items-center justify-center bg-[#032347] relative overflow-hidden">
         <div className="absolute -top-24 -left-24 w-72 h-72 rounded-full bg-white/[0.03]" />
         <div className="absolute -bottom-28 -right-28 w-80 h-80 rounded-full bg-[#f87203]/10" />
         <OrbitalRings />
         <GpsSignal isDark={false} />
         <img src={logoDark} alt="Floa GPS" className="w-80 h-auto object-contain relative z-10 animate-fade-in-up" />
-        {/* Rotating gear behind logo */}
         <div className="absolute z-[5] opacity-[0.06] animate-spin-slow">
           <GearIcon className="w-64 h-64 text-white" />
         </div>
       </div>
 
-      {/* Right panel — form */}
       <div className="flex-1 flex flex-col relative overflow-hidden">
         <FloatingDots isDark={isDark} />
         <GpsSignal isDark={isDark} />
 
-        {/* Form centered */}
         <div ref={formRef} className="flex-1 flex flex-col items-center px-6 lg:px-12 pt-10 sm:pt-0 pb-6 overflow-y-auto">
           <div className="w-full max-w-[360px] lg:my-auto">
-            {/* Mobile logo */}
             <div className="lg:hidden flex justify-center mb-8 animate-fade-in-up">
               <img src={isDark ? logoDark : logo} alt="Floa GPS" className="h-16 w-auto object-contain" />
             </div>
@@ -226,7 +218,6 @@ export default function Login() {
               </div>
             </form>
 
-            {/* Divider */}
             <div className="flex items-center gap-4 mt-6 animate-fade-in-up animate-delay-4">
               <div className={`flex-1 h-px ${isDark ? 'bg-[#33343c]' : 'bg-gray-100'}`} />
               <span className={`text-[12px] font-medium ${isDark ? 'text-gray-600' : 'text-gray-300'}`}>
@@ -255,7 +246,6 @@ export default function Login() {
           </div>
         </div>
 
-        {/* Bottom */}
         <div className="relative z-10 px-6 pb-6 pt-4 text-center">
           <p className={`text-[11px] ${isDark ? 'text-gray-700' : 'text-gray-300'}`}>
             Demo · admin@demo.com · demo123

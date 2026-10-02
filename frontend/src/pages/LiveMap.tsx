@@ -190,7 +190,6 @@ export default function LiveMap() {
           onMapReady={handleMapReady}
         />
 
-        {/* Map control buttons - right side */}
         <div className="absolute right-3 top-[72px] z-[50] flex flex-col gap-2">
           <button onClick={handleLocate} title="Mi ubicación"
             className={`w-[40px] h-[40px] rounded-full flex items-center justify-center shadow-lg transition-all active:scale-95
@@ -210,7 +209,6 @@ export default function LiveMap() {
           </button>
         </div>
 
-        {/* Search bar on map */}
         <div className="absolute top-3 left-3 right-3 z-[50]">
           <div className="flex items-center gap-2">
             <div className="flex-1 relative">
@@ -262,11 +260,9 @@ export default function LiveMap() {
         </div>
       </div>
 
-      {/* Bottom Bar */}
       <div className={`fixed lg:absolute left-0 right-0 z-[65]`} style={{ bottom: 'max(16px, env(safe-area-inset-bottom))' }}>
         <div className={`mx-auto flex items-center justify-between px-3 sm:px-5 w-[95%] sm:w-[60%] h-[72px] rounded-full shadow-2xl
           ${darkMode ? 'bg-[#1b1b1f]/95 backdrop-blur-xl border border-[#3c3d46]' : 'bg-white/95 backdrop-blur-xl border border-gray-200 shadow-black/10'}`}>
-          {/* Left: Share + Alarm */}
           <button onClick={() => navigate('/live-map/share')}
             className={`w-[44px] h-[44px] sm:w-[48px] sm:h-[48px] rounded-full flex items-center justify-center transition-all active:scale-95 flex-shrink-0
               ${darkMode ? 'bg-[#3b82f6]/20 text-[#60a5fa] hover:bg-[#3b82f6]/30' : 'bg-[#3b82f6]/10 text-[#3b82f6] hover:bg-[#3b82f6]/15'}`}>
@@ -278,7 +274,6 @@ export default function LiveMap() {
             <Bell className="w-5 h-5" />
           </button>
 
-          {/* Center: Car list */}
           <button onClick={() => setPanelOpen(true)}
             className="w-[60px] h-[60px] sm:w-[64px] sm:h-[64px] -mt-6 rounded-full flex items-center justify-center shadow-xl transition-all active:scale-95 bg-[#032347] text-white hover:bg-[#02335a] shadow-[0_4px_20px_rgba(3,35,71,0.4)] flex-shrink-0">
             <svg className="w-6 h-6 sm:w-7 sm:h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -287,7 +282,6 @@ export default function LiveMap() {
             </svg>
           </button>
 
-          {/* Right: Route + Engine Stop */}
           <button onClick={() => navigate('/live-map/route')}
             className={`w-[44px] h-[44px] sm:w-[48px] sm:h-[48px] rounded-full flex items-center justify-center transition-all active:scale-95 flex-shrink-0
               ${darkMode ? 'bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30' : 'bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/15'}`}>
@@ -301,13 +295,11 @@ export default function LiveMap() {
         </div>
       </div>
 
-      {/* Vehicle Popover */}
       {panelOpen && (
         <>
           <div className="fixed inset-0 z-[70]" onClick={() => { setPanelOpen(false); setSelectedUnit(null); }} />
           <div className={`fixed lg:absolute bottom-[88px] left-1/2 -translate-x-1/2 z-[80] w-[92%] sm:w-[360px] max-h-[55vh] rounded-2xl overflow-hidden flex flex-col shadow-2xl
             ${darkMode ? 'bg-[#1b1b1f] border border-[#3c3d46]' : 'bg-white border border-gray-200'}`}>
-            {/* Header */}
             <div className={`flex items-center justify-between px-4 py-3 border-b ${darkMode ? 'border-[#33343c]' : 'border-gray-100'}`}>
               <div>
                 <h2 className={`text-[14px] font-semibold ${darkMode ? 'text-white' : 'text-[#1d1d1f]'}`}>
@@ -326,7 +318,6 @@ export default function LiveMap() {
               </button>
             </div>
 
-            {/* Search */}
             {!selectedUnit && (
               <div className={`px-3 py-2 border-b ${darkMode ? 'border-[#33343c]' : 'border-gray-100'}`}>
                 <div className="relative">
@@ -345,7 +336,6 @@ export default function LiveMap() {
               </div>
             )}
 
-            {/* Filter spinner (when showing list) */}
             {!selectedUnit && (
               <div className={`flex items-center gap-2 px-3 py-2 border-b ${darkMode ? 'border-[#33343c]' : 'border-gray-100'}`}>
                 <SpinnerSelect
@@ -361,7 +351,6 @@ export default function LiveMap() {
             )}
 
             <div className="flex-1 overflow-y-auto overscroll-contain" style={{ WebkitOverflowScrolling: 'touch' }}>
-              {/* Vehicle list */}
               {!selectedUnit ? (
                 filteredUnits.slice(0, 10).map((u) => (
                   <button key={u.id} onClick={() => { setSelectedUnit(u); setDetailTab('info'); }}
@@ -385,7 +374,6 @@ export default function LiveMap() {
                   </button>
                 ))
               ) : (
-                /* Selected unit detail */
                 <SelectedUnitDetail
                   unit={selectedUnit}
                   detailTab={detailTab}
@@ -466,7 +454,6 @@ function SelectedUnitDetail({ unit, detailTab, setDetailTab, darkMode, onBack, o
         <ChevronLeft className="w-3 h-3" /> Volver a la lista
       </button>
 
-      {/* Tabs */}
       <div className="flex gap-1.5 mb-3">
         {(['info', 'bitacora'] as DetailTab[]).map((tab) => (
           <button key={tab} onClick={() => setDetailTab(tab)}
@@ -479,7 +466,6 @@ function SelectedUnitDetail({ unit, detailTab, setDetailTab, darkMode, onBack, o
 
       {detailTab === 'info' ? (
         <div className="space-y-3">
-          {/* Route preview */}
           <div>
             <div className="flex items-center justify-between mb-1.5">
               <p className={`text-[10px] font-medium ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>Trayecto de hoy</p>
@@ -521,7 +507,6 @@ function SelectedUnitDetail({ unit, detailTab, setDetailTab, darkMode, onBack, o
             )}
           </div>
 
-          {/* Status bar */}
           <div className="flex items-center gap-2">
             <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: markerColor(unit.status) }} />
             <span className={`text-[12px] font-medium ${darkMode ? 'text-white' : 'text-[#1d1d1f]'}`}>
@@ -532,7 +517,6 @@ function SelectedUnitDetail({ unit, detailTab, setDetailTab, darkMode, onBack, o
             )}
           </div>
 
-          {/* Today stats grid */}
           <div className={`rounded-xl p-3 ${darkMode ? 'bg-[#232329]' : 'bg-[#f5f5f7]'}`}>
             <p className={`text-[10px] font-medium mb-2 ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>Estadísticas de hoy</p>
             <div className="grid grid-cols-2 gap-x-4 gap-y-2.5">
@@ -583,7 +567,6 @@ function SelectedUnitDetail({ unit, detailTab, setDetailTab, darkMode, onBack, o
           </button>
         </div>
       ) : (
-        /* Bitácora de hoy */
         <div className="space-y-2">
           <p className={`text-[10px] font-medium ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>
             Bitácora del {new Date().toLocaleDateString('es-MX', { day: 'numeric', month: 'long' })}

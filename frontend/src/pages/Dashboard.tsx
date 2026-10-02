@@ -85,14 +85,12 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-5">
-      {/* Header */}
       <div>
         <h1 className={`text-[22px] font-bold tracking-tight ${darkMode ? 'text-white' : 'text-[#1d1d1f]'}`}>
           Panel de monitoreo
         </h1>
       </div>
 
-      {/* North Star — Vehicles in Motion */}
       <div className={`relative overflow-hidden rounded-2xl p-5 ${darkMode ? 'bg-[#1b1b1f]' : 'bg-white'}`}>
         <div className="flex items-start justify-between">
           <div>
@@ -113,7 +111,6 @@ export default function Dashboard() {
           </div>
           <MiniSparkline data={sparkData1} color={darkMode ? '#555' : '#bbb'} />
         </div>
-        {/* Bottom bar */}
         <div className={`flex gap-1 mt-4 h-1.5 rounded-full overflow-hidden ${darkMode ? 'bg-[#33343c]' : 'bg-gray-100'}`}>
           <div className="bg-green-500 rounded-full transition-all duration-700"
             style={{ width: `${(totalMoving / totalUnits) * 100}%` }} />
@@ -135,7 +132,6 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* KPI Strip */}
       <div className="grid grid-cols-3 gap-3">
         <KPIItem label="Horas hoy" value={stats.hoursWorkedToday} icon={Clock}
           color="bg-amber-500/10 text-amber-600" darkMode={darkMode} spark={sparkData2} sparkColor="#F59E0B" />
@@ -145,9 +141,7 @@ export default function Dashboard() {
           color="bg-red-500/10 text-red-500" darkMode={darkMode} />
       </div>
 
-      {/* Fleet Health + Quick Actions */}
       <div className="grid grid-cols-2 gap-3">
-        {/* Health ring */}
         <div className={`${darkMode ? 'bg-[#1b1b1f]' : 'bg-white'} rounded-2xl p-5 flex flex-col items-center justify-center`}>
           <div className="relative">
             <HealthRing percent={healthPercent} size={90} stroke={8} darkMode={darkMode} />
@@ -160,7 +154,6 @@ export default function Dashboard() {
           </p>
         </div>
 
-        {/* Alerts detail */}
         <div className={`${darkMode ? 'bg-[#1b1b1f]' : 'bg-white'} rounded-2xl p-5 flex flex-col`}>
           <div className="flex items-center gap-2 mb-3">
             <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-red-500/10">
@@ -193,7 +186,6 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Quick Actions */}
       <div>
         <h3 className={`text-[13px] font-semibold mb-3 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
           Accesos rápidos
@@ -206,7 +198,6 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Activity Feed */}
       <div className={`${darkMode ? 'bg-[#1b1b1f]' : 'bg-white'} rounded-2xl`}>
         <div className="flex items-center justify-between px-5 pt-5 pb-3">
           <h3 className={`text-[13px] font-semibold ${darkMode ? 'text-[#f5f5f7]' : 'text-[#1d1d1f]'}`}>

@@ -159,7 +159,6 @@ export default function Tracking() {
 
   return (
     <div className="space-y-4 pb-28 lg:pb-6">
-      {/* Header */}
       <div>
         <h1 className={`text-base font-bold ${darkMode ? 'text-[#f5f5f7]' : 'text-[#1d1d1f]'}`}>Rastreo histórico</h1>
         <p className={`text-[13px] ${darkMode ? 'text-gray-400' : 'text-gray-500'} mt-0.5`}>
@@ -168,10 +167,8 @@ export default function Tracking() {
       </div>
 
       <div className="flex flex-col lg:flex-row gap-4 lg:gap-5 items-start">
-        {/* Panel de filtros (una sola tarjeta compacta) */}
         <div className="w-full lg:w-[340px] flex-shrink-0 lg:sticky lg:top-4">
           <div className={`${cardClass} p-3.5 sm:p-4 divide-y ${darkMode ? 'divide-[#33343c]' : 'divide-gray-100'}`}>
-            {/* Fecha y horario */}
             <div className="pb-3.5">
               <div className="grid grid-cols-1 gap-2.5">
                 <DatePicker label="Fecha" value={date} onChange={setDate} />
@@ -182,13 +179,11 @@ export default function Tracking() {
               </div>
             </div>
 
-            {/* Unidades */}
             <div className="pt-3.5">
               <label className={`block text-xs font-medium ${darkMode ? 'text-gray-400' : 'text-gray-500'} mb-2`}>
                 Unidades
               </label>
 
-              {/* Trigger: abre el selector */}
               <button
                 onClick={() => setSelectorOpen(true)}
                 className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-left text-[13px] border-2 transition-all active:scale-[0.99]
@@ -213,7 +208,6 @@ export default function Tracking() {
                 </p>
               )}
 
-              {/* Chips seleccionados */}
               {selectedUnits.length > 0 && (
                 <div className="flex flex-wrap gap-1.5 mt-2.5">
                   {selectedUnits.map((u, i) => (
@@ -229,7 +223,6 @@ export default function Tracking() {
                 </div>
               )}
 
-              {/* Botón dentro del panel: solo escritorio */}
               <button onClick={handleSearch} disabled={fetching || selectedUnits.length === 0}
                 className={`mt-3 hidden lg:flex w-full items-center justify-center gap-2 px-4 py-2.5 text-[13px] font-medium rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed
                   ${darkMode ? 'bg-white text-[#032347] hover:bg-gray-100' : 'bg-[#032347] text-white hover:bg-[#02335a]'} active:scale-[0.99]`}>
@@ -240,7 +233,6 @@ export default function Tracking() {
           </div>
         </div>
 
-        {/* Área principal */}
         <div ref={resultsRef} className="flex-1 min-w-0 w-full space-y-4 scroll-mt-4">
           {fetchError && (
             <div className={`flex items-center gap-3 p-3 rounded-xl ${darkMode ? 'bg-red-900/20' : 'bg-red-50'}`}>
@@ -249,7 +241,6 @@ export default function Tracking() {
             </div>
           )}
 
-          {/* Instrucción o detalle de la unidad seleccionada en el mapa */}
           {okResults.length > 0 && !fetching && !activeResult && (
             <div className={`flex items-center gap-2.5 px-3.5 py-3 rounded-xl border border-dashed
               ${darkMode ? 'border-[#3c3d46] text-gray-500' : 'border-gray-300 text-gray-500'}`}>
@@ -308,11 +299,9 @@ export default function Tracking() {
             </div>
           )}
 
-          {/* Mapa con leyenda flotante */}
           {routes.length > 0 && !fetching ? (
             <div className="rounded-2xl overflow-hidden relative h-[58vh] sm:h-[440px] lg:h-[520px]" style={{ zIndex: 0 }}>
               <MapLibreMap dark={darkMode} polylines={routes} markers={endMarkers} height="100%" fitBounds />
-              {/* Leyenda de colores sobre el mapa (tappable para ver detalle) */}
               {okResults.length > 1 && (
                 <div className="absolute top-2.5 left-2.5 z-[900] flex flex-wrap gap-1.5 max-w-[75%]">
                   {okResults.map((r) => (
@@ -339,7 +328,6 @@ export default function Tracking() {
             </div>
           )}
 
-          {/* Errores por unidad */}
           {results.filter((r) => r.error).length > 0 && !fetching && (
             <div className={`${cardClass} p-3.5 space-y-1.5`}>
               <p className={`text-[12px] font-semibold ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Avisos</p>
@@ -351,7 +339,6 @@ export default function Tracking() {
             </div>
           )}
 
-          {/* Tabla detallada: sigue a la unidad seleccionada en el mapa */}
           {activeResult && !fetching && (
             <div className={`${cardClass} overflow-x-auto`}>
               <div className={`px-4 py-2.5 border-b ${darkMode ? 'border-[#33343c]' : 'border-gray-100'}`}>
@@ -392,7 +379,6 @@ export default function Tracking() {
         </div>
       </div>
 
-      {/* Barra de acción fija (móvil) */}
       <div className={`lg:hidden fixed bottom-0 inset-x-0 z-[1050] px-4 pt-3 pb-[calc(16px+env(safe-area-inset-bottom))] backdrop-blur-xl border-t
         ${darkMode ? 'bg-[#131316]/90 border-[#33343c]' : 'bg-white/90 border-gray-200'}`}>
         <button onClick={handleSearch} disabled={fetching || selectedUnits.length === 0}
@@ -402,7 +388,6 @@ export default function Tracking() {
         </button>
       </div>
 
-      {/* Selector de unidades (bottom sheet) */}
       <UnitSelectorSheet
         open={selectorOpen}
         units={units}

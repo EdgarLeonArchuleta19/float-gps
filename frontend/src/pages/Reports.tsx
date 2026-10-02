@@ -272,7 +272,6 @@ export default function Reports() {
     window.location.href = `mailto:?subject=${encodeURIComponent(`Floa GPS — ${meta.title}`)}&body=${encodeURIComponent(shareSummaryText().replace(/\*/g, ''))}`;
   };
 
-  // ===== Línea de resumen del documento (estilo informe, no KPIs) =====
   const docStats: string[] = useMemo(() => {
     if (loading) return [];
     if (activeTab === 'fleet') return [
@@ -308,7 +307,6 @@ export default function Reports() {
 
   return (
     <div className="space-y-3 pb-24 lg:pb-4">
-      {/* Controles */}
       <div className={`${card} rounded-xl p-2.5 sm:p-3 space-y-2.5`}>
         <div className="flex items-center gap-2">
           <span className={`hidden lg:block text-[10px] font-semibold uppercase tracking-wider flex-shrink-0 px-1 ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>Reporte</span>
@@ -354,9 +352,7 @@ export default function Reports() {
         )}
       </div>
 
-      {/* Documento */}
       <div className={`${card} rounded-xl overflow-hidden`}>
-        {/* Encabezado del informe */}
         <div className="px-4 pt-3.5 pb-3">
           <p className={`text-[10px] font-semibold uppercase tracking-widest ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>
             Reporte · {activeMeta.label}
@@ -375,7 +371,6 @@ export default function Reports() {
         </div>
         <div className={`h-px ${darkMode ? 'bg-[#33343c]' : 'bg-gray-100'}`} />
 
-        {/* Contenido */}
         {loading ? (
           <div className="flex items-center justify-center py-16">
             <div className="animate-spin rounded-full h-7 w-7 border-b-2 border-[#032347]" />
