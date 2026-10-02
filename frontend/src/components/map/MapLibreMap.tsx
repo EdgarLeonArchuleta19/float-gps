@@ -12,6 +12,7 @@ import {
   EMPTY_GEOJSON,
   RouteSpec,
   circlesGeoJson,
+  isValidMarker,
   isValidPoint,
   routesGeoJson,
   toLngLat,
@@ -23,13 +24,6 @@ export type MapRoute = RouteSpec;
 
 const CULIACAN: [number, number] = [24.7994, -107.3940];
 
-/**
- * Estilos gratuit@s, sin API key ni tarjeta.
- * - OpenFreeMap (calle) no pide registro.
- * - CartoDB cubre el tema oscuro.
- * - CartoDB ya no publica un style vectorial de satelite (devuelve 404), asi que
- *   el satelite se arma en memoria con los tiles raster de Esri World Imagery.
- */
 const SATELLITE_STYLE: StyleSpecification = {
   version: 8,
   sources: {
@@ -130,18 +124,15 @@ export default function MapLibreMap({
   const routeMarkersRef = useRef<Marker[]>([]);
   const [ready, setReady] = useState(false);
 
-  const styleUrl =
-    layer === 'satellite' ? STYLES.satellite : dark ? STYLES.dark : STYLES.street;
-
-  // Ultimos props, para poder repintar sin depender de un rerender.
   const dataRef = useRef<OverlayData>({ markers, polyline, polylines, circles, fitBounds });
   dataRef.current = { markers, polyline, polylines, circles, fitBounds };
 
   const onMapReadyRef = useRef(onMapReady);
   onMapReadyRef.current = onMapReady;
 
-  // Fuentes y capas propias. Hay que (re)crearlas tras cada setStyle porque
-  // MapLibre las descarta cuando cambia el estilo.
+  const styleUrl = layer === 'satellite' ? STYLES.satellite : dark ? STYLES.dark : STYLES.street;
+  const styleKey = `${layer}|${dark}`;
+
   const addOverlays = (map: MapLibreInstance) => {
     if (map.getSource(ROUTE_LAYER)) return;
 
@@ -194,8 +185,6 @@ export default function MapLibreMap({
     });
   };
 
-  // Pinta datos sobre el mapa. Se invoca desde los efectos y tambien desde
-  // load/styledata, porque al cambiar de estilo las fuentes nacen vacias.
   const applyData = (map: MapLibreInstance, data: OverlayData) => {
     if (!map.getSource(ROUTE_LAYER)) return;
 
@@ -246,12 +235,9 @@ export default function MapLibreMap({
     }
   };
 
-  // Marcadores de unidad: son elementos DOM, sobreviven al cambio de estilo.
   const paintMarkers = (map: MapLibreInstance, list: MapMarker[]) => {
     markersRef.current.forEach((m) => m.remove());
-    markersRef.current = list
-      .filter((m) => isValidPoint(m.position))
-      .map((m) => {
+    markersRef.current = list.filter(isValidMarker).map((m) => {
       const el = m.vehicleType === 'machine' ? pin(m.color, MACHINE_SVG) : pin(m.color, VEHICLE_SVG);
 
       if (m.onClick) {
@@ -270,10 +256,9 @@ export default function MapLibreMap({
       return new Marker({ element: el, anchor: 'bottom' })
         .setLngLat(toLngLat(m.position))
         .addTo(map);
-      });
+    });
   };
 
-  // Creacion del mapa (una sola vez)
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
 
@@ -302,26 +287,19 @@ export default function MapLibreMap({
       mapRef.current = null;
       setReady(false);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Cambio de estilo (tema oscuro / satelite)
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !ready) return;
-    setReady(false);
 
-    const onStyleReady = () => {
-      if (!map.getSource(ROUTE_LAYER)) return;
+    map.once('style.load', () => {
+      addOverlays(map);
       applyData(map, dataRef.current);
-      setReady(true);
-    };
-
-    map.once('styledata', onStyleReady);
+    });
     map.setStyle(styleUrl);
-  }, [styleUrl, ready]);
+  }, [styleKey, ready]);
 
-  // Repintar overlays cuando cambian los datos o el mapa queda listo.
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !ready) return;

@@ -50,7 +50,6 @@ export default function AddGeofence() {
   const colorRef = useRef(color);
   const [ready, setReady] = useState(false);
 
-  // Radio mostrado: la UI guarda el diametro completo.
   const radius = Math.max((parseFloat(diameter) || 0) / 2, 10);
 
   const paintCircle = (map: MapLibreInstance) => {
@@ -77,7 +76,6 @@ export default function AddGeofence() {
     }
   }, [id, isEdit]);
 
-  // Capa del circulo en edicion. MapLibre no tiene circulos, se usa un poligono.
   const addCircleLayer = (map: MapLibreInstance) => {
     if (map.getSource(CIRCLE_LAYER)) return;
     map.addSource(CIRCLE_LAYER, { type: 'geojson', data: circlesGeoJson([]) });
@@ -95,7 +93,6 @@ export default function AddGeofence() {
     });
   };
 
-  // Init map once
   useEffect(() => {
     if (!mapDivRef.current) return;
 
@@ -136,24 +133,19 @@ export default function AddGeofence() {
       markerRef.current = null;
       setReady(false);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // El tema cambia el estilo completo, y setStyle borra las capas propias
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !ready) return;
-    setReady(false);
 
-    map.once('styledata', () => {
+    map.once('style.load', () => {
       addCircleLayer(map);
       paintCircle(map);
-      setReady(true);
     });
     map.setStyle(darkMode ? STYLE_URL.dark : STYLE_URL.light);
   }, [darkMode, ready]);
 
-  // Sync center / diameter / color -> map objects
   useEffect(() => {
     const map = mapRef.current;
     const marker = markerRef.current;

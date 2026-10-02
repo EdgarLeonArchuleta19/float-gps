@@ -10,21 +10,19 @@ export interface RouteSpec {
   dashed?: boolean;
 }
 
+export interface PointMarker {
+  position: [number, number];
+}
+
 export const EMPTY_GEOJSON: GeoJSON.FeatureCollection = {
   type: 'FeatureCollection',
   features: [],
 };
 
-/**
- * La app usa [lat, lng] en todas sus props, pero MapLibre y GeoJSON esperan
- * [lng, lat]. Estas dos funciones son el unico lugar donde se invierte el orden,
- * para no tener que acordarse en cada llamada.
- */
 export function toLngLat([lat, lng]: [number, number]): [number, number] {
   return [lng, lat];
 }
 
-/** GeoJSON exige [lng, lat]. */
 function toGeoJSONPoint([lat, lng]: [number, number]): [number, number] {
   return [lng, lat];
 }
@@ -37,11 +35,14 @@ export function isValidPoint(p: [number, number] | undefined | null): boolean {
   );
 }
 
+export function isValidMarker(m: PointMarker): boolean {
+  return isValidPoint(m.position);
+}
+
 export function validPoints(path: [number, number][]): [number, number][] {
   return path.filter(isValidPoint);
 }
 
-/** MapLibre no tiene circulos, solo polilineas, asi que se aproxima con un poligono. */
 export function circlePolygon(
   center: [number, number],
   radiusMeters: number,
