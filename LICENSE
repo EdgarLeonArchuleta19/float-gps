@@ -1,0 +1,67 @@
+LICENCIA DE USO NO COMERCIAL CON ATRIBUCIÓN OBLIGATORIA
+(Attribution-NonCommercial License / Derechos de Autor Reservados)
+
+Proyecto: Float GPS — Sistema de Monitoreo GPS para Flotas
+Repositorio: https://github.com/EdgarLeonArchuleta19/float-gps
+Copyright (c) 2026 Edgar Leon Archuleta (https://github.com/EdgarLeonArchuleta19).
+Todos los derechos reservados conforme a los términos siguientes.
+
+================================================================================
+TÉRMINOS Y CONDICIONES DE USO (ESPAÑOL)
+================================================================================
+
+Por la presente se concede permiso únicamente para visualizar, estudiar y
+evaluar este código fuente con fines estrictamente personales, académicos o de
+demostración de portafolio, sujeto a las siguientes condiciones obligatorias:
+
+1. ATRIBUCIÓN OBLIGATORIA (CRÉDITOS AL AUTOR):
+   Cualquier copia, bifurcación (fork), referencia o uso permitido del código o
+   fragmentos del mismo debe incluir de forma visible este aviso de copyright y
+   dar crédito explícito al autor original:
+   - Autor: Edgar Leon Archuleta (@EdgarLeonArchuleta19)
+   - Repositorio original: https://github.com/EdgarLeonArchuleta19/float-gps
+
+2. PROHIBICIÓN DE USO COMERCIAL (SIN FINES DE LUCRO):
+   Queda ESTRICTAMENTE PROHIBIDO utilizar, copiar, modificar, fusionar, publicar,
+   distribuir, sublicenciar, vender, alquilar o explotar este sistema, su código
+   fuente, diseño o arquitectura con fines comerciales, empresariales, de venta a
+   terceros o para la operación de cualquier negocio sin el permiso previo,
+   expreso y por escrito del titular de los derechos de autor.
+
+3. RESERVA DE MARCA E IDENTIDAD VISUAL:
+   La arquitectura, interfaz y marca del sistema de monitoreo pertenecen exclusivamente al autor.
+   Esta licencia NO concede ningún derecho de uso sobre marcas comerciales,
+   logotipos ni identidad corporativa.
+
+4. AUSENCIA DE GARANTÍAS:
+   EL SOFTWARE SE PROPORCIONA "TAL CUAL", SIN GARANTÍA DE NINGÚN TIPO, EXPRESA O
+   IMPLÍCITA. EN NINGÚN CASO EL AUTOR SERÁ RESPONSABLE DE NINGÚN RECLAMO, DAÑO U
+   OTRA RESPONSABILIDAD DERIVADA DEL USO DEL SOFTWARE.
+
+================================================================================
+TERMS AND CONDITIONS OF USE (ENGLISH — NON-COMMERCIAL ATTRIBUTION)
+================================================================================
+
+Copyright (c) 2026 Edgar Leon Archuleta (@EdgarLeonArchuleta19).
+
+Permission is hereby granted solely to view, study, and reference this source
+code for strictly personal, educational, or portfolio evaluation purposes,
+subject to the following mandatory conditions:
+
+1. MANDATORY ATTRIBUTION:
+   You must give appropriate credit to the original author (Edgar Leon Archuleta
+   — https://github.com/EdgarLeonArchuleta19/float-gps), provide a link to this license,
+   and indicate if any changes were made.
+
+2. NON-COMMERCIAL USE ONLY:
+   You may NOT use the material, source code, UI components, or system
+   architecture for commercial purposes, business operations, client deliverables,
+   or monetary gain without prior written permission from the copyright holder.
+
+3. TRADEMARK & BRAND RESERVATION:
+   All brand names, logos, icons, and visual assets in this repository remain the
+   exclusive property of their respective owners and may not be reused.
+
+4. NO WARRANTY:
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+   IMPLIED.
