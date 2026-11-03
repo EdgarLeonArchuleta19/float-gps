@@ -72,10 +72,11 @@ function distanceMeters(lat: number, lng: number, centerLat: number, centerLng: 
   return haversine({ lat, lon: lng }, { lat: centerLat, lon: centerLng });
 }
 
-async function findDevice(imei: string) {
-  const candidates = [imei];
-  if (imei.length === 15) candidates.push(`0${imei}`);
-  if (imei.length === 16) candidates.push(imei.slice(1));
+export async function findDevice(imei: string) {
+  const trimmed = imei.trim();
+  const candidates = [trimmed];
+  if (trimmed.length === 15) candidates.push(`0${trimmed}`);
+  if (trimmed.length === 16) candidates.push(trimmed.slice(1));
 
   return prisma.gpsDevice.findFirst({
     where: { imei: { in: candidates } },
@@ -372,6 +373,13 @@ export async function ingestFixes(
       await prisma.machine.update({ where: { id: device.machineId }, data: { status } });
     }
     result.unitStatus = status;
+  }
+
+  if (result.inserted > 0) {
+    await prisma.gpsDevice.update({
+      where: { id: device.id },
+      data: { lastReportAt: new Date(), isActive: true },
+    }).catch(() => {});
   }
 
   return result;

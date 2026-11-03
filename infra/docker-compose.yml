@@ -1,0 +1,73 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: floa-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-floa_postgres_pass}
+      POSTGRES_DB: ${POSTGRES_DB:-gps_tracker}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    ports:
+      - "127.0.0.1:5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  traccar:
+    image: traccar/traccar:latest
+    container_name: floa-traccar
+    restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./traccar/traccar.xml:/opt/traccar/conf/traccar.xml:ro
+      - traccar_logs:/opt/traccar/logs
+    ports:
+      # Puerto Cellocator para el CR300B (público)
+      - "5033:5033/tcp"
+      - "5033:5033/udp"
+      # Puerto GT06 opcional
+      - "5023:5023/tcp"
+      - "5023:5023/udp"
+      # Panel web de Traccar (solo accesible en local para administración)
+      - "127.0.0.1:8082:8082"
+
+  api:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    container_name: floa-api
+    restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-floa_postgres_pass}@postgres:5432/${POSTGRES_DB:-gps_tracker}?schema=public
+      JWT_SECRET: ${JWT_SECRET}
+      TRACCAR_WEBHOOK_SECRET: ${TRACCAR_WEBHOOK_SECRET:-floa_super_secret_webhook_key}
+      TRACCAR_URL: http://traccar:8082
+      TRACCAR_USER: ${TRACCAR_ADMIN_USER:-admin}
+      TRACCAR_PASSWORD: ${TRACCAR_ADMIN_PASSWORD:-admin}
+      CORS_ORIGINS: ${CORS_ORIGINS:-*}
+    ports:
+      - "127.0.0.1:3001:3001"
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: floa-tunnel
+    restart: always
+    command: tunnel --no-autoupdate run
+    environment:
+      TUNNEL_TOKEN: ${TUNNEL_TOKEN}
+
+volumes:
+  postgres_data:
+  traccar_logs:

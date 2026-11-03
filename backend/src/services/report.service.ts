@@ -1,9 +1,25 @@
 import { PrismaClient } from '@prisma/client';
+import { TenantContext } from '../middleware/auth';
+import { CompanyService } from './company.service';
+import { haversineKm, isWorkingTime } from '../utils/workSchedule';
+
+const companyService = new CompanyService();
+// Gaps longer than this between two points are not counted as driven distance.
+const MAX_SEGMENT_GAP_MS = 30 * 60 * 1000;
 
 const prisma = new PrismaClient();
 
+function applyCompanySessionFilter(where: any, tenant?: TenantContext) {
+  if (tenant?.companyId) {
+    where.OR = [
+      { vehicle: { companyId: tenant.companyId } },
+      { machine: { companyId: tenant.companyId } },
+    ];
+  }
+}
+
 export class ReportService {
-  async getDailyReport(query: { vehicleId?: string; machineId?: string; date?: string }) {
+  async getDailyReport(query: { vehicleId?: string; machineId?: string; date?: string }, tenant?: TenantContext) {
     const date = query.date ? new Date(query.date) : new Date();
     date.setHours(0, 0, 0, 0);
     const endDate = new Date(date);
@@ -15,6 +31,7 @@ export class ReportService {
 
     if (query.vehicleId) where.vehicleId = query.vehicleId;
     if (query.machineId) where.machineId = query.machineId;
+    applyCompanySessionFilter(where, tenant);
 
     const sessions = await prisma.workSession.findMany({
       where,
@@ -38,7 +55,7 @@ export class ReportService {
     }));
   }
 
-  async getWeeklyReport(query: { vehicleId?: string; machineId?: string }) {
+  async getWeeklyReport(query: { vehicleId?: string; machineId?: string }, tenant?: TenantContext) {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - 7);
     startDate.setHours(0, 0, 0, 0);
@@ -46,6 +63,7 @@ export class ReportService {
     const where: any = { date: { gte: startDate } };
     if (query.vehicleId) where.vehicleId = query.vehicleId;
     if (query.machineId) where.machineId = query.machineId;
+    applyCompanySessionFilter(where, tenant);
 
     const sessions = await prisma.workSession.findMany({
       where,
@@ -67,7 +85,7 @@ export class ReportService {
     return Object.values(grouped);
   }
 
-  async getMonthlyReport(query: { vehicleId?: string; machineId?: string }) {
+  async getMonthlyReport(query: { vehicleId?: string; machineId?: string }, tenant?: TenantContext) {
     const startDate = new Date();
     startDate.setDate(1);
     startDate.setHours(0, 0, 0, 0);
@@ -75,6 +93,7 @@ export class ReportService {
     const where: any = { date: { gte: startDate } };
     if (query.vehicleId) where.vehicleId = query.vehicleId;
     if (query.machineId) where.machineId = query.machineId;
+    applyCompanySessionFilter(where, tenant);
 
     const sessions = await prisma.workSession.findMany({
       where,
@@ -96,7 +115,10 @@ export class ReportService {
     return Object.values(grouped);
   }
 
-  async getHoursReport(query: { vehicleId?: string; machineId?: string; startDate?: string; endDate?: string }) {
+  async getHoursReport(
+    query: { vehicleId?: string; machineId?: string; startDate?: string; endDate?: string },
+    tenant?: TenantContext
+  ) {
     const where: any = {};
     if (query.vehicleId) where.vehicleId = query.vehicleId;
     if (query.machineId) where.machineId = query.machineId;
@@ -105,6 +127,7 @@ export class ReportService {
       if (query.startDate) where.date.gte = new Date(query.startDate);
       if (query.endDate) where.date.lte = new Date(query.endDate);
     }
+    applyCompanySessionFilter(where, tenant);
 
     const sessions = await prisma.workSession.findMany({
       where,
@@ -127,17 +150,28 @@ export class ReportService {
     return Object.values(grouped);
   }
 
-  async getEventsReport(query: { vehicleId?: string; machineId?: string; startDate?: string; endDate?: string }) {
+  async getEventsReport(
+    query: { vehicleId?: string; machineId?: string; startDate?: string; endDate?: string },
+    tenant?: TenantContext
+  ) {
     const where: any = {};
     if (query.startDate || query.endDate) {
       where.timestamp = {};
       if (query.startDate) where.timestamp.gte = new Date(query.startDate);
       if (query.endDate) where.timestamp.lte = new Date(query.endDate);
     }
-    if (query.vehicleId || query.machineId) {
-      where.gpsDevice = {};
-      if (query.vehicleId) where.gpsDevice.vehicleId = query.vehicleId;
-      if (query.machineId) where.gpsDevice.machineId = query.machineId;
+    const gpsFilter: any = {};
+    if (query.vehicleId) gpsFilter.vehicleId = query.vehicleId;
+    if (query.machineId) gpsFilter.machineId = query.machineId;
+    if (tenant?.companyId) {
+      gpsFilter.OR = [
+        { companyId: tenant.companyId },
+        { vehicle: { companyId: tenant.companyId } },
+        { machine: { companyId: tenant.companyId } },
+      ];
+    }
+    if (Object.keys(gpsFilter).length > 0) {
+      where.gpsDevice = gpsFilter;
     }
 
     const events = await prisma.trackingEvent.findMany({
@@ -150,6 +184,47 @@ export class ReportService {
     return events.map((e) => ({
       ...e,
       unitName: e.gpsDevice.vehicle?.name || e.gpsDevice.machine?.name || 'Desconocido',
+    }));
+  }
+
+  // Kilometres driven outside the company's working hours, per unit, for the
+  // requested range (defaults to today). A segment counts as off-hours when it
+  // starts outside the schedule.
+  async getOffHoursReport(query: { startDate?: string; endDate?: string }, tenant?: TenantContext) {
+    const start = query.startDate ? new Date(query.startDate) : new Date(new Date().setHours(0, 0, 0, 0));
+    const end = query.endDate ? new Date(query.endDate) : new Date(new Date().setHours(23, 59, 59, 999));
+    const schedule = await companyService.getSchedule(tenant);
+
+    const deviceWhere: any = { OR: [{ vehicleId: { not: null } }, { machineId: { not: null } }] };
+    if (tenant?.companyId) {
+      deviceWhere.AND = [
+        { OR: [{ companyId: tenant.companyId }, { vehicle: { companyId: tenant.companyId } }, { machine: { companyId: tenant.companyId } }] },
+      ];
+    }
+    const devices = await prisma.gpsDevice.findMany({ where: deviceWhere, include: { vehicle: true, machine: true } });
+    if (!devices.length) return [];
+
+    const positions = await prisma.gpsPosition.findMany({
+      where: { gpsDeviceId: { in: devices.map((d) => d.id) }, timestamp: { gte: start, lte: end } },
+      orderBy: [{ gpsDeviceId: 'asc' }, { timestamp: 'asc' }],
+      select: { gpsDeviceId: true, latitude: true, longitude: true, timestamp: true },
+    });
+
+    const km: Record<string, number> = {};
+    for (let i = 1; i < positions.length; i++) {
+      const a = positions[i - 1];
+      const b = positions[i];
+      if (a.gpsDeviceId !== b.gpsDeviceId) continue;
+      if (b.timestamp.getTime() - a.timestamp.getTime() > MAX_SEGMENT_GAP_MS) continue;
+      if (isWorkingTime(a.timestamp, schedule)) continue;
+      km[a.gpsDeviceId] = (km[a.gpsDeviceId] || 0) + haversineKm(a.latitude, a.longitude, b.latitude, b.longitude);
+    }
+
+    return devices.map((d) => ({
+      unitId: d.vehicleId || d.machineId,
+      unitType: d.vehicleId ? 'VEHICLE' : 'MACHINE',
+      unitName: d.vehicle?.name || d.machine?.name || 'Desconocido',
+      offHoursKm: parseFloat((km[d.id] || 0).toFixed(1)),
     }));
   }
 }

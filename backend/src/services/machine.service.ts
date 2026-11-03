@@ -1,14 +1,21 @@
 import { PrismaClient } from '@prisma/client';
+import { TenantContext } from '../middleware/auth';
 
 const prisma = new PrismaClient();
 
 export class MachineService {
-  async findAll(query: { search?: string; status?: string; page?: string; limit?: string }) {
+  async findAll(query: { search?: string; status?: string; page?: string; limit?: string }, tenant?: TenantContext) {
     const page = parseInt(query.page || '1');
     const limit = parseInt(query.limit || '10');
     const skip = (page - 1) * limit;
 
     const where: any = { isActive: true };
+    if (tenant?.companyId) {
+      where.companyId = tenant.companyId;
+    }
+    if (tenant?.restrictToUserUnits && tenant.userId) {
+      where.userUnits = { some: { userId: tenant.userId } };
+    }
     if (query.search) {
       where.OR = [
         { name: { contains: query.search } },
@@ -43,7 +50,7 @@ export class MachineService {
     return { data: result, pagination: { page, limit, total, totalPages: Math.ceil(total / limit) } };
   }
 
-  async findById(id: string) {
+  async findById(id: string, tenant?: TenantContext) {
     const machine = await prisma.machine.findUnique({
       where: { id },
       include: {
@@ -53,11 +60,18 @@ export class MachineService {
             events: { orderBy: { timestamp: 'desc' }, take: 20 },
           },
         },
-        workSessions: { where: { date: { gte: new Date(new Date().setDate(new Date().getDate() - 7)) } }, orderBy: { date: 'desc' } },
+        workSessions: {
+          where: { date: { gte: new Date(new Date().setDate(new Date().getDate() - 7)) } },
+          orderBy: { date: 'desc' },
+        },
       },
     });
 
     if (!machine) return null;
+    if (tenant?.companyId && machine.companyId && machine.companyId !== tenant.companyId) {
+      return null;
+    }
+
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
     const todaySession = await prisma.workSession.findFirst({ where: { machineId: id, date: { gte: todayStart } } });

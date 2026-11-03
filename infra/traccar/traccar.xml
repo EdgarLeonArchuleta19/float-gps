@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+    <entry key="config.default">./conf/default.xml</entry>
+
+    <!-- Base de datos PostgreSQL en la misma red Docker -->
+    <entry key="database.driver">org.postgresql.Driver</entry>
+    <entry key="database.url">jdbc:postgresql://postgres:5432/traccar</entry>
+    <entry key="database.user">postgres</entry>
+    <entry key="database.password">floa_postgres_pass</entry>
+
+    <!-- Restricción de protocolos para ahorrar memoria en VM ARM -->
+    <entry key="protocols.enable">cellocator,gt06</entry>
+
+    <!-- Puerto web interno -->
+    <entry key="web.port">8082</entry>
+
+    <!-- Reenvío inmediato de posiciones a Floa GPS API -->
+    <entry key="forward.enable">true</entry>
+    <entry key="forward.json">true</entry>
+    <entry key="forward.url">http://api:3001/api/ingest/traccar?token=floa_super_secret_webhook_key</entry>
+
+    <!-- Reenvío de eventos (alarmas, offline, sos) -->
+    <entry key="event.forward.enable">true</entry>
+    <entry key="event.forward.url">http://api:3001/api/ingest/traccar?token=floa_super_secret_webhook_key</entry>
+</properties>

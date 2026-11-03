@@ -2,7 +2,6 @@
 node_modules/
 
 # Builds
-frontend/dist/
 backend/dist/
 *.tsbuildinfo
 
@@ -31,4 +30,3 @@ Thumbs.db
 # Editors
 .vscode/
 .idea/
-.vercel

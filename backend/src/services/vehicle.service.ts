@@ -1,14 +1,51 @@
 import { PrismaClient } from '@prisma/client';
+import { AppError } from '../middleware/errorHandler';
+import { TenantContext } from '../middleware/auth';
 
 const prisma = new PrismaClient();
 
+const VEHICLE_FIELDS = ['name', 'plate', 'type', 'brand', 'vehicleModel', 'year', 'color', 'status'] as const;
+
+function pickVehicleFields(data: any) {
+  const picked: Record<string, unknown> = {};
+  for (const key of VEHICLE_FIELDS) {
+    if (data?.[key] !== undefined && data[key] !== '') picked[key] = key === 'year' ? Number(data[key]) || null : data[key];
+  }
+  return picked as any;
+}
+
+// Mutations must only touch vehicles of the caller's company. Not-found and
+// foreign vehicles answer the same 404 so ids from other tenants can't be probed.
+async function assertVehicleInTenant(id: string, tenant?: TenantContext) {
+  const vehicle = await prisma.vehicle.findUnique({ where: { id }, select: { companyId: true } });
+  if (!vehicle || (tenant?.companyId && vehicle.companyId !== tenant.companyId)) {
+    throw new AppError('Unidad no encontrada', 404);
+  }
+}
+
+function assertGpsInTenant(device: { companyId: string | null } | null, companyId: string | null) {
+  if (device && device.companyId && companyId && device.companyId !== companyId) {
+    throw new AppError('Ese GPS pertenece a otra empresa', 403);
+  }
+}
+
 export class VehicleService {
-  async findAll(query: { search?: string; status?: string; page?: string; limit?: string; sortBy?: string; sortOrder?: string }) {
+  async findAll(
+    query: { search?: string; status?: string; page?: string; limit?: string; sortBy?: string; sortOrder?: string },
+    tenant?: TenantContext
+  ) {
     const page = parseInt(query.page || '1');
     const limit = parseInt(query.limit || '10');
     const skip = (page - 1) * limit;
 
     const where: any = { isActive: true };
+
+    if (tenant?.companyId) {
+      where.companyId = tenant.companyId;
+    }
+    if (tenant?.restrictToUserUnits && tenant.userId) {
+      where.userUnits = { some: { userId: tenant.userId } };
+    }
 
     if (query.search) {
       where.OR = [
@@ -61,7 +98,7 @@ export class VehicleService {
     return { data: result, pagination: { page, limit, total, totalPages: Math.ceil(total / limit) } };
   }
 
-  async findById(id: string) {
+  async findById(id: string, tenant?: TenantContext) {
     const vehicle = await prisma.vehicle.findUnique({
       where: { id },
       include: {
@@ -79,6 +116,9 @@ export class VehicleService {
     });
 
     if (!vehicle) return null;
+    if (tenant?.companyId && vehicle.companyId && vehicle.companyId !== tenant.companyId) {
+      return null;
+    }
 
     const gpsDeviceId = vehicle.gpsDevice?.id;
     const todayStart = new Date();
@@ -91,7 +131,12 @@ export class VehicleService {
         orderBy: { timestamp: 'asc' },
       });
       for (let i = 1; i < todayPositions.length; i++) {
-        kmToday += haversineDistance(todayPositions[i - 1].latitude, todayPositions[i - 1].longitude, todayPositions[i].latitude, todayPositions[i].longitude);
+        kmToday += haversineDistance(
+          todayPositions[i - 1].latitude,
+          todayPositions[i - 1].longitude,
+          todayPositions[i].latitude,
+          todayPositions[i].longitude
+        );
       }
     }
 
@@ -108,42 +153,67 @@ export class VehicleService {
     };
   }
 
-  async updateStatus(id: string, status: string) {
+  async updateStatus(id: string, status: string, tenant?: TenantContext) {
+    await assertVehicleInTenant(id, tenant);
     return prisma.vehicle.update({ where: { id }, data: { status } });
   }
 
-  async create(data: any) {
-    const { gps, ...vehicleData } = data;
+  async create(data: any, tenant?: TenantContext) {
+    const { gps } = data;
+    // Only accept known fields: spreading the raw body let a client pick any
+    // companyId (or other columns) and create units inside another tenant.
+    const vehicleData = pickVehicleFields(data);
+    const companyId = (tenant?.isSuperAdmin ? data.companyId : null) || tenant?.companyId || null;
 
     if (gps && !gps.imei) {
       throw new Error('El dispositivo GPS requiere un IMEI');
     }
 
     let gpsDeviceData: any = null;
+    let existingFreeGpsId: string | null = null;
+
     if (gps && gps.imei) {
       const existing = await prisma.gpsDevice.findUnique({ where: { imei: String(gps.imei).trim() } });
-      if (existing) {
+      if (existing && (existing.vehicleId || existing.machineId)) {
         throw new Error(`El IMEI ${gps.imei} ya está registrado en otro dispositivo`);
       }
-      gpsDeviceData = {
-        imei: String(gps.imei).trim(),
-        model: gps.model || 'Desconocido',
-        simNumber: gps.simNumber || null,
-        isActive: true,
-      };
+      assertGpsInTenant(existing, companyId);
+      if (existing) {
+        existingFreeGpsId = existing.id;
+      } else {
+        gpsDeviceData = {
+          imei: String(gps.imei).trim(),
+          model: gps.model || 'Cellocator CR300B Lite 3G',
+          simNumber: gps.simNumber || null,
+          isActive: true,
+          companyId,
+        };
+      }
     }
 
-    return prisma.vehicle.create({
-      data: {
-        ...vehicleData,
-        status: vehicleData.status || 'OFFLINE',
-        ...(gpsDeviceData ? { gpsDevice: { create: gpsDeviceData } } : {}),
-      },
+    return prisma.$transaction(async (tx) => {
+      const created = await tx.vehicle.create({
+        data: {
+          ...vehicleData,
+          companyId,
+          status: vehicleData.status || 'OFFLINE',
+          ...(gpsDeviceData ? { gpsDevice: { create: gpsDeviceData } } : {}),
+        },
+      });
+      if (existingFreeGpsId) {
+        await tx.gpsDevice.update({
+          where: { id: existingFreeGpsId },
+          data: { vehicleId: created.id, companyId },
+        });
+      }
+      return created;
     });
   }
 
-  async update(id: string, data: any) {
-    const { gps, ...vehicleData } = data;
+  async update(id: string, data: any, tenant?: TenantContext) {
+    await assertVehicleInTenant(id, tenant);
+    const { gps } = data;
+    const vehicleData = pickVehicleFields(data);
 
     if (!gps || !gps.imei) {
       return prisma.vehicle.update({ where: { id }, data: vehicleData });
@@ -153,6 +223,7 @@ export class VehicleService {
     if (existing && existing.vehicleId && existing.vehicleId !== id) {
       throw new Error(`El IMEI ${gps.imei} ya está vinculado a otra unidad`);
     }
+    assertGpsInTenant(existing, tenant?.companyId || null);
 
     return prisma.$transaction(async (tx) => {
       const vehicle = await tx.vehicle.update({ where: { id }, data: vehicleData });
@@ -162,15 +233,19 @@ export class VehicleService {
           data: { model: gps.model || existing.model, simNumber: gps.simNumber ?? existing.simNumber },
         });
       } else if (existing && !existing.vehicleId) {
-        await tx.gpsDevice.update({ where: { id: existing.id }, data: { vehicleId: id } });
+        await tx.gpsDevice.update({
+          where: { id: existing.id },
+          data: { vehicleId: id, companyId: vehicle.companyId || tenant?.companyId || null },
+        });
       } else {
         await tx.gpsDevice.create({
           data: {
             imei: String(gps.imei).trim(),
-            model: gps.model || 'Desconocido',
+            model: gps.model || 'Cellocator CR300B Lite 3G',
             simNumber: gps.simNumber || null,
             isActive: true,
             vehicleId: id,
+            companyId: vehicle.companyId || tenant?.companyId || null,
           },
         });
       }
@@ -178,7 +253,8 @@ export class VehicleService {
     });
   }
 
-  async delete(id: string) {
+  async delete(id: string, tenant?: TenantContext) {
+    await assertVehicleInTenant(id, tenant);
     return prisma.vehicle.update({ where: { id }, data: { isActive: false } });
   }
 }
@@ -187,6 +263,8 @@ function haversineDistance(lat1: number, lon1: number, lat2: number, lon2: numbe
   const R = 6371;
   const dLat = ((lat2 - lat1) * Math.PI) / 180;
   const dLon = ((lon2 - lon1) * Math.PI) / 180;
-  const a = Math.sin(dLat / 2) ** 2 + Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLon / 2) ** 2;
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLon / 2) ** 2;
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }

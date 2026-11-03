@@ -6,7 +6,6 @@
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
     "build": "tsc",
-    "build:vercel": "tsc && prisma generate",
     "start": "node dist/index.js",
     "seed": "ts-node prisma/seed.ts",
     "test": "ts-node --transpile-only scripts/test-gt06.ts",
@@ -21,7 +20,6 @@
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
     "@types/node": "^20.14.0",
-    "@vercel/node": "^3.0.0",
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
@@ -29,6 +27,7 @@
     "express": "^4.19.2",
     "haversine-distance": "^1.0.4",
     "jsonwebtoken": "^9.0.3",
+    "nodemailer": "^10.3.1",
     "pdfkit": "^0.15.0",
     "prisma": "^5.19.0",
     "typescript": "^5.4.5"
@@ -36,6 +35,7 @@
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
     "@types/jsonwebtoken": "^9.0.10",
+    "@types/nodemailer": "^8.0.2",
     "ts-node": "^10.9.2",
     "ts-node-dev": "^2.0.0"
   },

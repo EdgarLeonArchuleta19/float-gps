@@ -1,0 +1,70 @@
+{
+  "expo": {
+    "name": "floaGPS",
+    "slug": "floa-gps",
+    "version": "1.0.0",
+    "scheme": "floagps",
+    "orientation": "default",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "backgroundColor": "#131316",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.floa.gps",
+      "infoPlist": {
+        "NSFaceIDUsageDescription": "floaGPS usa Face ID para confirmar comandos de paro de motor.",
+        "NSLocationWhenInUseUsageDescription": "floaGPS usa tu ubicación para centrar el mapa y calcular rutas hacia tus unidades."
+      }
+    },
+    "android": {
+      "package": "com.floa.gps",
+      "adaptiveIcon": {
+        "backgroundColor": "#ffffff",
+        "foregroundImage": "./assets/android-icon-foreground.png"
+      },
+      "permissions": [
+        "USE_BIOMETRIC",
+        "USE_FINGERPRINT",
+        "ACCESS_FINE_LOCATION"
+      ],
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "single",
+      "favicon": "./assets/favicon.png",
+      "name": "floaGPS",
+      "shortName": "floaGPS",
+      "themeColor": "#032347",
+      "backgroundColor": "#131316"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-status-bar",
+      "expo-secure-store",
+      "expo-sharing",
+      "expo-font",
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "floaGPS usa Face ID para confirmar comandos de paro de motor."
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "floaGPS usa tu ubicación para centrar el mapa y calcular rutas hacia tus unidades."
+        }
+      ],
+      "expo-audio"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    }
+  }
+}

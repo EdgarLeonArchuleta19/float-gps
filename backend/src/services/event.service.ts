@@ -1,9 +1,13 @@
 import { PrismaClient } from '@prisma/client';
+import { TenantContext } from '../middleware/auth';
 
 const prisma = new PrismaClient();
 
 export class EventService {
-  async findAll(query: { type?: string; unitId?: string; startDate?: string; endDate?: string; page?: string; limit?: string }) {
+  async findAll(
+    query: { type?: string; unitId?: string; startDate?: string; endDate?: string; page?: string; limit?: string },
+    tenant?: TenantContext
+  ) {
     const page = parseInt(query.page || '1');
     const limit = parseInt(query.limit || '20');
     const skip = (page - 1) * limit;
@@ -15,10 +19,25 @@ export class EventService {
       if (query.startDate) where.timestamp.gte = new Date(query.startDate);
       if (query.endDate) where.timestamp.lte = new Date(query.endDate);
     }
+
+    const gpsFilter: any = {};
     if (query.unitId) {
-      where.gpsDevice = {
-        OR: [{ vehicleId: query.unitId }, { machineId: query.unitId }],
-      };
+      gpsFilter.OR = [{ vehicleId: query.unitId }, { machineId: query.unitId }];
+    }
+    if (tenant?.companyId) {
+      gpsFilter.AND = [
+        ...(gpsFilter.AND || []),
+        {
+          OR: [
+            { companyId: tenant.companyId },
+            { vehicle: { companyId: tenant.companyId } },
+            { machine: { companyId: tenant.companyId } },
+          ],
+        },
+      ];
+    }
+    if (Object.keys(gpsFilter).length > 0) {
+      where.gpsDevice = gpsFilter;
     }
 
     const [events, total] = await Promise.all([

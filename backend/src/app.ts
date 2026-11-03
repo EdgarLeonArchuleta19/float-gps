@@ -1,8 +1,13 @@
 import express from 'express';
 import cors from 'cors';
+import path from 'path';
+import fs from 'fs';
+import os from 'os';
 import { errorHandler } from './middleware/errorHandler';
-import { authRequired, adminRequired } from './middleware/auth';
+import { authRequired, adminRequired, superAdminRequired, ownerIpAllowed } from './middleware/auth';
+import { config } from './config';
 import authRoutes from './routes/auth.routes';
+import ownerRoutes from './routes/owner.routes';
 import dashboardRoutes from './routes/dashboard.routes';
 import vehicleRoutes from './routes/vehicle.routes';
 import machineRoutes from './routes/machine.routes';
@@ -11,31 +16,61 @@ import eventRoutes from './routes/event.routes';
 import geofenceRoutes from './routes/geofence.routes';
 import reportRoutes from './routes/report.routes';
 import userRoutes from './routes/user.routes';
+import ingestRoutes from './routes/ingest.routes';
+import companyRoutes from './routes/company.routes';
+import { handleEngineCommand } from './controllers/commands.controller';
 
 const app = express();
 
-app.use(cors());
-app.use(express.json());
+app.set('trust proxy', 1);
 
-app.get('/', (_req, res) => {
-  res.json({
-    name: 'Floa GPS API',
-    version: '1.0.0',
-    status: 'running',
-    endpoints: ['/api/auth/login', '/api/health', '/api/dashboard', '/api/vehicles', '/api/machines', '/api/gps/:id/positions', '/api/gps/:id/tracking', '/api/events', '/api/geofences', '/api/reports'],
-  });
+const corsOptions: cors.CorsOptions = {
+  origin: config.corsOrigins ? config.corsOrigins : true,
+  credentials: true,
+};
+app.use(cors(corsOptions));
+app.use(express.json({ limit: '1mb' }));
+app.disable('x-powered-by');
+app.use((_req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=(self)');
+  if (config.nodeEnv === 'production') {
+    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  }
+  next();
+});
+app.use('/api/owner', (_req, res, next) => {
+  res.setHeader('Cache-Control', 'no-store');
+  next();
 });
 
 app.get('/api', (_req, res) => {
   res.json({ name: 'Floa GPS API', status: 'running', health: '/api/health' });
 });
 
+function getLanIp(): string | null {
+  const interfaces = os.networkInterfaces();
+  for (const name of Object.keys(interfaces)) {
+    const entries = interfaces[name] || [];
+    for (const entry of entries) {
+      if (entry.family === 'IPv4' && !entry.internal) {
+        return entry.address;
+      }
+    }
+  }
+  return null;
+}
+
 app.get('/api/health', (_req, res) => {
-  res.json({ status: 'ok', timestamp: new Date() });
+  res.json({ status: 'ok', timestamp: new Date(), lanIp: getLanIp() });
 });
 
+app.use('/api/ingest', ingestRoutes);
+app.use('/api/auth/owner-login', ownerIpAllowed);
 app.use('/api/auth', authRoutes);
-
+app.use('/api/owner', ownerIpAllowed, authRequired, superAdminRequired, ownerRoutes);
 app.use('/api/dashboard', authRequired, dashboardRoutes);
 app.use('/api/vehicles', authRequired, vehicleRoutes);
 app.use('/api/machines', authRequired, machineRoutes);
@@ -44,16 +79,38 @@ app.use('/api/events', authRequired, eventRoutes);
 app.use('/api/geofences', authRequired, geofenceRoutes);
 app.use('/api/reports', authRequired, reportRoutes);
 app.use('/api/users', authRequired, adminRequired, userRoutes);
+app.use('/api/company', authRequired, companyRoutes);
+app.post('/api/commands/engine-stop', authRequired, handleEngineCommand);
 
-app.post('/api/commands/engine-stop', authRequired, (req, res) => {
-  const { unitId, unitType } = req.body;
-  console.log(`Engine stop command sent to ${unitType} ${unitId}`);
-  res.json({
-    success: true,
-    message: 'Comando de paro de motor enviado correctamente',
-    command: { unitId, unitType, type: 'ENGINE_STOP', timestamp: new Date() },
+// The client app is the Expo universal build in mobile/ (`npx expo export -p web`).
+const webDistPath = path.resolve(__dirname, '../../mobile/dist');
+const localDistPath = path.resolve(__dirname, '../public');
+
+let staticPath: string | null = null;
+if (fs.existsSync(webDistPath)) {
+  staticPath = webDistPath;
+} else if (fs.existsSync(localDistPath)) {
+  staticPath = localDistPath;
+}
+
+if (staticPath) {
+  app.use(express.static(staticPath));
+  app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api')) {
+      return next();
+    }
+    res.sendFile(path.join(staticPath!, 'index.html'));
   });
-});
+} else {
+  app.get('/', (_req, res) => {
+    res.json({
+      name: 'Floa GPS API',
+      version: '1.0.0',
+      status: 'running',
+      message: 'Build web no detectado. Corre `npx expo export -p web` en mobile para servirlo desde aquí.',
+    });
+  });
+}
 
 app.use(errorHandler);
 
