@@ -2,7 +2,7 @@
 
 Hecho por TechPoint Software.
 
-Plataforma de rastreo GPS para vehículos y maquinaria: mapa en vivo, recorridos, geocercas, alertas, reportes y paro de motor. Una sola app (`mobile/`) corre en iOS, Android y web/PWA.
+Plataforma de rastreo GPS para vehículos y maquinaria: mapa en vivo, recorridos, geocercas, alertas, reportes y paro de motor. Una sola app (`frontend/`) corre en iOS, Android y web/PWA.
 
 ## Requisitos
 
@@ -14,7 +14,7 @@ Plataforma de rastreo GPS para vehículos y maquinaria: mapa en vivo, recorridos
 
 ```bash
 cd backend && npm install
-cd ../mobile && npm install
+cd ../frontend && npm install
 ```
 
 Copia `backend/.env.example` a `backend/.env` y ajusta `DATABASE_URL`, `JWT_SECRET` y `OWNER_MASTER_KEY`. Para que "Recuperar contraseña" envíe correos, configura `RESEND_API_KEY` y `EMAIL_FROM` (cuenta en resend.com con tu dominio verificado); sin eso, en desarrollo el código aparece en la consola del backend.
@@ -32,10 +32,10 @@ npx prisma db seed
 cd backend && npx ts-node-dev --transpile-only src/index.ts
 
 # App: web en http://localhost:8081 y QR para Expo Go
-cd mobile && npx expo start
+cd frontend && npx expo start
 ```
 
-La app detecta la API en el mismo host en el puerto 3001. Para otro servidor define `EXPO_PUBLIC_API_URL` en `mobile/.env`.
+La app detecta la API en el mismo host en el puerto 3001. Para otro servidor define `EXPO_PUBLIC_API_URL` en `frontend/.env`.
 
 ## Credenciales locales
 
@@ -57,14 +57,14 @@ La atribución de OpenFreeMap, OpenStreetMap y CARTO es obligatoria en web.
 ## Arquitectura
 
 ```
-mobile/     Expo + React Native + React Native Web (app activa)
+frontend/   Expo + React Native + React Native Web (app activa)
 backend/    Express + TypeScript + Prisma + PostgreSQL
 ```
 
 ## Build web
 
 ```bash
-cd mobile && npx expo export -p web
+cd frontend && npx expo export -p web
 ```
 
-El backend sirve `mobile/dist` automáticamente si existe.
+El backend sirve `frontend/dist` automáticamente si existe.

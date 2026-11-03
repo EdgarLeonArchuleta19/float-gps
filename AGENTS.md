@@ -6,20 +6,20 @@
 - Producción solo refleja lo que existe en `main`. No se despliega a producción hasta hacer el merge.
 - Para revisar cambios en curso, desplegar una búsqueda/preview desde `develop`, nunca tocar la producción de `main`.
 
-## App activa: `mobile/` (IMPORTANTE)
-- La app se llama **floaGPS** y es hecha por **TechPoint Software** (`mobile/src/lib/brand.ts`).
-- **La única app cliente es `mobile/`** (Expo + React Native + React Native Web). Corre en iOS, Android y web/PWA desde el mismo código.
-- El backend sirve el build web de `mobile/dist` (`npx expo export -p web`).
+## App activa: `frontend/` (IMPORTANTE)
+- La app se llama **floaGPS** y es hecha por **TechPoint Software** (`frontend/src/lib/brand.ts`).
+- **La única app cliente es `frontend/`** (Expo + React Native + React Native Web). Corre en iOS, Android y web/PWA desde el mismo código.
+- El backend sirve el build web de `frontend/dist` (`npx expo export -p web`).
 
 ## Estilo de Código (IMPORTANTE)
-- **No escribir comentarios en `mobile/`.** Ni de línea (`//`), ni de bloque (`/* */`), ni JSX (`{/* */}`), ni JSDoc. El código debe explicarse solo con nombres claros.
+- **No escribir comentarios en `frontend/`.** Ni de línea (`//`), ni de bloque (`/* */`), ni JSX (`{/* */}`), ni JSDoc. El código debe explicarse solo con nombres claros.
 - Excepción: la directiva `/// <reference types="nativewind/types" />` de `nativewind-env.d.ts` es obligatoria y se conserva.
 - No agregar código muerto, exports sin usar ni helpers obsoletos: si algo no se usa, se elimina.
 - **Estructura por sección**: cada pantalla vive en `src/app/<grupo>/<seccion>/index.tsx`; los componentes exclusivos de una sección van en `src/components/<seccion>/`. Lo compartido va en `components/shared/`, `components/events/`, `components/ui.tsx`.
 - Diseño plano y sobrio: sin degradados ni colores saturados.
 
 ## Tech Stack
-- **App (`mobile/`)**: Expo SDK 58 + Expo Router + React Native 0.88 + React Native Web + TypeScript + NativeWind 4 (Tailwind 3, `darkMode: 'class'` obligatorio para web)
+- **App (`frontend/`)**: Expo SDK 58 + Expo Router + React Native 0.88 + React Native Web + TypeScript + NativeWind 4 (Tailwind 3, `darkMode: 'class'` obligatorio para web)
 - **Backend**: Node.js + Express + TypeScript + Prisma ORM
 - **Database**: PostgreSQL
   - Local dev: `floa-gps` (localhost:5432, user postgres)
@@ -31,7 +31,7 @@
 ## Project Structure
 ```
 floa-gps/
-├── mobile/            # App universal (web :8081, iOS/Android con Expo)
+├── frontend/          # App universal (web :8081, iOS/Android con Expo)
 │   ├── public/                         # index.html, manifest.json, sw.js, íconos PWA
 │   └── src/
 │       ├── app/
@@ -58,7 +58,7 @@ floa-gps/
 ### Brand Colors
 - **Navy**: `#032347` (botones primarios, estados activos en modo claro)
 - **Orange**: `#f87203` (acento, puntos de notificación, filtros activos, activo en modo oscuro)
-- **Marca**: wordmark floaGPS en `mobile/src/components/brand/Wordmark.tsx` (pin + "floa" + "GPS" en naranja)
+- **Marca**: wordmark floaGPS en `frontend/src/components/brand/Wordmark.tsx` (pin + "floa" + "GPS" en naranja)
 
 ### Dark Mode
 - Background: `#131316` (suave, no negro puro)
@@ -117,7 +117,7 @@ floa-gps/
 - Paro/Reanudación de motor: doble paso (selección + biometría en nativo o contraseña). El backend verifica `password` en `/api/commands/engine-stop` cuando se envía (403 si es incorrecta, con rate limit).
 
 ## Key Decisions
-- El antiguo `frontend/` (React + Vite) se eliminó; `mobile/` es el único frontend (web, iOS y Android).
+- El antiguo frontend de React + Vite se eliminó; la app Expo (antes `frontend/`) se renombró a `frontend/` y es el único cliente (web, iOS y Android).
 - Mapas nativos en celular (gratis), MapLibre en web (gratis, sin API key).
 - PostgreSQL (Neon prod + Postgres local dev).
 - Se eliminó todo lo de Vercel; el proyecto ya no se despliega ahí.
@@ -128,13 +128,13 @@ floa-gps/
 cd backend && npx ts-node-dev --transpile-only src/index.ts
 
 # App (web en :8081 + QR para Expo Go en el celular)
-cd mobile && npx expo start
+cd frontend && npx expo start
 
 # Build web servido por el backend
-cd mobile && npx expo export -p web
+cd frontend && npx expo export -p web
 
 # TypeScript check
-cd mobile && npx tsc --noEmit
+cd frontend && npx tsc --noEmit
 cd backend && npx tsc --noEmit
 
 # Re-seed database (borra datos locales)

@@ -82,8 +82,8 @@ app.use('/api/users', authRequired, adminRequired, userRoutes);
 app.use('/api/company', authRequired, companyRoutes);
 app.post('/api/commands/engine-stop', authRequired, handleEngineCommand);
 
-// The client app is the Expo universal build in mobile/ (`npx expo export -p web`).
-const webDistPath = path.resolve(__dirname, '../../mobile/dist');
+// The client app is the Expo universal build in frontend/ (`npx expo export -p web`).
+const webDistPath = path.resolve(__dirname, '../../frontend/dist');
 const localDistPath = path.resolve(__dirname, '../public');
 
 let staticPath: string | null = null;
@@ -107,7 +107,7 @@ if (staticPath) {
       name: 'Floa GPS API',
       version: '1.0.0',
       status: 'running',
-      message: 'Build web no detectado. Corre `npx expo export -p web` en mobile para servirlo desde aquí.',
+      message: 'Build web no detectado. Corre `npx expo export -p web` en frontend para servirlo desde aquí.',
     });
   });
 }
