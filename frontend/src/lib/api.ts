@@ -85,6 +85,17 @@ export interface WorkSchedule {
   days: number[];
 }
 
+export interface CompanyProfile {
+  name: string;
+  legalName: string | null;
+  taxId: string | null;
+  contactEmail: string | null;
+  contactPhone: string | null;
+  address: string | null;
+  website: string | null;
+  logo: string | null;
+}
+
 export interface CompanyUser {
   id: string;
   name: string;
@@ -169,6 +180,8 @@ export const api = {
       request<TrackingEvent[]>(`/reports/events${query({ startDate, endDate: `${endDate}T23:59:59` })}`),
   },
   company: {
+    profile: () => request<CompanyProfile>('/company/profile'),
+    updateProfile: (data: CompanyProfile) => request<CompanyProfile>('/company/profile', { method: 'PUT', body: JSON.stringify(data) }),
     schedule: () => request<WorkSchedule>('/company/schedule'),
     updateSchedule: (data: WorkSchedule) => request<WorkSchedule>('/company/schedule', { method: 'PUT', body: JSON.stringify(data) }),
   },

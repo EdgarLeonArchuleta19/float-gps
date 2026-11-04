@@ -8,6 +8,7 @@ import { APP_NAME, MAKER_CREDIT } from '@/lib/brand';
 import { Card, PageHeader, Screen, SectionTitle } from '@/components/ui';
 import MenuRow from '@/components/shared/MenuRow';
 import WorkScheduleCard from '@/components/config/WorkScheduleCard';
+import CompanyProfileCard from '@/components/config/CompanyProfileCard';
 import { useCanAdmin } from '@/hooks/useCanAdmin';
 
 const THEMES: { key: ThemePreference; label: string; icon: typeof Sun }[] = [
@@ -35,6 +36,9 @@ export default function Config() {
           />
         ))}
       </Card>
+
+      <SectionTitle>Datos de la empresa</SectionTitle>
+      <CompanyProfileCard editable={canAdmin} />
 
       <SectionTitle>Horario laboral</SectionTitle>
       <WorkScheduleCard editable={canAdmin} />

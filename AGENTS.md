@@ -77,11 +77,11 @@ floa-gps/
 
 ## Navegación
 - Un solo menú principal. < 1024px: barra inferior (Inicio, Compartir, **Mapa al centro destacado**, Apagar, Más) + navbar superior mínima (tema, alertas, perfil).
-- ≥ 1024px: sidebar azul marino (`OnNavyTheme`) con secciones plegables y desplazables: Inicio · Operación (Mapa en vivo, Compartir, Apagar) · Flota (Unidades, Geocercas, Alertas) · Análisis (Reportes) · Administración (Usuarios [admin], Configuración, Ayuda). La sección de la página activa siempre queda abierta; las plegadas se recuerdan (`floa_sidebar_closed`). Se puede colapsar a solo íconos.
+- ≥ 1024px: sidebar blanco (tarjeta en modo oscuro) con secciones plegables y desplazables: Inicio · Operación (Mapa en vivo, Compartir, Apagar) · Flota (Unidades, Geocercas, Alertas) · Análisis (Reportes) · Administración (Usuarios [admin], Configuración, Ayuda). Las secciones empiezan plegadas; la de la página activa siempre queda abierta y las que abre el usuario se recuerdan (`floa_sidebar_open`). Se puede colapsar a solo íconos.
 - Compartir (`/share`) y Apagar (`/engine`): selección múltiple de unidades; Apagar abre la doble confirmación.
 - Más: Alertas, Flota (con alta de unidad), Geocercas (ver/crear), Reportes, Usuarios [admin]; Cuenta: Perfil, Configuración, Ayuda.
 - Mapa: pide la ubicación del usuario (punto azul). Botones solo a la derecha, mismo estilo y sin texto: capas, ver todo, mi ubicación, ruta hacia una unidad, modo alarma. Al tocar una unidad: Seguir, Ruta de hoy, Historial (`/tracking`), Cómo llegar, Compartir, Motor.
-- Login (completo, centrado en web y celular) y barra superior usan fondo azul marino con `components/brand/AnimatedBackdrop.tsx` (variante `full` en login: ruta, pulsos de radar, puntos y un carro; variante `bar` en la barra: línea punteada y pulsos). `OnNavyTheme` fuerza la paleta oscura sobre el azul. El resto de la app usa tarjetas normales y solo la paleta del sistema (navy/naranja/neutros), sin colores decorativos.
+- Login (completo, centrado en web y celular) y la barra superior del celular usan fondo azul marino con `components/brand/AnimatedBackdrop.tsx` (variante `full` en login: ruta, pulsos de radar, puntos y un carro; variante `bar` en la barra móvil: línea punteada y pulsos). En web (≥ 1024px) la barra superior es blanca (tarjeta en modo oscuro) con el nombre de la empresa, sin ícono. `OnNavyTheme` fuerza la paleta oscura sobre el azul. El resto de la app usa tarjetas normales y solo la paleta del sistema (navy/naranja/neutros), sin colores decorativos.
 - Icono del sistema: el símbolo del logo FLOA (`assets/images/brand-mark*.png`), usado en la marca floaGPS, ícono de app, favicon y PWA.
 - Todas las listas usan paginación (`hooks/usePagination.ts` + `components/shared/Pagination.tsx`).
 - Usuarios de empresa: el admin solo crea Operador o Solo lectura; el admin de cada empresa lo crea el dueño desde la consola. La cuenta root (superadmin) nunca aparece en listas.
@@ -107,6 +107,10 @@ floa-gps/
 - `GET /api/reports/off-hours?startDate&endDate` calcula km recorridos fuera de ese horario por unidad (segmentos que empiezan fuera de horario, ignorando huecos > 30 min).
 - Se muestran tiempo de motor, ralentí y km fuera de horario en Inicio, el panel de la unidad en el mapa, el detalle de la unidad y Reportes (incluye exportación).
 - Modo guarda (dentro de Modo alarma): ante un evento de una unidad vigilada abre una alerta a pantalla completa con sirena en bucle (`assets/sounds/guard-alarm.wav`, `expo-audio` con `playsInSilentMode`) y vibración hasta que el usuario la detiene. Funciona con la app abierta; con la app cerrada haría falta push desde el backend.
+
+## Datos de la empresa
+- `Company` guarda nombre comercial, razón social, RFC, correo, teléfono, dirección, sitio web y `logo` (data URL PNG/JPG/WEBP, máximo ~500 KB).
+- `GET/PUT /api/company/profile` (PUT solo admin). Se edita en Configuración (`components/config/CompanyProfileCard.tsx`, logo con `expo-image-picker`). Al guardar, el nombre se actualiza en la sesión (`renameCompany`).
 
 ## Recuperar contraseña
 - `POST /api/auth/forgot-password` genera un código de 6 dígitos (vence en 15 min, guardado con HMAC) y lo envía por correo con Resend. **No cambia la contraseña.** Máximo 5 solicitudes por IP/correo cada 15 min.

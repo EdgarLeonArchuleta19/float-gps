@@ -56,7 +56,15 @@
           "locationWhenInUsePermission": "floaGPS usa tu ubicación para centrar el mapa y calcular rutas hacia tus unidades."
         }
       ],
-      "expo-audio"
+      "expo-audio",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "floaGPS usa tus fotos para que elijas el logo de tu empresa.",
+          "cameraPermission": false,
+          "microphonePermission": false
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

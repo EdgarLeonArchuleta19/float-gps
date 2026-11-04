@@ -6,7 +6,7 @@ import AnimatedBackdrop from '@/components/brand/AnimatedBackdrop';
 import { OnNavyTheme } from '@/context/ThemeContext';
 import HeaderActions from './HeaderActions';
 
-export const NAVY_BAR_SHADOW = {
+const NAVY_BAR_SHADOW = {
   shadowColor: '#032347',
   shadowOpacity: 0.35,
   shadowRadius: 14,

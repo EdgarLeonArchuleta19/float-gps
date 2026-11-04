@@ -17,6 +17,11 @@ model Company {
   maxUnits     Int         @default(50)
   isActive     Boolean     @default(true)
   notes        String?
+  legalName    String?
+  taxId        String?
+  address      String?
+  website      String?
+  logo         String?
   workStartHour Int        @default(7)
   workEndHour   Int        @default(19)
   workDays      String     @default("1,2,3,4,5,6")

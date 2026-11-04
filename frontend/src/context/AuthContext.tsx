@@ -30,6 +30,7 @@ interface AuthContextValue {
   logout: () => void;
   enterSupport: (company: SupportCompany) => void;
   exitSupport: () => void;
+  renameCompany: (name: string) => void;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -131,6 +132,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     storage.remove(SUPPORT_KEY);
   }, []);
 
+  const renameCompany = useCallback((name: string) => {
+    setUser((prev) => {
+      if (!prev?.companyId) return prev;
+      const next = { ...prev, companyName: name };
+      storage.set(USER_KEY, JSON.stringify(next));
+      return next;
+    });
+  }, []);
+
   const value = useMemo(
     () => ({
       user,
@@ -142,8 +152,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       logout: clearSession,
       enterSupport,
       exitSupport,
+      renameCompany,
     }),
-    [user, restoring, supportCompany, login, startSession, clearSession, enterSupport, exitSupport]
+    [user, restoring, supportCompany, login, startSession, clearSession, enterSupport, exitSupport, renameCompany]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

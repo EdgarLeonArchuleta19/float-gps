@@ -7,6 +7,21 @@ const companyService = new CompanyService();
 const router = Router();
 
 router.get(
+  '/profile',
+  asyncHandler(async (req: Request, res: Response) => {
+    res.json(await companyService.getProfile(getTenant(req)));
+  })
+);
+
+router.put(
+  '/profile',
+  adminRequired,
+  asyncHandler(async (req: Request, res: Response) => {
+    res.json(await companyService.updateProfile(req.body || {}, getTenant(req)));
+  })
+);
+
+router.get(
   '/schedule',
   asyncHandler(async (req: Request, res: Response) => {
     res.json(await companyService.getSchedule(getTenant(req)));
