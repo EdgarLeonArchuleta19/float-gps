@@ -16,6 +16,7 @@ model Company {
   plan         String      @default("PRO")
   maxUnits     Int         @default(50)
   isActive     Boolean     @default(true)
+  deletedAt    DateTime?
   notes        String?
   legalName    String?
   taxId        String?
@@ -32,6 +33,7 @@ model Company {
   machines     Machine[]
   geofences    Geofence[]
   gpsDevices   GpsDevice[]
+  roles        Role[]
 }
 
 model User {
@@ -40,6 +42,9 @@ model User {
   password     String
   name         String
   role         String     @default("admin")
+  roleId       String?
+  isActive     Boolean    @default(true)
+  deletedAt    DateTime?
   companyId    String?
   tokenVersion Int        @default(0)
   lastLoginAt  DateTime?
@@ -50,9 +55,30 @@ model User {
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
   company      Company?   @relation(fields: [companyId], references: [id], onDelete: SetNull)
-  units        UserUnit[]
+  customRole   Role?      @relation(fields: [roleId], references: [id], onDelete: Restrict)
 
   @@index([companyId])
+  @@index([roleId])
+}
+
+model Role {
+  id          String     @id @default(uuid())
+  name        String
+  nameKey     String?
+  isActive    Boolean    @default(true)
+  deletedAt   DateTime?
+  permissions String[]
+  allUnits    Boolean    @default(true)
+  systemKey   String?
+  companyId   String
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  company     Company    @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  users       User[]
+  units       RoleUnit[]
+
+  @@unique([companyId, nameKey])
+  @@unique([companyId, systemKey])
 }
 
 model OwnerAuditLog {
@@ -72,17 +98,17 @@ model OwnerAuditLog {
   @@index([action])
 }
 
-model UserUnit {
+model RoleUnit {
   id        String   @id @default(uuid())
-  userId    String
+  roleId    String
   vehicleId String?
   machineId String?
   createdAt DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
   vehicle   Vehicle? @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
   machine   Machine? @relation(fields: [machineId], references: [id], onDelete: Cascade)
 
-  @@index([userId])
+  @@index([roleId])
 }
 
 model GpsDevice {
@@ -91,6 +117,7 @@ model GpsDevice {
   model        String
   simNumber    String?
   isActive     Boolean         @default(true)
+  deletedAt    DateTime?
   lastReportAt DateTime?
   companyId    String?
   vehicleId    String?         @unique
@@ -117,12 +144,13 @@ model Vehicle {
   color        String?
   status       String        @default("OFFLINE")
   isActive     Boolean       @default(true)
+  deletedAt    DateTime?
   companyId    String?
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
   company      Company?      @relation(fields: [companyId], references: [id], onDelete: SetNull)
   gpsDevice    GpsDevice?
-  userUnits    UserUnit[]
+  roleUnits    RoleUnit[]
   workSessions WorkSession[]
 
   @@index([companyId])
@@ -138,12 +166,13 @@ model Machine {
   year         Int?
   status       String        @default("OFFLINE")
   isActive     Boolean       @default(true)
+  deletedAt    DateTime?
   companyId    String?
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
   company      Company?      @relation(fields: [companyId], references: [id], onDelete: SetNull)
   gpsDevice    GpsDevice?
-  userUnits    UserUnit[]
+  roleUnits    RoleUnit[]
   workSessions WorkSession[]
 
   @@index([companyId])
@@ -189,6 +218,7 @@ model Geofence {
   type      String
   color     String          @default("#3B82F6")
   isActive  Boolean         @default(true)
+  deletedAt DateTime?
   radius    Float?
   centerLat Float?
   centerLng Float?

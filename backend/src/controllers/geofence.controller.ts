@@ -26,9 +26,13 @@ export const updateGeofence = asyncHandler(async (req: Request, res: Response) =
   res.json(geofence);
 });
 
+export const setGeofenceActive = asyncHandler(async (req: Request, res: Response) => {
+  res.json(await geofenceService.setActive(req.params.id, req.body?.active, getTenant(req)));
+});
+
 export const deleteGeofence = asyncHandler(async (req: Request, res: Response) => {
   await geofenceService.delete(req.params.id, getTenant(req));
-  res.json({ message: 'Geofence deleted' });
+  res.json({ message: 'Geocerca borrada' });
 });
 
 export const getGeofenceEvents = asyncHandler(async (req: Request, res: Response) => {

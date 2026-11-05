@@ -5,6 +5,7 @@ import type { LucideIcon } from 'lucide-react-native';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
 import { userInitials } from '@/lib/user';
+import { useCan } from '@/hooks/useCan';
 
 function HeaderIcon({ icon: Icon, label, onPress, badge }: { icon: LucideIcon; label: string; onPress: () => void; badge?: number }) {
   const { t } = useTheme();
@@ -23,10 +24,11 @@ function HeaderIcon({ icon: Icon, label, onPress, badge }: { icon: LucideIcon; l
 export default function HeaderActions({ alerts }: { alerts: number }) {
   const { t, toggle } = useTheme();
   const { user } = useAuth();
+  const can = useCan();
   return (
     <View className="flex-row items-center gap-0.5">
       <HeaderIcon icon={t.isDark ? Sun : Moon} label="Cambiar tema" onPress={toggle} />
-      <HeaderIcon icon={Bell} label="Alertas" badge={alerts} onPress={() => router.replace('/notifications')} />
+      {can('alerts') ? <HeaderIcon icon={Bell} label="Alertas" badge={alerts} onPress={() => router.replace('/notifications')} /> : null}
       <Pressable
         onPress={() => router.push('/profile')}
         accessibilityLabel="Mi perfil"

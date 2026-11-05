@@ -1,3 +1,4 @@
+import type React from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { ChevronRight } from 'lucide-react-native';
 import { useTheme } from '@/context/ThemeContext';
@@ -11,11 +12,13 @@ export default function UnitRow({
   onPress,
   selected,
   showChevron,
+  trailing,
 }: {
   unit: FleetUnit;
   onPress: () => void;
   selected?: boolean;
   showChevron?: boolean;
+  trailing?: React.ReactNode;
 }) {
   const { t } = useTheme();
   const color = markerColor(unit.status);
@@ -41,6 +44,7 @@ export default function UnitRow({
         <Text className={`text-[14px] font-bold ${t.text}`}>{km.toFixed(1)}</Text>
         <Text className={`text-[10px] ${t.subtle}`}>km hoy</Text>
       </View>
+      {trailing}
       {showChevron ? <ChevronRight size={16} color={t.hex.muted} /> : null}
     </Pressable>
   );

@@ -14,6 +14,25 @@ if (isProduction && (!ownerMasterKey || ownerMasterKey.length < 16)) {
   throw new Error('FATAL: OWNER_MASTER_KEY debe estar configurada (mínimo 16 caracteres) en producción.');
 }
 
+const traccarWebhookSecret = process.env.TRACCAR_WEBHOOK_SECRET || '';
+
+if (isProduction && traccarWebhookSecret.length < 24) {
+  throw new Error('FATAL: TRACCAR_WEBHOOK_SECRET debe estar configurada (mínimo 24 caracteres) en producción.');
+}
+
+// Express only trusts X-Forwarded-For when the direct peer is a private or
+// loopback address (the reverse proxy), so a client exposed straight to the
+// internet can't spoof its IP to dodge rate limits. Override with TRUST_PROXY.
+function parseTrustProxy(value: string | undefined): boolean | number | string {
+  if (!value) return 'loopback, linklocal, uniquelocal';
+  if (value === 'true' || value === 'false') return value === 'true';
+  return /^\d+$/.test(value) ? parseInt(value, 10) : value;
+}
+
+function parseList(value: string | undefined): string[] {
+  return (value || '').split(',').map((s) => s.trim()).filter(Boolean);
+}
+
 export const config = {
   ownerMasterKey,
   ownerTokenTtl: process.env.OWNER_TOKEN_TTL || '8h',
@@ -22,12 +41,15 @@ export const config = {
     : [],
   port: parseInt(process.env.PORT || '3001', 10),
   nodeEnv: process.env.NODE_ENV || 'development',
+  isProduction,
   databaseUrl: process.env.DATABASE_URL,
   jwtSecret: jwtSecret || 'demo-jwt-secret',
-  corsOrigins: process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(',').map((s) => s.trim()) : null,
+  corsOrigins: parseList(process.env.CORS_ORIGINS),
+  trustProxy: parseTrustProxy(process.env.TRUST_PROXY),
+  cspConnectSrc: parseList(process.env.CSP_CONNECT_SRC),
   trackerPort: parseInt(process.env.TRACKER_PORT || '5001', 10),
   trackerHost: process.env.TRACKER_HOST || '0.0.0.0',
-  traccarWebhookSecret: process.env.TRACCAR_WEBHOOK_SECRET || '',
+  traccarWebhookSecret,
   traccarUrl: process.env.TRACCAR_URL || '',
   traccarToken: process.env.TRACCAR_TOKEN || '',
   traccarUser: process.env.TRACCAR_USER || '',

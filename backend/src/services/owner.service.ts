@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
+import { ensureSystemRoles } from './systemRoles';
 import { AppError } from '../middleware/errorHandler';
 import { assertStrongPassword } from '../utils/passwordPolicy';
 
@@ -27,30 +28,32 @@ export class OwnerService {
       totalUsers,
     ] = await Promise.all([
       prisma.company.findMany({
+        where: { deletedAt: null },
         orderBy: { createdAt: 'desc' },
         include: {
           users: {
+            where: { deletedAt: null },
             select: { id: true, name: true, email: true, role: true, createdAt: true },
             orderBy: { createdAt: 'asc' },
           },
           _count: {
             select: {
-              users: true,
-              vehicles: { where: { isActive: true } },
-              machines: { where: { isActive: true } },
-              geofences: { where: { isActive: true } },
-              gpsDevices: true,
+              users: { where: { deletedAt: null } },
+              vehicles: { where: { isActive: true, deletedAt: null } },
+              machines: { where: { isActive: true, deletedAt: null } },
+              geofences: { where: { isActive: true, deletedAt: null } },
+              gpsDevices: { where: { deletedAt: null } },
             },
           },
         },
       }),
-      prisma.vehicle.count({ where: { isActive: true } }),
-      prisma.machine.count({ where: { isActive: true } }),
-      prisma.gpsDevice.count(),
+      prisma.vehicle.count({ where: { isActive: true, deletedAt: null } }),
+      prisma.machine.count({ where: { isActive: true, deletedAt: null } }),
+      prisma.gpsDevice.count({ where: { deletedAt: null } }),
       prisma.gpsDevice.count({
-        where: { OR: [{ vehicleId: { not: null } }, { machineId: { not: null } }] },
+        where: { deletedAt: null, OR: [{ vehicleId: { not: null } }, { machineId: { not: null } }] },
       }),
-      prisma.user.count({ where: { role: { not: 'superadmin' } } }),
+      prisma.user.count({ where: { role: { not: 'superadmin' }, deletedAt: null } }),
     ]);
 
     const activeCompanies = companies.filter((c) => c.isActive).length;
@@ -117,6 +120,7 @@ export class OwnerService {
         },
       });
 
+      const roles = await ensureSystemRoles(company.id, tx);
       let createdAdmin = null;
       if (adminEmail && adminPassword) {
         const hash = await bcrypt.hash(adminPassword, 10);
@@ -126,6 +130,7 @@ export class OwnerService {
             name: adminName,
             password: hash,
             role: 'admin',
+            roleId: roles.admin,
             companyId: company.id,
           },
           select: { id: true, email: true, name: true, role: true },
@@ -175,26 +180,28 @@ export class OwnerService {
     });
   }
 
+  // Soft delete: the company and everything it owns stay in the database
+  // (nothing cascades); its users can no longer sign in until it is restored.
   async deleteCompany(id: string) {
     const existing = await prisma.company.findUnique({ where: { id } });
-    if (!existing) throw new AppError('Empresa no encontrada', 404);
+    if (!existing || existing.deletedAt) throw new AppError('Empresa no encontrada', 404);
 
-    await prisma.company.delete({ where: { id } });
-    return { message: 'Empresa eliminada correctamente' };
+    await prisma.company.update({ where: { id }, data: { deletedAt: new Date(), isActive: false } });
+    return { message: 'Empresa movida a Eliminados' };
   }
 
   async getCompanyForSupport(id: string) {
     const company = await prisma.company.findUnique({
       where: { id },
-      select: { id: true, name: true, isActive: true },
+      select: { id: true, name: true, isActive: true, deletedAt: true },
     });
-    if (!company) throw new AppError('Empresa no encontrada', 404);
+    if (!company || company.deletedAt) throw new AppError('Empresa no encontrada', 404);
     return company;
   }
 
   async listAllUsers() {
     return prisma.user.findMany({
-      where: { role: { not: 'superadmin' } },
+      where: { role: { not: 'superadmin' }, deletedAt: null },
       orderBy: { createdAt: 'desc' },
       select: {
         id: true,
@@ -205,7 +212,7 @@ export class OwnerService {
         createdAt: true,
         lastLoginAt: true,
         company: { select: { id: true, name: true, isActive: true, plan: true } },
-        _count: { select: { units: true } },
+        customRole: { select: { name: true } },
       },
     });
   }
@@ -214,16 +221,18 @@ export class OwnerService {
     name?: string;
     email?: string;
     password?: string;
-    role?: string;
     companyId?: string;
   }) {
     const email = (data.email || '').trim().toLowerCase();
     const name = (data.name || '').trim();
     const password = (data.password || '').trim();
-    const role = ['admin', 'operator', 'viewer'].includes(data.role || '') ? data.role! : 'admin';
-
+    // The owner only creates each company's admin; the admin then creates the
+    // rest of the users with the company's own roles.
     if (!email || !name || !password) {
       throw new AppError('Nombre, correo y contraseña son obligatorios', 400);
+    }
+    if (!data.companyId || !(await prisma.company.findUnique({ where: { id: data.companyId }, select: { id: true } }))) {
+      throw new AppError('Selecciona la empresa del administrador', 400);
     }
     assertStrongPassword(password);
 
@@ -233,13 +242,15 @@ export class OwnerService {
     }
 
     const hash = await bcrypt.hash(password, 10);
+    const roles = await ensureSystemRoles(data.companyId);
     return prisma.user.create({
       data: {
         name,
         email,
         password: hash,
-        role,
-        companyId: data.companyId || null,
+        role: 'admin',
+        roleId: roles.admin,
+        companyId: data.companyId,
       },
       select: {
         id: true,
@@ -280,16 +291,20 @@ export class OwnerService {
 
   async deleteUser(userId: string) {
     const user = await prisma.user.findUnique({ where: { id: userId } });
-    if (!user) throw new AppError('Usuario no encontrado', 404);
+    if (!user || user.deletedAt) throw new AppError('Usuario no encontrado', 404);
     if (user.role === 'superadmin') {
       throw new AppError('No se puede eliminar la cuenta de Dueño del Sistema', 403);
     }
-    await prisma.user.delete({ where: { id: userId } });
-    return { message: 'Usuario eliminado' };
+    await prisma.user.update({
+      where: { id: userId },
+      data: { deletedAt: new Date(), isActive: false, tokenVersion: { increment: 1 } },
+    });
+    return { message: 'Usuario movido a Eliminados' };
   }
 
   async listAllGps() {
     return prisma.gpsDevice.findMany({
+      where: { deletedAt: null },
       orderBy: { createdAt: 'desc' },
       include: {
         company: { select: { id: true, name: true } },
@@ -361,8 +376,11 @@ export class OwnerService {
 
   async deleteGps(id: string) {
     const existing = await prisma.gpsDevice.findUnique({ where: { id } });
-    if (!existing) throw new AppError('Dispositivo GPS no encontrado', 404);
-    await prisma.gpsDevice.delete({ where: { id } });
-    return { message: 'Dispositivo GPS eliminado del inventario' };
+    if (!existing || existing.deletedAt) throw new AppError('Dispositivo GPS no encontrado', 404);
+    if (existing.vehicleId || existing.machineId) {
+      throw new AppError('Desvincula el GPS de su unidad antes de eliminarlo', 409);
+    }
+    await prisma.gpsDevice.update({ where: { id }, data: { deletedAt: new Date(), isActive: false } });
+    return { message: 'GPS movido a Eliminados' };
   }
 }

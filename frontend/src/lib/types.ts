@@ -3,6 +3,8 @@ export interface User {
   email: string;
   name: string;
   role: string;
+  roleName?: string | null;
+  permissions?: string[] | null;
   companyId?: string | null;
   companyName?: string | null;
   companySlug?: string | null;
@@ -161,6 +163,7 @@ export interface FleetUnit {
   year?: number;
   color?: string;
   status: Vehicle['status'];
+  isActive: boolean;
   gpsDevice?: GpsDevice | null;
   position: GpsPosition | null;
   todaySession?: WorkSession | null;

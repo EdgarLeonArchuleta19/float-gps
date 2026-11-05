@@ -2,11 +2,14 @@ import React, { createContext, useCallback, useContext, useEffect, useMemo, useS
 import { Platform } from 'react-native';
 import { api, onUnauthorized, setSessionToken, setSupportCompanyId } from '@/lib/api';
 import { storage } from '@/lib/storage';
+import { forgetEngineCredential } from '@/lib/engineCredential';
 import type { User } from '@/lib/types';
 
 const TOKEN_KEY = 'floa_mobile_token';
 const USER_KEY = 'floa_mobile_user';
 const SUPPORT_KEY = 'floa_support_company';
+
+const USER_REFRESH_MS = 120000;
 
 const OWNER_BLOCKED_MESSAGE = 'Esta app es solo para empresas cliente. El acceso de dueño se realiza desde el portal web.';
 
@@ -31,6 +34,7 @@ interface AuthContextValue {
   enterSupport: (company: SupportCompany) => void;
   exitSupport: () => void;
   renameCompany: (name: string) => void;
+  replaceToken: (token: string) => void;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -56,6 +60,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     storage.remove(TOKEN_KEY);
     storage.remove(USER_KEY);
     storage.remove(SUPPORT_KEY);
+    forgetEngineCredential();
   }, []);
 
   useEffect(() => {
@@ -92,6 +97,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setRestoring(false);
     })();
   }, [clearSession]);
+
+  const loggedIn = !!user;
+  useEffect(() => {
+    if (!loggedIn) return;
+    const refreshUser = () =>
+      api.auth
+        .me()
+        .then((fresh) => {
+          setUser((prev) => {
+            if (!prev || prev.id !== fresh.id) return prev;
+            const next = { ...prev, ...fresh };
+            storage.set(USER_KEY, JSON.stringify(next));
+            return next;
+          });
+        })
+        .catch(() => {});
+    refreshUser();
+    const id = setInterval(refreshUser, USER_REFRESH_MS);
+    return () => clearInterval(id);
+  }, [loggedIn]);
 
   const startSession = useCallback(async (token: string, next: User) => {
     setSessionToken(token);
@@ -141,6 +166,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
+  const replaceToken = useCallback((token: string) => {
+    setSessionToken(token);
+    storage.set(TOKEN_KEY, token);
+  }, []);
+
   const value = useMemo(
     () => ({
       user,
@@ -153,8 +183,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       enterSupport,
       exitSupport,
       renameCompany,
+      replaceToken,
     }),
-    [user, restoring, supportCompany, login, startSession, clearSession, enterSupport, exitSupport, renameCompany]
+    [user, restoring, supportCompany, login, startSession, clearSession, enterSupport, exitSupport, renameCompany, replaceToken]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

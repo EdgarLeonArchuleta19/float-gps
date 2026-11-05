@@ -1,30 +1,20 @@
 import { useMemo, useState } from 'react';
-import { Alert, Platform, Pressable, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import { router } from 'expo-router';
-import { CircleDot, Plus, Trash2 } from 'lucide-react-native';
+import { CircleDot, Pencil, Plus } from 'lucide-react-native';
 import { useTheme } from '@/context/ThemeContext';
-import { useToast } from '@/context/ToastContext';
 import { useApi } from '@/hooks/useApi';
 import { useIsDesktop } from '@/hooks/useBreakpoint';
 import { useCanAdmin } from '@/hooks/useCanAdmin';
 import { usePagination } from '@/hooks/usePagination';
 import Pagination from '@/components/shared/Pagination';
+import LifecycleActions from '@/components/shared/LifecycleActions';
+import StatusFilter, { InactiveBadge, type StatusView } from '@/components/shared/StatusFilter';
 import { api } from '@/lib/api';
 import type { Geofence } from '@/lib/types';
 import FleetMap from '@/components/map/FleetMap';
 import type { MapCamera, MapCircle } from '@/components/map/types';
 import { Button, Card, EmptyState, ErrorBanner, Loading, PageHeader, Screen } from '@/components/ui';
-
-function confirmDelete(name: string): Promise<boolean> {
-  const message = `¿Eliminar la geocerca "${name}"? Esta acción no se puede deshacer.`;
-  if (Platform.OS === 'web') return Promise.resolve(window.confirm(message));
-  return new Promise((resolve) =>
-    Alert.alert('Eliminar geocerca', message, [
-      { text: 'Cancelar', style: 'cancel', onPress: () => resolve(false) },
-      { text: 'Eliminar', style: 'destructive', onPress: () => resolve(true) },
-    ])
-  );
-}
 
 function formatRadius(radius?: number) {
   if (!radius) return '—';
@@ -33,21 +23,23 @@ function formatRadius(radius?: number) {
 
 export default function Geofences() {
   const { t } = useTheme();
-  const toast = useToast();
   const isDesktop = useIsDesktop();
   const canAdmin = useCanAdmin();
   const { data, loading, error, refreshing, refresh } = useApi(() => api.geofences.list(), []);
   const [focus, setFocus] = useState<Geofence | null>(null);
+  const [view, setView] = useState<StatusView>('active');
 
-  const geofences = data || [];
-  const { pageItems, pager } = usePagination(geofences, '', 10);
+  const all = data || [];
+  const geofences = useMemo(() => all.filter((g) => g.isActive === (view === 'active')), [all, view]);
+  const { pageItems, pager } = usePagination(geofences, view, 10);
 
   const circles: MapCircle[] = useMemo(
     () =>
-      geofences
+      all
+        .filter((g) => g.isActive)
         .filter((g) => g.centerLat != null && g.centerLng != null && g.radius)
         .map((g) => ({ lat: g.centerLat!, lng: g.centerLng!, radius: g.radius!, color: g.color || '#f87203' })),
-    [geofences]
+    [all]
   );
 
   const camera: MapCamera | null = useMemo(() => {
@@ -58,20 +50,19 @@ export default function Geofences() {
     return circles.length ? { key: `fit-${circles.length}`, type: 'fit' } : null;
   }, [focus, circles.length]);
 
-  const remove = async (g: Geofence) => {
-    if (!(await confirmDelete(g.name))) return;
-    try {
-      await api.geofences.remove(g.id);
-      toast('Geocerca eliminada', 'success');
-      if (focus?.id === g.id) setFocus(null);
-      refresh();
-    } catch (err: any) {
-      toast(err.message, 'error');
-    }
-  };
-
   const list = (
     <View>
+    {canAdmin ? (
+      <View className="mb-3 flex-row">
+        <StatusFilter
+          value={view}
+          onChange={setView}
+          activeCount={all.filter((g) => g.isActive).length}
+          inactiveCount={all.filter((g) => !g.isActive).length}
+          feminine
+        />
+      </View>
+    ) : null}
     <Card className="py-1">
       {geofences.length ? (
         pageItems.map((g) => (
@@ -84,22 +75,43 @@ export default function Geofences() {
               <CircleDot size={18} color={g.color} />
             </View>
             <View className="flex-1 min-w-0">
-              <Text className={`text-[14px] font-semibold ${t.text}`} numberOfLines={1}>
-                {g.name}
-              </Text>
+              <View className="flex-row items-center gap-2">
+                <Text className={`text-[14px] font-semibold ${t.text} flex-shrink`} numberOfLines={1}>
+                  {g.name}
+                </Text>
+                {g.isActive ? null : <InactiveBadge feminine />}
+              </View>
               <Text className={`text-[12px] ${t.muted}`}>
                 {g.type} · radio {formatRadius(g.radius)}
               </Text>
             </View>
             {canAdmin ? (
-              <Pressable onPress={() => remove(g)} accessibilityLabel={`Eliminar ${g.name}`} className="p-2 rounded-lg active:opacity-60">
-                <Trash2 size={17} color="#ef4444" />
+              <Pressable onPress={() => router.push(`/geofences/${g.id}` as never)} accessibilityLabel={`Editar ${g.name}`} className="p-2 rounded-lg active:opacity-60">
+                <Pencil size={16} color={t.hex.muted} />
               </Pressable>
+            ) : null}
+            {canAdmin ? (
+              <LifecycleActions
+                noun={{ label: 'geocerca', feminine: true }}
+                name={g.name}
+                active={g.isActive}
+                deactivateHint="Dejará de mostrarse en el mapa y de generar alertas."
+                onSetActive={(active) => api.geofences.setActive(g.id, active)}
+                onDelete={() => api.geofences.remove(g.id)}
+                onChanged={() => {
+                  if (focus?.id === g.id) setFocus(null);
+                  refresh();
+                }}
+              />
             ) : null}
           </Pressable>
         ))
       ) : (
-        <EmptyState icon={CircleDot} title="Sin geocercas" message="Crea zonas para recibir alertas de entrada y salida." />
+        <EmptyState
+          icon={CircleDot}
+          title={view === 'inactive' ? 'Sin geocercas desactivadas' : 'Sin geocercas'}
+          message={view === 'inactive' ? undefined : 'Crea zonas para recibir alertas de entrada y salida.'}
+        />
       )}
     </Card>
     <Pagination {...pager} />
@@ -118,7 +130,7 @@ export default function Geofences() {
     <Screen refreshing={refreshing} onRefresh={refresh}>
       <PageHeader
         title="Geocercas" back="/more"
-        subtitle={`${geofences.length} zonas configuradas`}
+        subtitle={`${all.filter((g) => g.isActive).length} zonas activas`}
         right={canAdmin ? <Button label="Nueva" icon={Plus} compact onPress={() => router.push('/geofences/new')} /> : undefined}
       />
       {error ? <ErrorBanner message={error} /> : null}

@@ -101,10 +101,36 @@ export interface CompanyUser {
   name: string;
   email: string;
   role: string;
+  roleId: string | null;
+  roleName: string;
+  isActive: boolean;
   createdAt?: string;
 }
 
-interface NewVehicle {
+export interface Role {
+  id: string;
+  name: string;
+  permissions: string[];
+  allUnits: boolean;
+  isActive: boolean;
+  systemKey: 'admin' | 'operator' | 'viewer' | null;
+  vehicleIds: string[];
+  machineIds: string[];
+  userCount: number;
+}
+
+export type RoleInput = Pick<Role, 'name' | 'permissions' | 'allUnits' | 'vehicleIds' | 'machineIds'>;
+
+export interface GeofenceInput {
+  name: string;
+  type: string;
+  color: string;
+  radius: number;
+  centerLat: number;
+  centerLng: number;
+}
+
+export interface VehicleInput {
   name: string;
   plate: string;
   type: string;
@@ -114,6 +140,10 @@ interface NewVehicle {
   color?: string;
   gps?: { imei: string; simNumber?: string };
 }
+
+export type UnitState = 'active' | 'all';
+
+const setActive = (path: string, active: boolean) => request<unknown>(`${path}/active`, { method: 'PATCH', body: JSON.stringify({ active }) });
 
 function listOf<T>(response: T[] | PaginatedResponse<T>): T[] {
   return Array.isArray(response) ? response : response.data || [];
@@ -136,8 +166,9 @@ export const api = {
         method: 'POST',
         body: JSON.stringify({ email, code, newPassword }),
       }),
+    me: () => request<User>('/auth/me'),
     changePassword: (currentPassword: string, newPassword: string) =>
-      request<{ message?: string }>('/auth/change-password', {
+      request<{ message: string; token: string }>('/auth/change-password', {
         method: 'POST',
         body: JSON.stringify({ currentPassword, newPassword }),
       }),
@@ -146,12 +177,19 @@ export const api = {
     getStats: () => request<DashboardStats & Record<string, any>>('/dashboard'),
   },
   vehicles: {
-    list: async () => listOf(await request<PaginatedResponse<Vehicle>>(`/vehicles${query({ limit: '500' })}`)),
+    list: async (state: UnitState = 'active') =>
+      listOf(await request<PaginatedResponse<Vehicle>>(`/vehicles${query({ limit: '500', state: state === 'all' ? 'all' : undefined })}`)),
     get: (id: string) => request<Vehicle & { recentEvents?: TrackingEvent[] }>(`/vehicles/${id}`),
-    create: (data: NewVehicle) => request<Vehicle>('/vehicles', { method: 'POST', body: JSON.stringify(data) }),
+    create: (data: VehicleInput) => request<Vehicle>('/vehicles', { method: 'POST', body: JSON.stringify(data) }),
+    update: (id: string, data: VehicleInput) => request<Vehicle>(`/vehicles/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+    setActive: (id: string, active: boolean) => setActive(`/vehicles/${id}`, active),
+    remove: (id: string) => request<unknown>(`/vehicles/${id}`, { method: 'DELETE' }),
   },
   machines: {
-    list: async () => listOf(await request<PaginatedResponse<Machine>>(`/machines${query({ limit: '500' })}`)),
+    list: async (state: UnitState = 'active') =>
+      listOf(await request<PaginatedResponse<Machine>>(`/machines${query({ limit: '500', state: state === 'all' ? 'all' : undefined })}`)),
+    setActive: (id: string, active: boolean) => setActive(`/machines/${id}`, active),
+    remove: (id: string) => request<unknown>(`/machines/${id}`, { method: 'DELETE' }),
     get: (id: string) => request<Machine & { recentEvents?: TrackingEvent[] }>(`/machines/${id}`),
   },
   gps: {
@@ -166,8 +204,10 @@ export const api = {
   },
   geofences: {
     list: async () => listOf(await request<Geofence[] | PaginatedResponse<Geofence>>('/geofences')),
-    create: (data: { name: string; type: string; color: string; radius: number; centerLat: number; centerLng: number }) =>
-      request<Geofence>('/geofences', { method: 'POST', body: JSON.stringify(data) }),
+    get: (id: string) => request<Geofence>(`/geofences/${id}`),
+    create: (data: GeofenceInput) => request<Geofence>('/geofences', { method: 'POST', body: JSON.stringify(data) }),
+    update: (id: string, data: GeofenceInput) => request<Geofence>(`/geofences/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+    setActive: (id: string, active: boolean) => setActive(`/geofences/${id}`, active),
     remove: (id: string) => request<unknown>(`/geofences/${id}`, { method: 'DELETE' }),
   },
   reports: {
@@ -187,12 +227,23 @@ export const api = {
   },
   users: {
     list: () => request<CompanyUser[]>('/users'),
-    create: (data: { name: string; email: string; password: string; role: string }) =>
+    create: (data: { name: string; email: string; password: string; roleId: string }) =>
       request<CompanyUser>('/users', { method: 'POST', body: JSON.stringify(data) }),
+    update: (id: string, data: { name: string; roleId?: string }) =>
+      request<CompanyUser>(`/users/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+    setActive: (id: string, active: boolean) => setActive(`/users/${id}`, active),
     remove: (id: string) => request<unknown>(`/users/${id}`, { method: 'DELETE' }),
   },
+  roles: {
+    list: () => request<Role[]>('/roles'),
+    get: (id: string) => request<Role>(`/roles/${id}`),
+    create: (data: RoleInput) => request<Role>('/roles', { method: 'POST', body: JSON.stringify(data) }),
+    update: (id: string, data: RoleInput) => request<Role>(`/roles/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+    setActive: (id: string, active: boolean) => setActive(`/roles/${id}`, active),
+    remove: (id: string) => request<unknown>(`/roles/${id}`, { method: 'DELETE' }),
+  },
   commands: {
-    engine: (data: { unitId: string; unitType: 'vehicle' | 'machine'; action: 'stop' | 'resume'; password?: string }) =>
+    engine: (data: { unitId: string; unitType: 'vehicle' | 'machine'; action: 'stop' | 'resume'; password: string }) =>
       request<{ success: boolean; message: string }>('/commands/engine-stop', {
         method: 'POST',
         body: JSON.stringify(data),

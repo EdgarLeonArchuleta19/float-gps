@@ -7,6 +7,7 @@ import { useTheme } from '@/context/ThemeContext';
 import { useToast } from '@/context/ToastContext';
 import { useAuth } from '@/context/AuthContext';
 import { api } from '@/lib/api';
+import { forgetEngineCredential, hasEngineCredential, readEngineCredential, saveEngineCredential } from '@/lib/engineCredential';
 import type { FleetUnit } from '@/lib/types';
 import { Button, ErrorBanner, Field, Sheet } from '@/components/ui';
 
@@ -37,13 +38,15 @@ export default function EngineCommandSheet({
   const [sending, setSending] = useState(false);
   const [error, setError] = useState('');
   const [biometricLabel, setBiometricLabel] = useState<string | null>(null);
+  const [hasSavedPassword, setHasSavedPassword] = useState(false);
 
   useEffect(() => {
     if (!visible) return;
     setStep('choose');
     setPassword('');
     setError('');
-    if (Platform.OS === 'web') return;
+    if (Platform.OS === 'web' || !user) return;
+    hasEngineCredential(user.id).then(setHasSavedPassword);
     (async () => {
       const [hardware, enrolled, types] = await Promise.all([
         LocalAuthentication.hasHardwareAsync(),
@@ -57,16 +60,15 @@ export default function EngineCommandSheet({
       const face = types.includes(LocalAuthentication.AuthenticationType.FACIAL_RECOGNITION);
       setBiometricLabel(face ? 'Confirmar con Face ID' : 'Confirmar con huella');
     })().catch(() => setBiometricLabel(null));
-  }, [visible]);
+  }, [visible, user]);
 
   const targets = units;
   if (!targets.length) return null;
   const targetLabel = targets.length === 1 ? targets[0].name : `${targets.length} unidades`;
 
   const isStop = action === 'stop';
-  const isViewer = user?.role === 'viewer';
 
-  const send = async (withPassword?: string) => {
+  const send = async (withPassword: string, fromKeychain: boolean) => {
     setSending(true);
     setError('');
     try {
@@ -75,6 +77,7 @@ export default function EngineCommandSheet({
       );
       const failed = results.filter((r): r is PromiseRejectedResult => r.status === 'rejected');
       if (failed.length === targets.length) throw failed[0].reason;
+      if (!fromKeychain && biometricLabel && user) await saveEngineCredential(user.id, withPassword);
       vibrate(Haptics.NotificationFeedbackType.Success);
       if (targets.length === 1) toast((results[0] as PromiseFulfilledResult<{ message: string }>).value.message, 'success');
       else toast(`Comando enviado a ${targets.length - failed.length} de ${targets.length} unidades`, failed.length ? 'info' : 'success');
@@ -82,19 +85,21 @@ export default function EngineCommandSheet({
       onClose();
     } catch (err: any) {
       vibrate(Haptics.NotificationFeedbackType.Error);
-      setError(err.message);
+      if (fromKeychain && err.status === 403) {
+        await forgetEngineCredential();
+        setHasSavedPassword(false);
+        setError(`${err.message}. Escribe tu contraseña para confirmar.`);
+      } else {
+        setError(err.message);
+      }
     } finally {
       setSending(false);
     }
   };
 
   const confirmWithBiometrics = async () => {
-    const result = await LocalAuthentication.authenticateAsync({
-      promptMessage: isStop ? `Paro de motor · ${targetLabel}` : `Reanudar motor · ${targetLabel}`,
-      cancelLabel: 'Cancelar',
-      disableDeviceFallback: false,
-    });
-    if (result.success) await send();
+    const saved = await readEngineCredential(isStop ? `Paro de motor · ${targetLabel}` : `Reanudar motor · ${targetLabel}`);
+    if (saved) await send(saved, true);
     else setError('No se pudo verificar tu identidad');
   };
 
@@ -103,14 +108,12 @@ export default function EngineCommandSheet({
       setError('Ingresa tu contraseña para confirmar');
       return;
     }
-    await send(password);
+    await send(password, false);
   };
 
   return (
     <Sheet visible={visible} onClose={onClose} title={step === 'choose' ? 'Control de motor' : 'Confirma tu identidad'}>
-      {isViewer ? (
-        <ErrorBanner message="Tu cuenta es de solo lectura y no puede enviar comandos de motor." />
-      ) : step === 'choose' ? (
+      {step === 'choose' ? (
         <View className="gap-3 pb-2">
           <Text className={`text-[13px] ${t.muted}`}>
             {targets.length === 1 ? 'Unidad ' : 'Destino: '}
@@ -162,7 +165,7 @@ export default function EngineCommandSheet({
             <Text className={`font-semibold ${t.text}`}>{targetLabel}</Text>. Esta acción queda registrada.
           </Text>
           {error ? <ErrorBanner message={error} /> : null}
-          {biometricLabel ? (
+          {biometricLabel && hasSavedPassword ? (
             <>
               <Button
                 label={biometricLabel}
@@ -183,9 +186,12 @@ export default function EngineCommandSheet({
             autoComplete="password"
             onSubmitEditing={confirmWithPassword}
           />
+          {biometricLabel && !hasSavedPassword ? (
+            <Text className={`text-[11px] ${t.subtle}`}>Al confirmar con tu contraseña, la próxima vez podrás usar {biometricLabel.includes('Face') ? 'Face ID' : 'tu huella'}.</Text>
+          ) : null}
           <Button
             label={isStop ? 'Confirmar paro de motor' : 'Confirmar reanudación'}
-            variant={biometricLabel ? 'secondary' : isStop ? 'danger' : 'primary'}
+            variant={biometricLabel && hasSavedPassword ? 'secondary' : isStop ? 'danger' : 'primary'}
             onPress={confirmWithPassword}
             loading={sending && !!password}
             disabled={sending}

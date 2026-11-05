@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
-import { ArrowLeft, Bell, History, Map as MapIcon, Navigation, Power } from 'lucide-react-native';
+import { ArrowLeft, Bell, History, Map as MapIcon, Navigation, Pencil, Power } from 'lucide-react-native';
 import { useTheme } from '@/context/ThemeContext';
 import { useApi } from '@/hooks/useApi';
 import { useIsDesktop } from '@/hooks/useBreakpoint';
+import { useCan } from '@/hooks/useCan';
+import { useCanAdmin } from '@/hooks/useCanAdmin';
 import { api } from '@/lib/api';
 import { formatDateTime, formatHours, markerColor, shortTimeAgo, toDateInput } from '@/lib/format';
 import { useOffHours } from '@/hooks/useOffHours';
@@ -18,10 +20,13 @@ import EngineCommandSheet from '@/components/shared/EngineCommandSheet';
 import NavigateSheet from '@/components/shared/NavigateSheet';
 import InfoRow from '@/components/units/InfoRow';
 import QuickAction from '@/components/units/QuickAction';
+import LifecycleActions from '@/components/shared/LifecycleActions';
 
 export default function UnitDetail() {
   const { t } = useTheme();
   const isDesktop = useIsDesktop();
+  const can = useCan();
+  const canAdmin = useCanAdmin();
   const params = useLocalSearchParams<{ id: string; kind?: string }>();
   const id = String(params.id);
   const kind = params.kind === 'machine' ? 'machine' : 'vehicle';
@@ -105,7 +110,10 @@ export default function UnitDetail() {
       <QuickAction icon={MapIcon} label="En mapa" onPress={() => router.push(`/live-map?unit=${unit.id}` as never)} />
       <QuickAction icon={History} label="Historial" onPress={() => router.push(`/tracking?unit=${unit.id}` as never)} />
       <QuickAction icon={Navigation} label="Cómo llegar" onPress={() => setNavOpen(true)} />
-      <QuickAction icon={Power} label="Motor" onPress={() => setEngineOpen(true)} danger />
+      {unit.kind === 'vehicle' && canAdmin ? (
+        <QuickAction icon={Pencil} label="Editar" onPress={() => router.push(`/fleet/${unit.id}` as never)} />
+      ) : null}
+      {can('engine') ? <QuickAction icon={Power} label="Motor" onPress={() => setEngineOpen(true)} danger /> : null}
     </View>
   );
 
@@ -147,6 +155,22 @@ export default function UnitDetail() {
         </View>
         <StatusPill status={unit.status} />
       </View>
+      {canAdmin ? (
+        <Card className="p-3 mb-4 flex-row items-center justify-between gap-3">
+          <Text className={`text-[12.5px] flex-1 ${t.muted}`}>
+            {unit.isActive ? 'Unidad activa y visible en el mapa.' : 'Unidad desactivada: no aparece en el mapa ni en las listas.'}
+          </Text>
+          <LifecycleActions
+            noun={{ label: 'unidad', feminine: true }}
+            name={unit.name}
+            active={unit.isActive}
+            deactivateHint="Dejará de verse en el mapa y en las listas; su historial se conserva."
+            onSetActive={(active) => (unit.kind === 'vehicle' ? api.vehicles : api.machines).setActive(unit.id, active)}
+            onDelete={() => (unit.kind === 'vehicle' ? api.vehicles : api.machines).remove(unit.id)}
+            onChanged={(deleted) => (deleted ? router.replace('/fleet') : refresh())}
+          />
+        </Card>
+      ) : null}
 
       {isDesktop ? (
         <View className="flex-row gap-4 items-start">

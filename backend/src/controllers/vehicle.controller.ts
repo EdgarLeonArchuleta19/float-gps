@@ -32,7 +32,11 @@ export const updateVehicle = asyncHandler(async (req: Request, res: Response) =>
   res.json(vehicle);
 });
 
+export const setVehicleActive = asyncHandler(async (req: Request, res: Response) => {
+  res.json(await vehicleService.setActive(req.params.id, req.body?.active, getTenant(req)));
+});
+
 export const deleteVehicle = asyncHandler(async (req: Request, res: Response) => {
   await vehicleService.delete(req.params.id, getTenant(req));
-  res.json({ message: 'Vehicle deleted' });
+  res.json({ message: 'Unidad borrada' });
 });

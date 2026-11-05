@@ -2,6 +2,7 @@ import { PrismaClient } from '@prisma/client';
 import { TenantContext } from '../middleware/auth';
 import { CompanyService } from './company.service';
 import { haversineKm, isWorkingTime } from '../utils/workSchedule';
+import { gpsDeviceFilter, linkedUnitFilter } from './unitAccess';
 
 const companyService = new CompanyService();
 // Gaps longer than this between two points are not counted as driven distance.
@@ -10,12 +11,8 @@ const MAX_SEGMENT_GAP_MS = 30 * 60 * 1000;
 const prisma = new PrismaClient();
 
 function applyCompanySessionFilter(where: any, tenant?: TenantContext) {
-  if (tenant?.companyId) {
-    where.OR = [
-      { vehicle: { companyId: tenant.companyId } },
-      { machine: { companyId: tenant.companyId } },
-    ];
-  }
+  const scope = linkedUnitFilter(tenant);
+  if (scope) where.AND = [...(where.AND || []), scope];
 }
 
 export class ReportService {
@@ -163,13 +160,8 @@ export class ReportService {
     const gpsFilter: any = {};
     if (query.vehicleId) gpsFilter.vehicleId = query.vehicleId;
     if (query.machineId) gpsFilter.machineId = query.machineId;
-    if (tenant?.companyId) {
-      gpsFilter.OR = [
-        { companyId: tenant.companyId },
-        { vehicle: { companyId: tenant.companyId } },
-        { machine: { companyId: tenant.companyId } },
-      ];
-    }
+    const scope = gpsDeviceFilter(tenant);
+    if (scope) gpsFilter.AND = [scope];
     if (Object.keys(gpsFilter).length > 0) {
       where.gpsDevice = gpsFilter;
     }
@@ -196,11 +188,8 @@ export class ReportService {
     const schedule = await companyService.getSchedule(tenant);
 
     const deviceWhere: any = { OR: [{ vehicleId: { not: null } }, { machineId: { not: null } }] };
-    if (tenant?.companyId) {
-      deviceWhere.AND = [
-        { OR: [{ companyId: tenant.companyId }, { vehicle: { companyId: tenant.companyId } }, { machine: { companyId: tenant.companyId } }] },
-      ];
-    }
+    const scope = linkedUnitFilter(tenant);
+    if (scope) deviceWhere.AND = [scope];
     const devices = await prisma.gpsDevice.findMany({ where: deviceWhere, include: { vehicle: true, machine: true } });
     if (!devices.length) return [];
 

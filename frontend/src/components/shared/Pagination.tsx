@@ -16,7 +16,7 @@ export default function Pagination({
   onChange: (page: number) => void;
 }) {
   const { t } = useTheme();
-  if (total <= pageSize) return null;
+  if (!total) return null;
   const from = (page - 1) * pageSize + 1;
   const to = Math.min(page * pageSize, total);
   const button = (label: string, target: number, disabled: boolean, icon: 'prev' | 'next') => (

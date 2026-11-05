@@ -8,8 +8,6 @@ import type { OwnerUser } from './ownerApi';
 const ROLE_LABELS: Record<string, string> = {
   superadmin: 'Dueño',
   admin: 'Administrador',
-  operator: 'Operador',
-  viewer: 'Solo lectura',
 };
 
 export default function UsersTab({
@@ -42,7 +40,7 @@ export default function UsersTab({
             </Text>
           </View>
           <View className="items-end gap-0.5">
-            <Text className={`text-[12px] font-semibold ${t.text}`}>{ROLE_LABELS[u.role] || u.role}</Text>
+            <Text className={`text-[12px] font-semibold ${t.text}`}>{ROLE_LABELS[u.role] || u.customRole?.name || 'Usuario'}</Text>
             <Text className={`text-[11px] ${t.subtle}`}>{formatDate(u.createdAt)}</Text>
           </View>
           {u.role !== 'superadmin' ? (

@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Text, View } from 'react-native';
 import { ShieldAlert, Zap } from 'lucide-react-native';
-import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
 import { useFleet } from '@/hooks/useFleet';
 import { Button, Card, ErrorBanner, Loading, PageHeader, Screen } from '@/components/ui';
@@ -11,14 +10,12 @@ import ActionFooter from '@/components/shared/ActionFooter';
 
 export default function EngineScreen() {
   const { t } = useTheme();
-  const { user } = useAuth();
   const { units, loading, error } = useFleet(30000);
   const [selected, setSelected] = useState<string[]>([]);
   const [open, setOpen] = useState(false);
 
   const withGps = units.filter((u) => u.gpsDevice);
   const chosen = withGps.filter((u) => selected.includes(u.id));
-  const readOnly = user?.role === 'viewer';
 
   return (
     <View className={`flex-1 ${t.screen}`}>
@@ -32,7 +29,6 @@ export default function EngineScreen() {
             Úsalo solo con la unidad detenida o en caso de robo. Cada comando pide tu huella, Face ID o contraseña y queda registrado.
           </Text>
         </Card>
-        {readOnly ? <ErrorBanner message="Tu cuenta es de solo lectura y no puede enviar comandos de motor." /> : null}
         {error ? <ErrorBanner message={error} /> : null}
         {loading && !units.length ? <Loading /> : <UnitMultiSelect units={withGps} selected={selected} onChange={setSelected} />}
       </Screen>
@@ -42,7 +38,7 @@ export default function EngineScreen() {
           icon={Zap}
           variant="danger"
           onPress={() => setOpen(true)}
-          disabled={!chosen.length || readOnly}
+          disabled={!chosen.length}
           className="flex-1"
         />
       </ActionFooter>

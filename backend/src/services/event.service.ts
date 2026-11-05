@@ -1,5 +1,7 @@
 import { PrismaClient } from '@prisma/client';
+import { pageParams } from '../utils/pagination';
 import { TenantContext } from '../middleware/auth';
+import { gpsDeviceFilter } from './unitAccess';
 
 const prisma = new PrismaClient();
 
@@ -8,9 +10,7 @@ export class EventService {
     query: { type?: string; unitId?: string; startDate?: string; endDate?: string; page?: string; limit?: string },
     tenant?: TenantContext
   ) {
-    const page = parseInt(query.page || '1');
-    const limit = parseInt(query.limit || '20');
-    const skip = (page - 1) * limit;
+    const { page, limit, skip } = pageParams(query, 20);
 
     const where: any = {};
     if (query.type) where.type = query.type;
@@ -24,18 +24,8 @@ export class EventService {
     if (query.unitId) {
       gpsFilter.OR = [{ vehicleId: query.unitId }, { machineId: query.unitId }];
     }
-    if (tenant?.companyId) {
-      gpsFilter.AND = [
-        ...(gpsFilter.AND || []),
-        {
-          OR: [
-            { companyId: tenant.companyId },
-            { vehicle: { companyId: tenant.companyId } },
-            { machine: { companyId: tenant.companyId } },
-          ],
-        },
-      ];
-    }
+    const scope = gpsDeviceFilter(tenant);
+    if (scope) gpsFilter.AND = [scope];
     if (Object.keys(gpsFilter).length > 0) {
       where.gpsDevice = gpsFilter;
     }

@@ -1,10 +1,12 @@
+import { cloneElement, type ReactElement } from 'react';
 import { Text, View } from 'react-native';
 import { router } from 'expo-router';
-import { Bell, ChevronRight, CircleDot, FileBarChart, HelpCircle, LogOut, Settings, Truck, UserRound, Users } from 'lucide-react-native';
+import { Bell, ChevronRight, CircleDot, FileBarChart, HelpCircle, LogOut, Settings, ShieldCheck, Truck, UserRound, Users } from 'lucide-react-native';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
 import { useAlarm } from '@/context/AlarmContext';
 import { useCanAdmin } from '@/hooks/useCanAdmin';
+import { useCan } from '@/hooks/useCan';
 import { useApi } from '@/hooks/useApi';
 import { api } from '@/lib/api';
 import { userInitials } from '@/lib/user';
@@ -16,7 +18,31 @@ export default function More() {
   const { t } = useTheme();
   const alarm = useAlarm();
   const canAdmin = useCanAdmin();
-  const { data } = useApi(() => api.dashboard.getStats(), []);
+  const can = useCan();
+  const canAlerts = can('alerts');
+  const { data } = useApi(() => (canAlerts ? api.dashboard.getStats() : Promise.resolve(null)), [canAlerts]);
+
+  const operationRows = [
+    can('alerts') ? (
+      <MenuRow
+        key="alerts"
+        icon={Bell}
+        label="Alertas"
+        hint={alarm.active ? `Modo alarma activo en ${alarm.unitIds.length} unidades` : 'Eventos y modo alarma'}
+        badge={data?.alertsCount}
+        onPress={() => router.push('/notifications')}
+      />
+    ) : null,
+    can('fleet') ? (
+      <MenuRow key="fleet" icon={Truck} label="Flota" hint={canAdmin ? 'Vehículos, maquinaria y alta de unidades' : 'Vehículos y maquinaria'} onPress={() => router.push('/fleet')} />
+    ) : null,
+    can('geofences') ? (
+      <MenuRow key="geofences" icon={CircleDot} label="Geocercas" hint={canAdmin ? 'Ver, crear y editar zonas' : 'Ver zonas'} onPress={() => router.push('/geofences')} />
+    ) : null,
+    can('reports') ? (
+      <MenuRow key="reports" icon={FileBarChart} label="Reportes" hint="Kilómetros, horas y bitácora" onPress={() => router.push('/reports')} />
+    ) : null,
+  ].filter((row): row is ReactElement<{ last?: boolean }> => row !== null);
 
   return (
     <Screen maxWidth={720}>
@@ -34,20 +60,22 @@ export default function More() {
         </View>
       </Card>
 
-      <SectionTitle>Operación</SectionTitle>
-      <Card>
-        <MenuRow
-          icon={Bell}
-          label="Alertas"
-          hint={alarm.active ? `Modo alarma activo en ${alarm.unitIds.length} unidades` : 'Eventos y modo alarma'}
-          badge={data?.alertsCount}
-          onPress={() => router.push('/notifications')}
-        />
-        <MenuRow icon={Truck} label="Flota" hint="Vehículos, maquinaria y alta de unidades" onPress={() => router.push('/fleet')} />
-        <MenuRow icon={CircleDot} label="Geocercas" hint="Ver y crear zonas" onPress={() => router.push('/geofences')} />
-        <MenuRow icon={FileBarChart} label="Reportes" hint="Kilómetros, horas y bitácora" onPress={() => router.push('/reports')} last={!canAdmin} />
-        {canAdmin ? <MenuRow icon={Users} label="Usuarios" hint="Accesos de tu empresa" onPress={() => router.push('/users')} last /> : null}
-      </Card>
+      {operationRows.length ? (
+        <>
+          <SectionTitle>Operación</SectionTitle>
+          <Card>{operationRows.map((row, i) => cloneElement(row, { last: i === operationRows.length - 1 }))}</Card>
+        </>
+      ) : null}
+
+      {canAdmin ? (
+        <>
+          <SectionTitle>Administración</SectionTitle>
+          <Card>
+            <MenuRow icon={Users} label="Usuarios" hint="Accesos de tu empresa" onPress={() => router.push('/users')} />
+            <MenuRow icon={ShieldCheck} label="Roles" hint="Qué ve cada usuario y qué unidades" onPress={() => router.push('/roles' as never)} last />
+          </Card>
+        </>
+      ) : null}
 
       <SectionTitle>Cuenta</SectionTitle>
       <Card>

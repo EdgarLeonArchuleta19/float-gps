@@ -61,7 +61,7 @@ function throttle(key: string, store: Map<string, number>, cooldown: number): bo
 async function loadGeofences(): Promise<GeofenceRow[]> {
   if (Date.now() - geofenceCache.at < GEOFENCE_TTL_MS) return geofenceCache.rows;
   const rows = await prisma.geofence.findMany({
-    where: { isActive: true },
+    where: { isActive: true, deletedAt: null },
     select: { id: true, name: true, radius: true, centerLat: true, centerLng: true },
   });
   geofenceCache = { at: Date.now(), rows };

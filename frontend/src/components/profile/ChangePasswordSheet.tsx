@@ -2,13 +2,16 @@ import { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { KeyRound, Lock } from 'lucide-react-native';
 import { useToast } from '@/context/ToastContext';
+import { useAuth } from '@/context/AuthContext';
 import { api } from '@/lib/api';
+import { forgetEngineCredential } from '@/lib/engineCredential';
 import { isStrongPassword } from '@/lib/passwordPolicy';
 import { Button, ErrorBanner, Field, Sheet } from '@/components/ui';
 import PasswordChecklist from '@/components/shared/PasswordChecklist';
 
 export default function ChangePasswordSheet({ visible, onClose }: { visible: boolean; onClose: () => void }) {
   const toast = useToast();
+  const { replaceToken } = useAuth();
   const [current, setCurrent] = useState('');
   const [next, setNext] = useState('');
   const [confirm, setConfirm] = useState('');
@@ -33,8 +36,10 @@ export default function ChangePasswordSheet({ visible, onClose }: { visible: boo
     setSaving(true);
     setError('');
     try {
-      await api.auth.changePassword(current, next);
-      toast('Contraseña actualizada', 'success');
+      const { token } = await api.auth.changePassword(current, next);
+      replaceToken(token);
+      await forgetEngineCredential();
+      toast('Contraseña actualizada. Se cerraron tus otras sesiones.', 'success');
       onClose();
     } catch (err: any) {
       setError(err.message);

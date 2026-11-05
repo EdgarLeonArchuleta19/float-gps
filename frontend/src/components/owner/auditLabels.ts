@@ -7,14 +7,15 @@ const AUDIT_LABELS: Record<string, string> = {
   COMPANY_CREATE: 'Empresa creada',
   COMPANY_UPDATE: 'Empresa editada',
   COMPANY_TOGGLE_STATUS: 'Empresa suspendida / reactivada',
-  COMPANY_DELETE: 'Empresa eliminada',
+  COMPANY_DELETE: 'Empresa movida a Eliminados',
   SUPPORT_MODE_ENTER: 'Entrada a Modo Soporte',
   USER_CREATE: 'Usuario creado',
   USER_RESET_PASSWORD: 'Contraseña de usuario restablecida',
-  USER_DELETE: 'Usuario eliminado',
+  USER_DELETE: 'Usuario movido a Eliminados',
   GPS_CREATE: 'GPS registrado',
   GPS_UPDATE: 'GPS reasignado / editado',
-  GPS_DELETE: 'GPS eliminado',
+  GPS_DELETE: 'GPS movido a Eliminados',
+  RECORD_RESTORE: 'Registro restaurado desde Eliminados',
 };
 
 export function auditLabel(action: string) {

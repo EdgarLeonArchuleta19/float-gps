@@ -19,6 +19,7 @@ import { useToast } from '@/context/ToastContext';
 import { useAlarm } from '@/context/AlarmContext';
 import { useFleet } from '@/hooks/useFleet';
 import { useIsDesktop } from '@/hooks/useBreakpoint';
+import { useCan } from '@/hooks/useCan';
 import { usePagination } from '@/hooks/usePagination';
 import { useOffHours } from '@/hooks/useOffHours';
 import { api } from '@/lib/api';
@@ -64,6 +65,7 @@ export default function LiveMap() {
   const toast = useToast();
   const alarm = useAlarm();
   const isDesktop = useIsDesktop();
+  const can = useCan();
   const { height } = useWindowDimensions();
   const params = useLocalSearchParams<{ unit?: string; status?: string }>();
 
@@ -332,8 +334,8 @@ export default function LiveMap() {
       onRoute={toggleTodayRoute}
       onHistory={() => router.push(`/tracking?unit=${selected.id}` as never)}
       onNavigate={() => navigateTo(selected)}
-      onShare={share}
-      onEngine={() => setEngineUnit(selected)}
+      onShare={can('share') ? share : undefined}
+      onEngine={can('engine') ? () => setEngineUnit(selected) : undefined}
     />
   ) : null;
 
@@ -350,7 +352,7 @@ export default function LiveMap() {
       />
       <MapButton icon={LocateFixed} label="Mi ubicación" active={!!me} onPress={locateMe} />
       <MapButton icon={Navigation2} label="Ruta hacia una unidad" active={!!guide || guideLoading} onPress={() => setOverlay('route')} />
-      <MapButton icon={Bell} label="Modo alarma" dot={alarm.active} onPress={() => setOverlay('alarm')} />
+      {can('alerts') ? <MapButton icon={Bell} label="Modo alarma" dot={alarm.active} onPress={() => setOverlay('alarm')} /> : null}
     </View>
   );
 

@@ -2,17 +2,18 @@ import { Pressable, Text, View } from 'react-native';
 import { usePathname } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/context/ThemeContext';
-import { MOBILE_TABS, goTo, isActive } from './navItems';
+import { goTo, isActive, useMainTabs } from './navItems';
 import FeaturedTab from './FeaturedTab';
 
 export default function BottomTabBar({ alerts }: { alerts: number }) {
   const { t } = useTheme();
   const pathname = usePathname();
   const insets = useSafeAreaInsets();
+  const tabs = useMainTabs();
   const activeColor = t.isDark ? '#f87203' : '#032347';
   return (
     <View className={`flex-row items-end border-t ${t.card} ${t.border}`} style={{ paddingBottom: Math.max(insets.bottom, 8), paddingTop: 6 }}>
-      {MOBILE_TABS.map((item) => {
+      {tabs.map((item) => {
         const active = isActive(item, pathname);
         const Icon = item.icon;
         if (item.featured) {

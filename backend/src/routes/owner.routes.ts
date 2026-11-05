@@ -19,6 +19,10 @@ import {
 import { ownerLogoutAll } from '../controllers/auth.controller';
 import { masterKeyRequired } from '../middleware/auth';
 import { auditOwnerAction } from '../middleware/audit';
+import { asyncHandler } from '../middleware/errorHandler';
+import { TrashService } from '../services/trash.service';
+
+const trashService = new TrashService();
 
 const router = Router();
 
@@ -51,6 +55,13 @@ router.delete(
   auditOwnerAction('USER_DELETE', 'user'),
   deleteOwnerUser,
 );
+
+router.get('/trash', asyncHandler(async (_req, res) => {
+  res.json(await trashService.list());
+}));
+router.post('/trash/:type/:id/restore', auditOwnerAction('RECORD_RESTORE', 'record'), asyncHandler(async (req, res) => {
+  res.json(await trashService.restore(req.params.type, req.params.id));
+}));
 
 router.get('/gps', listAllGps);
 router.post('/gps', auditOwnerAction('GPS_CREATE', 'gps'), createOwnerGps);

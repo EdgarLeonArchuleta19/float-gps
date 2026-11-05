@@ -8,8 +8,9 @@ import { api } from '@/lib/api';
 import { eventTypeLabel, formatDayLabel, formatHours, formatTime, shiftDate, toDateInput } from '@/lib/format';
 import { type ExportTable } from '@/lib/exporters';
 import type { ReportRow, TrackingEvent } from '@/lib/types';
-import { Button, Card, Chip, ChipRow, EmptyState, ErrorBanner, Loading, PageHeader, Screen } from '@/components/ui';
+import { Button, Card, EmptyState, ErrorBanner, Loading, PageHeader, Screen } from '@/components/ui';
 import DayStepper from '@/components/shared/DayStepper';
+import FilterSelect from '@/components/shared/FilterSelect';
 import EventRow from '@/components/events/EventRow';
 import EventPreviewSheet from '@/components/events/EventPreviewSheet';
 import { summarize } from '@/components/reports/summary';
@@ -141,15 +142,8 @@ export default function Reports() {
           <SummaryTable items={summaryPage.pageItems} totals={totals} sort={sort} onSort={setSort} />
         ) : (
           <>
-            <View className="flex-row items-center gap-2 mb-2">
-              <Text className={`text-[11px] font-semibold uppercase tracking-wide ${t.subtle}`}>Ordenar</Text>
-              <View className="flex-1">
-                <ChipRow>
-                  {SORT_OPTIONS.map((o) => (
-                    <Chip key={o.value} label={o.label} active={sort === o.value} onPress={() => setSort(o.value)} />
-                  ))}
-                </ChipRow>
-              </View>
+            <View className="flex-row mb-2">
+              <FilterSelect label="Ordenar" value={sort} onChange={(v) => setSort(v as SortKey)} options={SORT_OPTIONS} />
             </View>
             <UnitReportList items={summaryPage.pageItems} />
           </>

@@ -1,4 +1,4 @@
-const CACHE = 'floa-mobile-v1';
+const CACHE = 'floa-mobile-v2';
 const SHELL = ['/', '/manifest.json', '/pwa-192x192.png', '/pwa-512x512.png'];
 
 self.addEventListener('install', (event) => {

@@ -44,7 +44,7 @@ export default function Login() {
     setError('');
     const res = await login(email, password, company);
     setLoading(false);
-    if (res.ok) router.replace('/dashboard');
+    if (res.ok) router.replace('/live-map');
     else setError(res.error || 'Credenciales incorrectas');
   };
 

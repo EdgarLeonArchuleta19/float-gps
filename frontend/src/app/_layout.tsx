@@ -6,6 +6,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { ThemeProvider, useTheme } from '@/context/ThemeContext';
 import { AuthProvider } from '@/context/AuthContext';
 import { ToastProvider } from '@/context/ToastContext';
+import { ConfirmProvider } from '@/context/ConfirmContext';
 
 function ThemedStack() {
   const { t } = useTheme();
@@ -24,7 +25,9 @@ export default function RootLayout() {
         <ThemeProvider>
           <AuthProvider>
             <ToastProvider>
-              <ThemedStack />
+              <ConfirmProvider>
+                <ThemedStack />
+              </ConfirmProvider>
             </ToastProvider>
           </AuthProvider>
         </ThemeProvider>

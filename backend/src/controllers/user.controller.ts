@@ -6,28 +6,21 @@ import { getTenant } from '../middleware/auth';
 const userService = new UserService();
 
 export const getUsers = asyncHandler(async (req: Request, res: Response) => {
-  const users = await userService.findAll(getTenant(req));
-  res.json(users);
+  res.json(await userService.findAll(getTenant(req)));
 });
 
 export const createUser = asyncHandler(async (req: Request, res: Response) => {
-  const user = await userService.create(req.body, getTenant(req));
-  res.status(201).json(user);
+  res.status(201).json(await userService.create(req.body || {}, getTenant(req)));
+});
+
+export const updateUser = asyncHandler(async (req: Request, res: Response) => {
+  res.json(await userService.update(req.params.id, req.body || {}, getTenant(req)));
+});
+
+export const setUserActive = asyncHandler(async (req: Request, res: Response) => {
+  res.json(await userService.setActive(req.params.id, req.body?.active, getTenant(req)));
 });
 
 export const deleteUser = asyncHandler(async (req: Request, res: Response) => {
-  const result = await userService.remove(req.params.id, getTenant(req));
-  res.json(result);
-});
-
-export const getUserUnits = asyncHandler(async (req: Request, res: Response) => {
-  const units = await userService.getUserUnits(req.params.id, getTenant(req));
-  res.json(units);
-});
-
-export const updateUserUnits = asyncHandler(async (req: Request, res: Response) => {
-  const vehicleIds: string[] = Array.isArray(req.body?.vehicleIds) ? req.body.vehicleIds : [];
-  const machineIds: string[] = Array.isArray(req.body?.machineIds) ? req.body.machineIds : [];
-  const units = await userService.updateUnits(req.params.id, vehicleIds, machineIds, getTenant(req));
-  res.json(units);
+  res.json(await userService.remove(req.params.id, getTenant(req)));
 });

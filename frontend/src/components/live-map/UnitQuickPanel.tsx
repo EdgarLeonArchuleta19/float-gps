@@ -84,8 +84,8 @@ export default function UnitQuickPanel({
   onRoute: () => void;
   onHistory: () => void;
   onNavigate: () => void;
-  onShare: () => void;
-  onEngine: () => void;
+  onShare?: () => void;
+  onEngine?: () => void;
 }) {
   const { t } = useTheme();
   const p = unit.position;
@@ -131,8 +131,8 @@ export default function UnitQuickPanel({
         <Action icon={Route} label="Ruta de hoy" onPress={onRoute} active={routeShown} loading={routeLoading} />
         <Action icon={History} label="Historial" onPress={onHistory} />
         <Action icon={Navigation} label="Cómo llegar" onPress={onNavigate} />
-        <Action icon={Share2} label="Compartir" onPress={onShare} />
-        <Action icon={Power} label="Motor" onPress={onEngine} danger />
+        {onShare ? <Action icon={Share2} label="Compartir" onPress={onShare} /> : null}
+        {onEngine ? <Action icon={Power} label="Motor" onPress={onEngine} danger /> : null}
       </View>
 
       <Pressable

@@ -1,21 +1,25 @@
 import { PrismaClient } from '@prisma/client';
+import { pageParams } from '../utils/pagination';
 import { TenantContext } from '../middleware/auth';
+import { AppError } from '../middleware/errorHandler';
+import { canAccessUnit, unitFilter, unitStatusFilter } from './unitAccess';
 
 const prisma = new PrismaClient();
 
-export class MachineService {
-  async findAll(query: { search?: string; status?: string; page?: string; limit?: string }, tenant?: TenantContext) {
-    const page = parseInt(query.page || '1');
-    const limit = parseInt(query.limit || '10');
-    const skip = (page - 1) * limit;
+async function assertMachineInTenant(id: string, tenant: TenantContext) {
+  const machine = await prisma.machine.findUnique({ where: { id }, select: { companyId: true, isActive: true, deletedAt: true } });
+  if (!machine || machine.deletedAt || (tenant.companyId && machine.companyId !== tenant.companyId)) {
+    throw new AppError('Unidad no encontrada', 404);
+  }
+  return machine;
+}
 
-    const where: any = { isActive: true };
-    if (tenant?.companyId) {
-      where.companyId = tenant.companyId;
-    }
-    if (tenant?.restrictToUserUnits && tenant.userId) {
-      where.userUnits = { some: { userId: tenant.userId } };
-    }
+export class MachineService {
+  async findAll(query: { search?: string; status?: string; state?: string; page?: string; limit?: string }, tenant?: TenantContext) {
+    const { page, limit, skip } = pageParams(query, 10);
+
+    const where: any = { deletedAt: null, ...unitStatusFilter(query.state, tenant) };
+    if (tenant?.companyId) Object.assign(where, unitFilter(tenant));
     if (query.search) {
       where.OR = [
         { name: { contains: query.search } },
@@ -68,9 +72,7 @@ export class MachineService {
     });
 
     if (!machine) return null;
-    if (tenant?.companyId && machine.companyId && machine.companyId !== tenant.companyId) {
-      return null;
-    }
+    if (tenant && !(await canAccessUnit('machine', id, tenant))) return null;
 
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
@@ -84,5 +86,19 @@ export class MachineService {
       todaySession,
       workWeek: machine.workSessions,
     };
+  }
+
+  async setActive(id: string, active: unknown, tenant: TenantContext) {
+    await assertMachineInTenant(id, tenant);
+    if (typeof active !== 'boolean') throw new AppError('Indica si la unidad queda activa', 400);
+    return prisma.machine.update({ where: { id }, data: { isActive: active } });
+  }
+
+  // Soft delete, same rules as vehicles: deactivate first, the row and its
+  // history stay for support to restore.
+  async delete(id: string, tenant: TenantContext) {
+    const machine = await assertMachineInTenant(id, tenant);
+    if (machine.isActive) throw new AppError('Desactiva la unidad antes de borrarla', 409);
+    return prisma.machine.update({ where: { id }, data: { deletedAt: new Date() } });
   }
 }

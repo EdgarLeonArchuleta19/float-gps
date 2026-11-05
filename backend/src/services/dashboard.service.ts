@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import { TenantContext } from '../middleware/auth';
+import { gpsDeviceFilter, linkedUnitFilter, unitFilter } from './unitAccess';
 
 const prisma = new PrismaClient();
 
@@ -9,17 +10,12 @@ export class DashboardService {
     const todayStart = new Date(now);
     todayStart.setHours(0, 0, 0, 0);
 
-    const companyFilter =
-      tenant && tenant.companyId ? { companyId: tenant.companyId } : {};
+    const companyFilter = tenant?.companyId ? { companyId: tenant.companyId } : {};
+    const unitScope = tenant?.companyId ? unitFilter(tenant) : {};
 
-    const unitUserFilter =
-      tenant && tenant.restrictToUserUnits && tenant.userId
-        ? { userUnits: { some: { userId: tenant.userId } } }
-        : {};
-
-    const vehicleWhere: any = { isActive: true, ...companyFilter, ...unitUserFilter };
-    const machineWhere: any = { isActive: true, ...companyFilter, ...unitUserFilter };
-    const geofenceWhere: any = { isActive: true, ...companyFilter };
+    const vehicleWhere: any = { isActive: true, ...unitScope };
+    const machineWhere: any = { isActive: true, ...unitScope };
+    const geofenceWhere: any = { isActive: true, deletedAt: null, ...companyFilter };
 
     const [totalVehicles, totalMachines, vehicleStats, machineStats, totalGeofences] = await Promise.all([
       prisma.vehicle.count({ where: vehicleWhere }),
@@ -47,17 +43,8 @@ export class DashboardService {
     const totalOffline = vehiclesOffline + machinesOffline;
     const alertsCount = vehiclesAlert + machinesAlert;
 
-    const sessionWhere: any = {
-      date: { gte: todayStart },
-      ...(tenant && tenant.companyId
-        ? {
-            OR: [
-              { vehicle: { companyId: tenant.companyId } },
-              { machine: { companyId: tenant.companyId } },
-            ],
-          }
-        : {}),
-    };
+    const sessionScope = linkedUnitFilter(tenant);
+    const sessionWhere: any = { date: { gte: todayStart }, ...(sessionScope ? { AND: [sessionScope] } : {}) };
 
     const todaySessions = await prisma.workSession.findMany({
       where: sessionWhere,
@@ -73,18 +60,8 @@ export class DashboardService {
     const idleH = Math.floor(totalIdleHoursToday);
     const idleM = Math.floor((totalIdleHoursToday - idleH) * 60);
 
-    const eventWhere: any =
-      tenant && tenant.companyId
-        ? {
-            gpsDevice: {
-              OR: [
-                { companyId: tenant.companyId },
-                { vehicle: { companyId: tenant.companyId } },
-                { machine: { companyId: tenant.companyId } },
-              ],
-            },
-          }
-        : {};
+    const eventScope = gpsDeviceFilter(tenant);
+    const eventWhere: any = eventScope ? { gpsDevice: eventScope } : {};
 
     const recentEvents = await prisma.trackingEvent.findMany({
       where: eventWhere,

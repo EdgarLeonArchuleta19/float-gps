@@ -5,6 +5,7 @@ import { config } from '../config';
 import { getTenant } from '../middleware/auth';
 import { engineCommandLimiter } from '../middleware/rateLimit';
 import { getClientIp } from '../services/audit.service';
+import { canAccessUnit } from '../services/unitAccess';
 
 const prisma = new PrismaClient();
 
@@ -20,12 +21,12 @@ function requestHeaders(): Record<string, string> {
   return headers;
 }
 
-// Optional second factor: clients that send `password` (the mobile app always does)
-// get it verified here, so the double confirmation is enforced server-side.
+// The account password is always required: the biometric path on mobile only
+// unlocks a password saved in the device keychain, it never skips this check.
 // Wrong passwords answer 403, not 401, so the client does not log the user out.
-async function confirmPasswordIfProvided(req: Request, userId: string): Promise<string | null> {
+async function confirmPassword(req: Request, userId: string): Promise<string | null> {
   const password = req.body?.password;
-  if (password === undefined) return null;
+  if (typeof password !== 'string' || !password) return 'Confirma el comando con tu contraseña';
   const keys = [`engine:user:${userId}`, `engine:ip:${getClientIp(req)}`];
   try {
     engineCommandLimiter.assertAllowed(keys, 'Demasiados intentos de confirmación.');
@@ -33,7 +34,7 @@ async function confirmPasswordIfProvided(req: Request, userId: string): Promise<
     return err.message;
   }
   const user = await prisma.user.findUnique({ where: { id: userId }, select: { password: true } });
-  const ok = !!user && typeof password === 'string' && (await bcrypt.compare(password, user.password).catch(() => false));
+  const ok = !!user && (await bcrypt.compare(password, user.password).catch(() => false));
   if (!ok) {
     engineCommandLimiter.recordFailure(keys);
     return 'Contraseña de confirmación incorrecta';
@@ -43,44 +44,29 @@ async function confirmPasswordIfProvided(req: Request, userId: string): Promise<
 }
 
 export async function handleEngineCommand(req: Request, res: Response) {
-  const { unitId, unitType, action = 'stop' } = req.body;
+  const { unitId, unitType, action = 'stop' } = req.body || {};
   const tenant = getTenant(req);
 
-  if (tenant.role === 'viewer') {
-    return res.status(403).json({ success: false, message: 'Tu cuenta de solo lectura no tiene permiso para enviar comandos de motor' });
+  if (typeof unitId !== 'string' || !unitId || (unitType !== 'vehicle' && unitType !== 'machine')) {
+    return res.status(400).json({ success: false, message: 'unitId y unitType (vehicle o machine) son requeridos' });
+  }
+  if (action !== 'stop' && action !== 'resume') {
+    return res.status(400).json({ success: false, message: 'La acción debe ser stop o resume' });
   }
 
-  const confirmError = await confirmPasswordIfProvided(req, tenant.userId);
+  const confirmError = await confirmPassword(req, tenant.userId);
   if (confirmError) {
     return res.status(403).json({ success: false, message: confirmError });
   }
 
-  if (!unitId) {
-    return res.status(400).json({ success: false, message: 'unitId es requerido' });
+  if (!(await canAccessUnit(unitType, unitId, tenant))) {
+    return res.status(403).json({ success: false, message: 'No tienes autorización sobre esta unidad' });
   }
 
-  const isVehicle = (unitType || '').toLowerCase() === 'vehicle';
-  let gpsDevice = null;
-
-  if (isVehicle) {
-    const v = await prisma.vehicle.findUnique({
-      where: { id: unitId },
-      include: { gpsDevice: true },
-    });
-    if (tenant.companyId && v?.companyId && v.companyId !== tenant.companyId) {
-      return res.status(403).json({ success: false, message: 'No tienes autorización sobre esta unidad' });
-    }
-    gpsDevice = v?.gpsDevice;
-  } else {
-    const m = await prisma.machine.findUnique({
-      where: { id: unitId },
-      include: { gpsDevice: true },
-    });
-    if (tenant.companyId && m?.companyId && m.companyId !== tenant.companyId) {
-      return res.status(403).json({ success: false, message: 'No tienes autorización sobre esta unidad' });
-    }
-    gpsDevice = m?.gpsDevice;
-  }
+  const gpsDevice =
+    unitType === 'vehicle'
+      ? await prisma.gpsDevice.findUnique({ where: { vehicleId: unitId } })
+      : await prisma.gpsDevice.findUnique({ where: { machineId: unitId } });
 
   if (!gpsDevice) {
     return res.status(404).json({ success: false, message: 'La unidad no tiene un GPS vinculado' });

@@ -2,11 +2,12 @@ import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import { AppError } from '../middleware/errorHandler';
 import { signToken, safeEqual } from '../middleware/auth';
-import { tenantLoginLimiter, ownerLoginLimiter, passwordResetRequestLimiter } from '../middleware/rateLimit';
+import { tenantLoginLimiter, accountLoginLimiter, ownerLoginLimiter, passwordChangeLimiter, passwordResetRequestLimiter } from '../middleware/rateLimit';
 import { sendEmail } from './email.service';
 import crypto from 'crypto';
 import { writeAudit } from './audit.service';
 import { config } from '../config';
+import { permissionsFor } from '../utils/permissions';
 import { assertStrongPassword, OWNER_PASSWORD_MIN_LENGTH, PASSWORD_MIN_LENGTH } from '../utils/passwordPolicy';
 
 const prisma = new PrismaClient();
@@ -38,29 +39,70 @@ async function verifyPassword(plain: string, hash: string | undefined) {
   }
 }
 
+const SESSION_INCLUDE = {
+  company: { select: { name: true, slug: true, isActive: true, deletedAt: true } },
+  customRole: { select: { name: true, permissions: true } },
+} as const;
+
+function sessionUser(user: {
+  id: string;
+  email: string;
+  name: string;
+  role: string;
+  companyId: string | null;
+  company: { name: string; slug: string } | null;
+  customRole: { name: string; permissions: string[] } | null;
+}) {
+  return {
+    id: user.id,
+    email: user.email,
+    name: user.name,
+    role: user.role,
+    roleName: user.role === 'admin' ? 'Administrador' : user.customRole?.name || null,
+    permissions: permissionsFor(user.role, user.customRole),
+    companyId: user.companyId,
+    companyName: user.company?.name || null,
+    companySlug: user.company?.slug || null,
+  };
+}
+
 export class AuthService {
+  async me(userId: string) {
+    const user = await prisma.user.findUnique({ where: { id: userId }, include: SESSION_INCLUDE });
+    if (!user) throw new AppError('Usuario no encontrado', 404);
+    return sessionUser(user);
+  }
+
   async login(email: string, password: string, ctx: LoginContext) {
     if (!email || !password) {
       throw new AppError('Correo y contraseña son obligatorios', 400);
     }
 
     const normalized = email.trim().toLowerCase();
-    const keys = [`tenant:${normalized}`, `tenant-ip:${ctx.ip}`];
+    // Each IP gets a tight budget; the per-account budget is much larger so a
+    // stranger can't lock someone out with a handful of bad attempts.
+    const keys = [`tenant-ip:${ctx.ip}`];
+    const accountKeys = [`tenant:${normalized}`];
     tenantLoginLimiter.assertAllowed(keys, 'Demasiados intentos fallidos.');
+    accountLoginLimiter.assertAllowed(accountKeys, 'Demasiados intentos fallidos en esta cuenta.');
+    const recordFailure = () => {
+      tenantLoginLimiter.recordFailure(keys);
+      accountLoginLimiter.recordFailure(accountKeys);
+    };
 
     const user = await prisma.user.findUnique({
       where: { email: normalized },
-      include: { company: true },
+      include: SESSION_INCLUDE,
     });
     const valid = await verifyPassword(password, user?.password);
 
     if (!user || !valid) {
-      tenantLoginLimiter.recordFailure(keys);
+      recordFailure();
       throw new AppError('Credenciales incorrectas', 401);
     }
 
     if (user.role === 'superadmin') {
-      tenantLoginLimiter.recordFailure(keys);
+      recordFailure();
       await writeAudit({
         actorId: user.id,
         actorEmail: user.email,
@@ -72,11 +114,19 @@ export class AuthService {
       throw new AppError('Credenciales incorrectas', 401);
     }
 
+    if (user.deletedAt || user.company?.deletedAt) {
+      recordFailure();
+      throw new AppError('Credenciales incorrectas', 401);
+    }
+    if (!user.isActive) {
+      throw new AppError('Tu cuenta está desactivada. Contacta al administrador de tu empresa.', 403);
+    }
     if (user.company && !user.company.isActive) {
       throw new AppError('El acceso de tu empresa se encuentra suspendido temporalmente. Contacta a soporte de FLOA.', 403);
     }
 
     tenantLoginLimiter.clear(keys);
+    accountLoginLimiter.clear(accountKeys);
     await prisma.user.update({
       where: { id: user.id },
       data: { lastLoginAt: new Date(), lastLoginIp: ctx.ip },
@@ -91,18 +141,7 @@ export class AuthService {
       tokenVersion: user.tokenVersion,
     });
 
-    return {
-      token,
-      user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        role: user.role,
-        companyId: user.companyId,
-        companyName: user.company?.name || null,
-        companySlug: user.company?.slug || null,
-      },
-    };
+    return { token, user: sessionUser(user) };
   }
 
   async ownerLogin(email: string, password: string, masterKey: string, ctx: LoginContext) {
@@ -202,7 +241,7 @@ export class AuthService {
     passwordResetRequestLimiter.recordFailure(keys);
 
     const user = await prisma.user.findUnique({ where: { email: normalized } });
-    if (!user || user.role === 'superadmin') return response;
+    if (!user || user.role === 'superadmin' || !user.isActive || user.deletedAt) return response;
 
     const code = crypto.randomInt(0, 1_000_000).toString().padStart(6, '0');
     await prisma.user.update({
@@ -238,7 +277,7 @@ export class AuthService {
     const invalid = new AppError('El código es inválido o ya venció. Solicita uno nuevo.', 400);
     if (!email || !code || !newPassword) throw new AppError('Correo, código y nueva contraseña son obligatorios', 400);
     const user = await prisma.user.findUnique({ where: { email: email.trim().toLowerCase() } });
-    if (!user || user.role === 'superadmin' || !user.resetCodeHash || !user.resetCodeExpiresAt) throw invalid;
+    if (!user || user.role === 'superadmin' || !user.isActive || user.deletedAt || !user.resetCodeHash || !user.resetCodeExpiresAt) throw invalid;
     if (user.resetCodeExpiresAt.getTime() < Date.now() || user.resetCodeAttempts >= RESET_CODE_MAX_ATTEMPTS) throw invalid;
 
     if (!safeEqual(hashResetCode(user.id, String(code).trim()), user.resetCodeHash)) {
@@ -265,20 +304,43 @@ export class AuthService {
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new AppError('Usuario no encontrado', 404);
 
+    // 400 (not 401) so a typo doesn't log the client out; attempts are limited
+    // so a hijacked session can't brute-force the current password.
+    const keys = [`change:${userId}`];
+    passwordChangeLimiter.assertAllowed(keys, 'Demasiados intentos para cambiar la contraseña.');
     const valid = await verifyPassword(currentPassword, user.password);
-    if (!valid) throw new AppError('La contraseña actual es incorrecta', 401);
+    if (!valid) {
+      passwordChangeLimiter.recordFailure(keys);
+      throw new AppError('La contraseña actual es incorrecta', 400);
+    }
+    passwordChangeLimiter.clear(keys);
     const minLength = user.role === 'superadmin' ? OWNER_PASSWORD_MIN_LENGTH : PASSWORD_MIN_LENGTH;
     assertStrongPassword(newPassword, 'La nueva contraseña', minLength);
     if (await verifyPassword(newPassword, user.password)) {
       throw new AppError('La nueva contraseña debe ser distinta a la actual', 400);
     }
 
+    // Bumping tokenVersion signs out every other session; the caller gets a
+    // fresh token so the device that changed the password stays logged in.
     const hash = await bcrypt.hash(newPassword, 10);
-    await prisma.user.update({
+    const updated = await prisma.user.update({
       where: { id: userId },
-      data: { password: hash },
+      data: { password: hash, tokenVersion: { increment: 1 } },
     });
 
-    return { message: 'Contraseña actualizada correctamente' };
+    const isOwner = updated.role === 'superadmin';
+    const token = signToken(
+      {
+        userId: updated.id,
+        email: updated.email,
+        role: updated.role,
+        companyId: isOwner ? null : updated.companyId,
+        scope: isOwner ? 'owner_portal' : 'tenant',
+        tokenVersion: updated.tokenVersion,
+      },
+      isOwner ? config.ownerTokenTtl : undefined,
+    );
+
+    return { message: 'Contraseña actualizada correctamente', token };
   }
 }

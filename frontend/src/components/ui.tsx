@@ -63,8 +63,7 @@ export function PageHeader({
   back?: string;
 }) {
   const { t } = useTheme();
-  const isDesktop = useIsDesktop();
-  const showBack = !!back && !isDesktop;
+  const showBack = !!back;
   const goBack = () => (router.canGoBack() ? router.back() : router.replace(back as never));
   return (
     <View className="flex-row items-center justify-between mb-5 gap-3">

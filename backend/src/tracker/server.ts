@@ -45,7 +45,10 @@ export const trackerState: TrackerState = {
 };
 
 const captureDir = path.join(process.cwd(), 'tracker_captures');
-const CAPTURE_ENABLED = process.env.TRACKER_CAPTURE !== 'false';
+const CAPTURE_ENABLED = process.env.TRACKER_CAPTURE ? process.env.TRACKER_CAPTURE === 'true' : !config.isProduction;
+const MAX_CONNECTIONS = parseInt(process.env.TRACKER_MAX_CONNECTIONS || '500', 10);
+const MAX_PENDING_TEXT = 8 * 1024;
+const MAX_CAPTURE_BYTES = 5 * 1024 * 1024;
 const OFFLINE_TIMEOUT_MS = parseInt(process.env.TRACKER_OFFLINE_MIN || '15', 10) * 60 * 1000;
 
 function refreshOnlineDevices(): void {
@@ -59,6 +62,7 @@ function refreshOnlineDevices(): void {
 function writeCapture(sessionFile: string | null, line: string): void {
   if (!CAPTURE_ENABLED || !sessionFile) return;
   try {
+    if (fs.existsSync(sessionFile) && fs.statSync(sessionFile).size > MAX_CAPTURE_BYTES) return;
     fs.appendFileSync(sessionFile, line + '\n');
   } catch {
     /* captura es best-effort, nunca debe tumbar el tracker */
@@ -168,6 +172,11 @@ export function startTrackerServer(): net.Server {
 
       const incoming = textRest + chunk.toString('latin1');
       const { frames, rest } = splitFrames(incoming);
+      if (rest.length > MAX_PENDING_TEXT) {
+        console.warn(`[TRACKER] ${remote} envió datos sin delimitar, cerrando`);
+        socket.destroy();
+        return;
+      }
       textRest = rest;
 
       for (const frame of frames) {
@@ -187,6 +196,8 @@ export function startTrackerServer(): net.Server {
       console.log(`[TRACKER] Conexión cerrada ${remote}`);
     });
   });
+
+  server.maxConnections = MAX_CONNECTIONS;
 
   server.listen(config.trackerPort, config.trackerHost, () => {
     trackerState.started = true;

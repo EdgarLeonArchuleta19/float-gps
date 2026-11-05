@@ -2,9 +2,8 @@ import express from 'express';
 import cors from 'cors';
 import path from 'path';
 import fs from 'fs';
-import os from 'os';
 import { errorHandler } from './middleware/errorHandler';
-import { authRequired, adminRequired, superAdminRequired, ownerIpAllowed } from './middleware/auth';
+import { authRequired, adminRequired, superAdminRequired, ownerIpAllowed, permissionRequired } from './middleware/auth';
 import { config } from './config';
 import authRoutes from './routes/auth.routes';
 import ownerRoutes from './routes/owner.routes';
@@ -18,17 +17,38 @@ import reportRoutes from './routes/report.routes';
 import userRoutes from './routes/user.routes';
 import ingestRoutes from './routes/ingest.routes';
 import companyRoutes from './routes/company.routes';
+import roleRoutes from './routes/role.routes';
 import { handleEngineCommand } from './controllers/commands.controller';
 
 const app = express();
 
-app.set('trust proxy', 1);
+app.set('trust proxy', config.trustProxy);
 
+// Auth travels in the Authorization header (no cookies), so credentials stay off.
+// Without CORS_ORIGINS, production only accepts same-origin browser calls; the
+// native app sends no Origin header and is unaffected.
 const corsOptions: cors.CorsOptions = {
-  origin: config.corsOrigins ? config.corsOrigins : true,
-  credentials: true,
+  origin: config.corsOrigins.length ? config.corsOrigins : !config.isProduction,
+  credentials: false,
 };
 app.use(cors(corsOptions));
+
+const MAP_HOSTS = ['https://tiles.openfreemap.org', 'https://*.cartocdn.com', 'https://server.arcgisonline.com'];
+const CONTENT_SECURITY_POLICY = [
+  "default-src 'self'",
+  "script-src 'self' https://cdn.jsdelivr.net",
+  "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net",
+  `img-src 'self' data: blob: ${MAP_HOSTS.join(' ')}`,
+  "font-src 'self' data:",
+  `connect-src 'self' ${[...MAP_HOSTS, 'https://router.project-osrm.org', ...config.cspConnectSrc].join(' ')}`,
+  "worker-src 'self' blob:",
+  "child-src 'self' blob:",
+  "manifest-src 'self'",
+  "object-src 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+  "frame-ancestors 'none'",
+].join('; ');
 app.use(express.json({ limit: '1mb' }));
 app.disable('x-powered-by');
 app.use((_req, res, next) => {
@@ -36,7 +56,9 @@ app.use((_req, res, next) => {
   res.setHeader('X-Frame-Options', 'DENY');
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
   res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=(self)');
-  if (config.nodeEnv === 'production') {
+  res.setHeader('Content-Security-Policy', CONTENT_SECURITY_POLICY);
+  res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
+  if (config.isProduction) {
     res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
   }
   next();
@@ -50,37 +72,25 @@ app.get('/api', (_req, res) => {
   res.json({ name: 'Floa GPS API', status: 'running', health: '/api/health' });
 });
 
-function getLanIp(): string | null {
-  const interfaces = os.networkInterfaces();
-  for (const name of Object.keys(interfaces)) {
-    const entries = interfaces[name] || [];
-    for (const entry of entries) {
-      if (entry.family === 'IPv4' && !entry.internal) {
-        return entry.address;
-      }
-    }
-  }
-  return null;
-}
-
 app.get('/api/health', (_req, res) => {
-  res.json({ status: 'ok', timestamp: new Date(), lanIp: getLanIp() });
+  res.json({ status: 'ok', timestamp: new Date() });
 });
 
 app.use('/api/ingest', ingestRoutes);
 app.use('/api/auth/owner-login', ownerIpAllowed);
 app.use('/api/auth', authRoutes);
 app.use('/api/owner', ownerIpAllowed, authRequired, superAdminRequired, ownerRoutes);
-app.use('/api/dashboard', authRequired, dashboardRoutes);
+app.use('/api/dashboard', authRequired, permissionRequired('dashboard', 'alerts'), dashboardRoutes);
 app.use('/api/vehicles', authRequired, vehicleRoutes);
 app.use('/api/machines', authRequired, machineRoutes);
 app.use('/api/gps', authRequired, gpsRoutes);
-app.use('/api/events', authRequired, eventRoutes);
+app.use('/api/events', authRequired, permissionRequired('alerts', 'dashboard'), eventRoutes);
 app.use('/api/geofences', authRequired, geofenceRoutes);
 app.use('/api/reports', authRequired, reportRoutes);
 app.use('/api/users', authRequired, adminRequired, userRoutes);
+app.use('/api/roles', authRequired, adminRequired, roleRoutes);
 app.use('/api/company', authRequired, companyRoutes);
-app.post('/api/commands/engine-stop', authRequired, handleEngineCommand);
+app.post('/api/commands/engine-stop', authRequired, permissionRequired('engine'), handleEngineCommand);
 
 // The client app is the Expo universal build in frontend/ (`npx expo export -p web`).
 const webDistPath = path.resolve(__dirname, '../../frontend/dist');

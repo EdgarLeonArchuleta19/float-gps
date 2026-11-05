@@ -32,6 +32,7 @@ export interface OwnerUser {
   role: string;
   createdAt: string;
   company?: { id: string; name: string } | null;
+  customRole?: { name: string } | null;
 }
 
 export interface OwnerGps {
@@ -67,11 +68,21 @@ export interface NewCompany {
   adminPassword: string;
 }
 
+export type TrashType = 'company' | 'user' | 'vehicle' | 'machine' | 'geofence' | 'role' | 'gps';
+
+export interface TrashItem {
+  type: TrashType;
+  id: string;
+  label: string;
+  detail: string | null;
+  companyName: string | null;
+  deletedAt: string;
+}
+
 export interface NewOwnerUser {
   name: string;
   email: string;
   password: string;
-  role: string;
   companyId: string;
 }
 
@@ -113,6 +124,8 @@ export const ownerApi = {
   createGps: (data: NewGps) => request<OwnerGps>('/owner/gps', { method: 'POST', body: JSON.stringify(data) }),
   updateGps: (id: string, data: { companyId: string | null }) =>
     request<OwnerGps>(`/owner/gps/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  trash: () => request<TrashItem[]>('/owner/trash'),
+  restore: (item: TrashItem) => request<{ message: string }>(`/owner/trash/${item.type}/${item.id}/restore`, { method: 'POST' }),
   deleteGps: (id: string, masterKey: string) =>
     request<unknown>(`/owner/gps/${id}`, { method: 'DELETE', headers: masterKeyHeader(masterKey) }),
 };

@@ -1,15 +1,33 @@
 import { PrismaClient } from '@prisma/client';
+import { pageParams } from '../utils/pagination';
 import { AppError } from '../middleware/errorHandler';
 import { TenantContext } from '../middleware/auth';
+import { canAccessUnit, unitFilter, unitStatusFilter } from './unitAccess';
+import { number, text } from '../utils/validate';
 
 const prisma = new PrismaClient();
 
-const VEHICLE_FIELDS = ['name', 'plate', 'type', 'brand', 'vehicleModel', 'year', 'color', 'status'] as const;
+const STATUSES = ['MOVING', 'STOPPED', 'OFFLINE', 'ALERT'];
+const SORTABLE = ['name', 'plate', 'type', 'status', 'createdAt'];
 
-function pickVehicleFields(data: any) {
+// Whitelist plus type/length checks: spreading the raw body let a client pick
+// any companyId, and unchecked types reached Prisma as 500 errors.
+function pickVehicleFields(data: any, creating = false) {
   const picked: Record<string, unknown> = {};
-  for (const key of VEHICLE_FIELDS) {
-    if (data?.[key] !== undefined && data[key] !== '') picked[key] = key === 'year' ? Number(data[key]) || null : data[key];
+  const optional = (key: string, label: string, max: number) => {
+    if (data?.[key] === undefined) return;
+    picked[key] = data[key] === null || data[key] === '' ? null : text(data[key], label, 1, max);
+  };
+  if (creating || data?.name !== undefined) picked.name = text(data?.name, 'El nombre', 1, 80);
+  if (creating || data?.plate !== undefined) picked.plate = text(data?.plate, 'La placa', 1, 20).toUpperCase();
+  if (creating || data?.type !== undefined) picked.type = text(data?.type, 'El tipo', 1, 40);
+  optional('brand', 'La marca', 60);
+  optional('vehicleModel', 'El modelo', 60);
+  optional('color', 'El color', 40);
+  if (data?.year !== undefined) picked.year = data.year === null || data.year === '' ? null : Math.round(number(data.year, 'El año', 1950, 2100));
+  if (data?.status !== undefined) {
+    if (!STATUSES.includes(data.status)) throw new AppError('Estado no válido', 400);
+    picked.status = data.status;
   }
   return picked as any;
 }
@@ -17,10 +35,11 @@ function pickVehicleFields(data: any) {
 // Mutations must only touch vehicles of the caller's company. Not-found and
 // foreign vehicles answer the same 404 so ids from other tenants can't be probed.
 async function assertVehicleInTenant(id: string, tenant?: TenantContext) {
-  const vehicle = await prisma.vehicle.findUnique({ where: { id }, select: { companyId: true } });
-  if (!vehicle || (tenant?.companyId && vehicle.companyId !== tenant.companyId)) {
+  const vehicle = await prisma.vehicle.findUnique({ where: { id }, select: { companyId: true, isActive: true, deletedAt: true } });
+  if (!vehicle || vehicle.deletedAt || (tenant?.companyId && vehicle.companyId !== tenant.companyId)) {
     throw new AppError('Unidad no encontrada', 404);
   }
+  return vehicle;
 }
 
 function assertGpsInTenant(device: { companyId: string | null } | null, companyId: string | null) {
@@ -31,21 +50,13 @@ function assertGpsInTenant(device: { companyId: string | null } | null, companyI
 
 export class VehicleService {
   async findAll(
-    query: { search?: string; status?: string; page?: string; limit?: string; sortBy?: string; sortOrder?: string },
+    query: { search?: string; status?: string; state?: string; page?: string; limit?: string; sortBy?: string; sortOrder?: string },
     tenant?: TenantContext
   ) {
-    const page = parseInt(query.page || '1');
-    const limit = parseInt(query.limit || '10');
-    const skip = (page - 1) * limit;
+    const { page, limit, skip } = pageParams(query, 10);
 
-    const where: any = { isActive: true };
-
-    if (tenant?.companyId) {
-      where.companyId = tenant.companyId;
-    }
-    if (tenant?.restrictToUserUnits && tenant.userId) {
-      where.userUnits = { some: { userId: tenant.userId } };
-    }
+    const where: any = { deletedAt: null, ...unitStatusFilter(query.state, tenant) };
+    if (tenant?.companyId) Object.assign(where, unitFilter(tenant));
 
     if (query.search) {
       where.OR = [
@@ -60,8 +71,8 @@ export class VehicleService {
     }
 
     const orderBy: any = {};
-    if (query.sortBy) {
-      orderBy[query.sortBy] = query.sortOrder || 'asc';
+    if (query.sortBy && SORTABLE.includes(query.sortBy)) {
+      orderBy[query.sortBy] = query.sortOrder === 'desc' ? 'desc' : 'asc';
     } else {
       orderBy.name = 'asc';
     }
@@ -116,9 +127,7 @@ export class VehicleService {
     });
 
     if (!vehicle) return null;
-    if (tenant?.companyId && vehicle.companyId && vehicle.companyId !== tenant.companyId) {
-      return null;
-    }
+    if (tenant && !(await canAccessUnit('vehicle', id, tenant))) return null;
 
     const gpsDeviceId = vehicle.gpsDevice?.id;
     const todayStart = new Date();
@@ -155,18 +164,18 @@ export class VehicleService {
 
   async updateStatus(id: string, status: string, tenant?: TenantContext) {
     await assertVehicleInTenant(id, tenant);
-    return prisma.vehicle.update({ where: { id }, data: { status } });
+    return prisma.vehicle.update({ where: { id }, data: pickVehicleFields({ status }) });
   }
 
   async create(data: any, tenant?: TenantContext) {
     const { gps } = data;
     // Only accept known fields: spreading the raw body let a client pick any
     // companyId (or other columns) and create units inside another tenant.
-    const vehicleData = pickVehicleFields(data);
+    const vehicleData = pickVehicleFields(data, true);
     const companyId = (tenant?.isSuperAdmin ? data.companyId : null) || tenant?.companyId || null;
 
     if (gps && !gps.imei) {
-      throw new Error('El dispositivo GPS requiere un IMEI');
+      throw new AppError('El dispositivo GPS requiere un IMEI', 400);
     }
 
     let gpsDeviceData: any = null;
@@ -175,7 +184,7 @@ export class VehicleService {
     if (gps && gps.imei) {
       const existing = await prisma.gpsDevice.findUnique({ where: { imei: String(gps.imei).trim() } });
       if (existing && (existing.vehicleId || existing.machineId)) {
-        throw new Error(`El IMEI ${gps.imei} ya está registrado en otro dispositivo`);
+        throw new AppError(`El IMEI ${gps.imei} ya está registrado en otro dispositivo`, 409);
       }
       assertGpsInTenant(existing, companyId);
       if (existing) {
@@ -220,8 +229,12 @@ export class VehicleService {
     }
 
     const existing = await prisma.gpsDevice.findUnique({ where: { imei: String(gps.imei).trim() } });
-    if (existing && existing.vehicleId && existing.vehicleId !== id) {
-      throw new Error(`El IMEI ${gps.imei} ya está vinculado a otra unidad`);
+    if (existing && (existing.machineId || (existing.vehicleId && existing.vehicleId !== id))) {
+      throw new AppError(`El IMEI ${gps.imei} ya está vinculado a otra unidad`, 409);
+    }
+    const current = await prisma.gpsDevice.findUnique({ where: { vehicleId: id }, select: { imei: true } });
+    if (current && current.imei !== String(gps.imei).trim()) {
+      throw new AppError('Esta unidad ya tiene un GPS; el cambio de equipo lo hace soporte', 409);
     }
     assertGpsInTenant(existing, tenant?.companyId || null);
 
@@ -253,9 +266,18 @@ export class VehicleService {
     });
   }
 
-  async delete(id: string, tenant?: TenantContext) {
+  async setActive(id: string, active: unknown, tenant?: TenantContext) {
     await assertVehicleInTenant(id, tenant);
-    return prisma.vehicle.update({ where: { id }, data: { isActive: false } });
+    if (typeof active !== 'boolean') throw new AppError('Indica si la unidad queda activa', 400);
+    return prisma.vehicle.update({ where: { id }, data: { isActive: active } });
+  }
+
+  // Soft delete: the vehicle, its GPS link and its history stay in the
+  // database so support can restore it; only deactivated units can be deleted.
+  async delete(id: string, tenant?: TenantContext) {
+    const vehicle = await assertVehicleInTenant(id, tenant);
+    if (vehicle.isActive) throw new AppError('Desactiva la unidad antes de borrarla', 409);
+    return prisma.vehicle.update({ where: { id }, data: { deletedAt: new Date() } });
   }
 }
 

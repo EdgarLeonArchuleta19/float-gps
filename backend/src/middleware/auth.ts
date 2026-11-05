@@ -6,6 +6,7 @@ import { config } from '../config';
 import { AppError } from './errorHandler';
 import { masterKeyLimiter } from './rateLimit';
 import { getClientIp, writeAudit } from '../services/audit.service';
+import { permissionsFor, type Permission } from '../utils/permissions';
 
 const prisma = new PrismaClient();
 
@@ -26,6 +27,8 @@ export interface TenantContext {
   role: string;
   companyId: string | null;
   isSuperAdmin: boolean;
+  roleId: string | null;
+  permissions: string[] | null;
   restrictToUserUnits: boolean;
 }
 
@@ -36,6 +39,8 @@ export function getTenant(req: Request): TenantContext {
     role: 'viewer',
     companyId: null,
     isSuperAdmin: false,
+    roleId: null,
+    permissions: [],
     restrictToUserUnits: false,
   };
 }
@@ -76,11 +81,14 @@ export async function authRequired(req: Request, _res: Response, next: NextFunct
         role: true,
         companyId: true,
         tokenVersion: true,
-        company: { select: { isActive: true } },
+        isActive: true,
+        deletedAt: true,
+        company: { select: { isActive: true, deletedAt: true } },
+        customRole: { select: { id: true, permissions: true, allUnits: true } },
       },
     });
 
-    if (!dbUser || dbUser.role !== payload.role || (payload.tokenVersion ?? 0) !== dbUser.tokenVersion) {
+    if (!dbUser || dbUser.deletedAt || !dbUser.isActive || dbUser.company?.deletedAt || dbUser.role !== payload.role || (payload.tokenVersion ?? 0) !== dbUser.tokenVersion) {
       return next(new AppError('Sesión revocada. Inicia sesión nuevamente.', 401));
     }
 
@@ -97,12 +105,23 @@ export async function authRequired(req: Request, _res: Response, next: NextFunct
     if (isOwner && typeof supportHeader === 'string' && supportHeader.trim()) {
       const supportCompany = await prisma.company.findUnique({
         where: { id: supportHeader.trim() },
-        select: { id: true },
+        select: { id: true, deletedAt: true },
       });
-      if (!supportCompany) {
+      if (!supportCompany || supportCompany.deletedAt) {
         return next(new AppError('La empresa de soporte no existe.', 404));
       }
       supportCompanyId = supportCompany.id;
+    }
+
+    // Every company filter keys off companyId, so a non-owner account without
+    // a company would otherwise match no filter and see every tenant's data.
+    if (!isOwner && !dbUser.companyId) {
+      return next(new AppError('Tu cuenta no está asignada a ninguna empresa.', 403));
+    }
+
+    const isMember = !isOwner && dbUser.role !== 'admin';
+    if (isMember && !dbUser.customRole) {
+      return next(new AppError('Tu cuenta no tiene un rol asignado. Contacta al administrador.', 403));
     }
 
     if (!isOwner && dbUser.company && !dbUser.company.isActive) {
@@ -116,7 +135,9 @@ export async function authRequired(req: Request, _res: Response, next: NextFunct
       role: dbUser.role,
       companyId: supportCompanyId || dbUser.companyId || null,
       isSuperAdmin: isOwner && !supportCompanyId,
-      restrictToUserUnits: dbUser.role === 'viewer' || dbUser.role === 'operator',
+      roleId: dbUser.customRole?.id || null,
+      permissions: permissionsFor(dbUser.role, dbUser.customRole),
+      restrictToUserUnits: isMember && !dbUser.customRole!.allUnits,
     } satisfies TenantContext;
 
     next();
@@ -131,6 +152,15 @@ export function adminRequired(req: Request, _res: Response, next: NextFunction) 
     return next(new AppError('Acceso no autorizado. Se requiere rol admin.', 403));
   }
   next();
+}
+
+// Passes when the caller's role grants any of the given sections.
+export function permissionRequired(...anyOf: Permission[]) {
+  return (req: Request, _res: Response, next: NextFunction) => {
+    const { permissions } = getTenant(req);
+    if (permissions === null || anyOf.some((p) => permissions.includes(p))) return next();
+    next(new AppError('Tu rol no tiene acceso a esta sección.', 403));
+  };
 }
 
 export function superAdminRequired(req: Request, _res: Response, next: NextFunction) {

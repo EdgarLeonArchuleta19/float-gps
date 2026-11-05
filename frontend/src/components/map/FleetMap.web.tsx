@@ -1,34 +1,40 @@
 import React, { useEffect, useRef } from 'react';
 import { View } from 'react-native';
-import { MAPLIBRE_CSS, MAPLIBRE_JS, MAP_ENGINE_SOURCE } from './mapEngine';
+import { MAPLIBRE_CSS, MAPLIBRE_CSS_INTEGRITY, MAPLIBRE_JS, MAPLIBRE_JS_INTEGRITY, MAP_ENGINE_JS } from './mapEngine';
 import type { FleetMapProps, MapEngineInstance } from './types';
 import { useEngineState } from './useEngineState';
 
 let enginePromise: Promise<void> | null = null;
 
-function loadEngine(): Promise<void> {
-  if (enginePromise) return enginePromise;
-  enginePromise = new Promise<void>((resolve, reject) => {
-    const css = document.createElement('link');
-    css.rel = 'stylesheet';
-    css.href = MAPLIBRE_CSS;
-    document.head.appendChild(css);
-
+function loadScript(src: string, integrity?: string): Promise<void> {
+  return new Promise<void>((resolve, reject) => {
     const script = document.createElement('script');
-    script.src = MAPLIBRE_JS;
+    script.src = src;
     script.async = true;
-    script.onload = () => {
-      const engine = document.createElement('script');
-      engine.text = MAP_ENGINE_SOURCE;
-      document.head.appendChild(engine);
-      resolve();
-    };
-    script.onerror = () => {
-      enginePromise = null;
-      reject(new Error('No se pudo cargar MapLibre'));
-    };
+    if (integrity) {
+      script.integrity = integrity;
+      script.crossOrigin = 'anonymous';
+    }
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error('No se pudo cargar MapLibre'));
     document.head.appendChild(script);
   });
+}
+
+function loadEngine(): Promise<void> {
+  if (enginePromise) return enginePromise;
+  const css = document.createElement('link');
+  css.rel = 'stylesheet';
+  css.href = MAPLIBRE_CSS;
+  css.integrity = MAPLIBRE_CSS_INTEGRITY;
+  css.crossOrigin = 'anonymous';
+  document.head.appendChild(css);
+  enginePromise = loadScript(MAPLIBRE_JS, MAPLIBRE_JS_INTEGRITY)
+    .then(() => loadScript(MAP_ENGINE_JS))
+    .catch((err) => {
+      enginePromise = null;
+      throw err;
+    });
   return enginePromise;
 }
 

@@ -5,7 +5,7 @@ services:
     restart: always
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-floa_postgres_pass}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Define POSTGRES_PASSWORD en .env}
       POSTGRES_DB: ${POSTGRES_DB:-gps_tracker}
     volumes:
       - postgres_data:/var/lib/postgresql/data
@@ -25,6 +25,11 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    environment:
+      CONFIG_USE_ENVIRONMENT_VARIABLES: "true"
+      DATABASE_PASSWORD: ${POSTGRES_PASSWORD:?Define POSTGRES_PASSWORD en .env}
+      FORWARD_URL: http://api:3001/api/ingest/traccar?token=${TRACCAR_WEBHOOK_SECRET:?Define TRACCAR_WEBHOOK_SECRET en .env}
+      EVENT_FORWARD_URL: http://api:3001/api/ingest/traccar?token=${TRACCAR_WEBHOOK_SECRET:?Define TRACCAR_WEBHOOK_SECRET en .env}
     volumes:
       - ./traccar/traccar.xml:/opt/traccar/conf/traccar.xml:ro
       - traccar_logs:/opt/traccar/logs
@@ -50,13 +55,14 @@ services:
     environment:
       NODE_ENV: production
       PORT: 3001
-      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-floa_postgres_pass}@postgres:5432/${POSTGRES_DB:-gps_tracker}?schema=public
-      JWT_SECRET: ${JWT_SECRET}
-      TRACCAR_WEBHOOK_SECRET: ${TRACCAR_WEBHOOK_SECRET:-floa_super_secret_webhook_key}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:?Define POSTGRES_PASSWORD en .env}@postgres:5432/${POSTGRES_DB:-gps_tracker}?schema=public
+      JWT_SECRET: ${JWT_SECRET:?Define JWT_SECRET en .env}
+      OWNER_MASTER_KEY: ${OWNER_MASTER_KEY:?Define OWNER_MASTER_KEY en .env}
+      TRACCAR_WEBHOOK_SECRET: ${TRACCAR_WEBHOOK_SECRET:?Define TRACCAR_WEBHOOK_SECRET en .env}
       TRACCAR_URL: http://traccar:8082
       TRACCAR_USER: ${TRACCAR_ADMIN_USER:-admin}
-      TRACCAR_PASSWORD: ${TRACCAR_ADMIN_PASSWORD:-admin}
-      CORS_ORIGINS: ${CORS_ORIGINS:-*}
+      TRACCAR_PASSWORD: ${TRACCAR_ADMIN_PASSWORD:?Define TRACCAR_ADMIN_PASSWORD en .env}
+      CORS_ORIGINS: ${CORS_ORIGINS:?Define CORS_ORIGINS en .env}
     ports:
       - "127.0.0.1:3001:3001"
 

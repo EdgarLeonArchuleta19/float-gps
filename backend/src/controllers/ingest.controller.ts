@@ -12,17 +12,20 @@ import {
 
 const prisma = new PrismaClient();
 
+// Fails closed: without a configured secret the webhook only works outside
+// production (config refuses to boot in production without one).
 function verifyWebhookSecret(req: Request): boolean {
   if (!config.traccarWebhookSecret) {
-    return true;
+    return !config.isProduction;
   }
-  const token = (req.query.token as string) || (req.headers['x-floa-token'] as string) || '';
+  const header = req.headers['x-floa-token'];
+  const query = req.query.token;
+  const token = typeof header === 'string' && header ? header : typeof query === 'string' ? query : '';
   if (!token) return false;
 
-  const bufExpected = Buffer.from(config.traccarWebhookSecret);
-  const bufActual = Buffer.from(token);
-  if (bufExpected.length !== bufActual.length) return false;
-  return crypto.timingSafeEqual(bufExpected, bufActual);
+  const expected = crypto.createHash('sha256').update(config.traccarWebhookSecret).digest();
+  const actual = crypto.createHash('sha256').update(token).digest();
+  return crypto.timingSafeEqual(expected, actual);
 }
 
 export async function handleTraccarWebhook(req: Request, res: Response) {

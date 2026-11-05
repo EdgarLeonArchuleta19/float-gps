@@ -1,90 +1,133 @@
-import { useState } from 'react';
-import { Alert, Platform, Pressable, Text, View } from 'react-native';
-import { Plus, Trash2, Users } from 'lucide-react-native';
+import { useMemo, useState } from 'react';
+import { Pressable, Text, View } from 'react-native';
+import { router } from 'expo-router';
+import { Plus, ShieldCheck, Users } from 'lucide-react-native';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
-import { useToast } from '@/context/ToastContext';
 import { useApi } from '@/hooks/useApi';
-import { api, type CompanyUser } from '@/lib/api';
-import { Button, Card, EmptyState, ErrorBanner, Loading, PageHeader, Screen } from '@/components/ui';
+import { api, type CompanyUser, type Role } from '@/lib/api';
+import { Button, Card, EmptyState, ErrorBanner, Field, Loading, PageHeader, Screen } from '@/components/ui';
+import FilterSelect from '@/components/shared/FilterSelect';
 import AdminOnly from '@/components/shared/AdminOnly';
 import Pagination from '@/components/shared/Pagination';
 import { usePagination } from '@/hooks/usePagination';
 import UserFormSheet from '@/components/users/UserFormSheet';
+import LifecycleActions from '@/components/shared/LifecycleActions';
+import StatusFilter, { InactiveBadge, type StatusView } from '@/components/shared/StatusFilter';
 
-const ROLE_LABELS: Record<string, string> = { admin: 'Administrador', operator: 'Operador', viewer: 'Solo lectura' };
+const ALL = 'all';
 
-function confirmRemove(u: CompanyUser): Promise<boolean> {
-  const message = `${u.name} (${u.email}) perderá el acceso de inmediato.`;
-  if (Platform.OS === 'web') return Promise.resolve(window.confirm(`¿Eliminar usuario? ${message}`));
-  return new Promise((resolve) =>
-    Alert.alert('Eliminar usuario', message, [
-      { text: 'Cancelar', style: 'cancel', onPress: () => resolve(false) },
-      { text: 'Eliminar', style: 'destructive', onPress: () => resolve(true) },
-    ])
-  );
+function matchesFilter(u: CompanyUser, filter: string) {
+  return filter === ALL || u.roleId === filter;
 }
 
 export default function AdminUsers() {
   const { t } = useTheme();
-  const toast = useToast();
   const { user } = useAuth();
-  const { data, loading, error, refreshing, refresh } = useApi(() => api.users.list(), []);
+  const { data, loading, error, refreshing, refresh } = useApi(() => Promise.all([api.users.list(), api.roles.list()]), []);
   const [formOpen, setFormOpen] = useState(false);
-  const users = data || [];
-  const { pageItems, pager } = usePagination(users);
+  const [editing, setEditing] = useState<CompanyUser | null>(null);
+  const [filter, setFilter] = useState(ALL);
+  const [query, setQuery] = useState('');
+  const [view, setView] = useState<StatusView>('active');
 
-  const remove = async (u: CompanyUser) => {
-    if (!(await confirmRemove(u))) return;
-    try {
-      await api.users.remove(u.id);
-      toast('Usuario eliminado', 'success');
-      refresh();
-    } catch (err: any) {
-      toast(err.message, 'error');
-    }
+  const users = data?.[0] || [];
+  const roles: Role[] = data?.[1] || [];
+  const q = query.trim().toLowerCase();
+  const inView = useMemo(() => users.filter((u) => u.isActive === (view === 'active')), [users, view]);
+  const filtered = useMemo(
+    () => inView.filter((u) => matchesFilter(u, filter) && (!q || u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q))),
+    [inView, filter, q]
+  );
+  const { pageItems, pager } = usePagination(filtered, `${view}|${filter}|${q}`);
+
+  const openForm = (target: CompanyUser | null) => {
+    setEditing(target);
+    setFormOpen(true);
   };
+
+  const filters = [
+    { value: ALL, label: 'Todos', count: inView.length },
+    ...roles.map((r) => ({ value: r.id, label: r.name, count: inView.filter((u) => u.roleId === r.id).length })),
+  ];
 
   return (
     <AdminOnly>
       <Screen refreshing={refreshing} onRefresh={refresh} maxWidth={720}>
         <PageHeader
-          title="Usuarios" back="/more"
+          title="Usuarios"
+          back="/more"
           subtitle={`${users.length} accesos en tu empresa`}
-          right={<Button label="Nuevo" icon={Plus} compact onPress={() => setFormOpen(true)} />}
+          right={
+            <View className="flex-row gap-2">
+              <Button label="Roles" icon={ShieldCheck} variant="secondary" compact onPress={() => router.push('/roles' as never)} />
+              <Button label="Nuevo" icon={Plus} compact onPress={() => openForm(null)} />
+            </View>
+          }
         />
         {error ? <ErrorBanner message={error} /> : null}
+        <View className="gap-3 mb-3">
+          <Field search placeholder="Buscar por nombre o correo" value={query} onChangeText={setQuery} autoCapitalize="none" />
+          <View className="flex-row flex-wrap gap-2">
+            <StatusFilter
+              value={view}
+              onChange={setView}
+              activeCount={users.filter((u) => u.isActive).length}
+              inactiveCount={users.filter((u) => !u.isActive).length}
+            />
+            <FilterSelect label="Rol" value={filter} options={filters} onChange={setFilter} />
+          </View>
+        </View>
         {loading && !data ? (
           <Loading />
-        ) : users.length ? (
+        ) : filtered.length ? (
           <Card className="py-1">
             {pageItems.map((u, i) => (
-              <View key={u.id} className={`flex-row items-center gap-3 px-4 py-3 ${i < pageItems.length - 1 ? `border-b ${t.border}` : ''}`}>
+              <Pressable
+                key={u.id}
+                onPress={() => openForm(u)}
+                className={`flex-row items-center gap-3 px-4 py-3 active:opacity-70 ${i < pageItems.length - 1 ? `border-b ${t.border}` : ''}`}
+              >
                 <View className="flex-1 min-w-0">
                   <Text className={`text-[14px] font-semibold ${t.text}`} numberOfLines={1}>
                     {u.name}
                     {u.id === user?.id ? ' (tú)' : ''}
                   </Text>
                   <Text className={`text-[12px] ${t.muted}`} numberOfLines={1}>
-                    {u.email} · {ROLE_LABELS[u.role] || u.role}
+                    {u.email}
+                  </Text>
+                </View>
+                {u.isActive ? null : <InactiveBadge />}
+                <View className={`rounded-full px-2.5 py-1 ${t.input}`}>
+                  <Text className={`text-[11px] font-semibold ${t.text}`} numberOfLines={1}>
+                    {u.roleName}
                   </Text>
                 </View>
                 {u.id !== user?.id ? (
-                  <Pressable onPress={() => remove(u)} accessibilityLabel={`Eliminar ${u.name}`} className="p-2 active:opacity-60">
-                    <Trash2 size={17} color="#ef4444" />
-                  </Pressable>
+                  <LifecycleActions
+                    noun={{ label: 'usuario' }}
+                    name={u.name}
+                    active={u.isActive}
+                    deactivateHint="No podrá entrar al sistema y se cerrarán sus sesiones."
+                    onSetActive={(active) => api.users.setActive(u.id, active)}
+                    onDelete={() => api.users.remove(u.id)}
+                    onChanged={refresh}
+                  />
                 ) : null}
-              </View>
+              </Pressable>
             ))}
           </Card>
-        ) : null}
-        {users.length ? <Pagination {...pager} /> : null}
-        {!loading && !users.length ? (
+        ) : (
           <Card>
-            <EmptyState icon={Users} title="Sin usuarios" />
+            <EmptyState
+              icon={Users}
+              title={view === 'inactive' && !q ? 'Sin usuarios desactivados' : users.length ? 'Sin resultados' : 'Sin usuarios'}
+              message={view === 'inactive' && !q ? undefined : users.length ? 'Prueba con otro filtro.' : undefined}
+            />
           </Card>
-        ) : null}
-        <UserFormSheet visible={formOpen} onClose={() => setFormOpen(false)} onSaved={refresh} />
+        )}
+        <Pagination {...pager} />
+        <UserFormSheet visible={formOpen} editing={editing} roles={roles} onClose={() => setFormOpen(false)} onSaved={refresh} />
       </Screen>
     </AdminOnly>
   );

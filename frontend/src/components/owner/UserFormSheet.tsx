@@ -5,13 +5,7 @@ import { Button, Field, Sheet } from '@/components/ui';
 import OptionPicker from './OptionPicker';
 import { ownerApi, type NewOwnerUser, type OwnerCompany } from './ownerApi';
 
-const EMPTY: NewOwnerUser = { name: '', email: '', password: '', role: 'admin', companyId: '' };
-
-const ROLES = [
-  { value: 'admin', label: 'Administrador de la empresa' },
-  { value: 'operator', label: 'Operador' },
-  { value: 'viewer', label: 'Solo lectura' },
-];
+const EMPTY: NewOwnerUser = { name: '', email: '', password: '', companyId: '' };
 
 export default function UserFormSheet({
   visible,
@@ -49,7 +43,7 @@ export default function UserFormSheet({
   };
 
   return (
-    <Sheet visible={visible} onClose={onClose} title="Nuevo usuario">
+    <Sheet visible={visible} onClose={onClose} title="Nuevo administrador de empresa">
       <View className="gap-3 pb-2">
         <OptionPicker
           label="Empresa"
@@ -61,8 +55,7 @@ export default function UserFormSheet({
         <Field label="Nombre" value={form.name} onChangeText={(v) => set('name', v)} />
         <Field label="Correo" value={form.email} onChangeText={(v) => set('email', v)} autoCapitalize="none" keyboardType="email-address" />
         <Field label="Contraseña" value={form.password} onChangeText={(v) => set('password', v)} secureTextEntry />
-        <OptionPicker label="Rol" value={form.role} options={ROLES} onChange={(v) => set('role', v)} />
-        <Button label="Crear usuario" onPress={save} loading={saving} className="mt-1" />
+        <Button label="Crear administrador" onPress={save} loading={saving} className="mt-1" />
       </View>
     </Sheet>
   );
