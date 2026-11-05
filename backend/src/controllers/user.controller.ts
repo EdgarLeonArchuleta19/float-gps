@@ -21,6 +21,10 @@ export const setUserActive = asyncHandler(async (req: Request, res: Response) =>
   res.json(await userService.setActive(req.params.id, req.body?.active, getTenant(req)));
 });
 
-export const deleteUser = asyncHandler(async (req: Request, res: Response) => {
+export const resetUserPassword = asyncHandler(async (req: Request, res: Response) => {
+  res.json(await userService.resetPassword(req.params.id, getTenant(req)));
+});
+
+export const deleteUser =asyncHandler(async (req: Request, res: Response) => {
   res.json(await userService.remove(req.params.id, getTenant(req)));
 });

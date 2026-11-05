@@ -34,7 +34,7 @@ export default function ShareScreen() {
       <Screen maxWidth={720}>
         <PageHeader title="Compartir ubicación" subtitle="Envía la posición actual de una o varias unidades" />
         <Card className="p-3 mb-4 flex-row items-center gap-3">
-          <View className="w-9 h-9 rounded-xl items-center justify-center bg-blue-500/15">
+          <View className="w-9 h-9 rounded-full items-center justify-center bg-blue-500/15">
             <MapPin size={17} color="#3b82f6" />
           </View>
           <Text className={`text-[12.5px] flex-1 ${t.muted}`}>
@@ -45,8 +45,8 @@ export default function ShareScreen() {
         {loading && !units.length ? <Loading /> : <UnitMultiSelect units={located} selected={selected} onChange={setSelected} />}
       </Screen>
       <ActionFooter>
-        <Button label="WhatsApp" icon={MessageCircle} variant="secondary" onPress={() => run(() => whatsappLocations(chosen))} disabled={disabled} className="flex-1" compact />
-        <Button label="Copiar" icon={Copy} variant="secondary" onPress={() => run(() => copyLocations(chosen), 'Ubicaciones copiadas')} disabled={disabled} className="flex-1" compact />
+        <Button label="WhatsApp" icon={MessageCircle} iconColor="#25d366" variant="surface" onPress={() => run(() => whatsappLocations(chosen))} disabled={disabled} className="flex-1" compact />
+        <Button label="Copiar" icon={Copy} variant="surface" onPress={() => run(() => copyLocations(chosen), 'Ubicaciones copiadas')} disabled={disabled} className="flex-1" compact />
         <Button
           label={chosen.length ? `Compartir (${chosen.length})` : 'Compartir'}
           icon={Share2}

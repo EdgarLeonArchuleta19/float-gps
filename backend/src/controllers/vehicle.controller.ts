@@ -32,6 +32,10 @@ export const updateVehicle = asyncHandler(async (req: Request, res: Response) =>
   res.json(vehicle);
 });
 
+export const updateVehicleAppearance = asyncHandler(async (req: Request, res: Response) => {
+  res.json(await vehicleService.updateAppearance(req.params.id, req.body, getTenant(req)));
+});
+
 export const setVehicleActive = asyncHandler(async (req: Request, res: Response) => {
   res.json(await vehicleService.setActive(req.params.id, req.body?.active, getTenant(req)));
 });

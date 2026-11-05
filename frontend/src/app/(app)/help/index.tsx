@@ -2,7 +2,7 @@ import { Linking, Platform, Text, View } from 'react-native';
 import { Clock, Mail, MapPin, MessageCircle } from 'lucide-react-native';
 import { useTheme } from '@/context/ThemeContext';
 import { Card, PageHeader, Screen, SectionTitle } from '@/components/ui';
-import { APP_NAME, MAKER_CREDIT } from '@/lib/brand';
+import { APP_NAME, MAKER_BRAND } from '@/lib/brand';
 import MenuRow from '@/components/shared/MenuRow';
 import { SUPPORT, GROUPS } from '@/components/help/content';
 import Faq from '@/components/help/FaqItem';
@@ -39,7 +39,7 @@ export default function Help() {
         </View>
       ))}
       <Text className={`text-[11.5px] text-center mt-6 ${t.subtle}`}>
-        {APP_NAME} · {MAKER_CREDIT}
+        {APP_NAME} · {MAKER_BRAND}
       </Text>
     </Screen>
   );

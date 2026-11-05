@@ -11,8 +11,10 @@ import type { Geofence } from '@/lib/types';
 import { getMyLocation } from '@/lib/myLocation';
 import FleetMap from '@/components/map/FleetMap';
 import type { MapCamera, MapCenter, MapCircle } from '@/components/map/types';
-import { Button, Card, Chip, ChipRow, Field } from '@/components/ui';
+import { Button, Card, Chip, ChipRow, Field, FLOAT_SHADOW } from '@/components/ui';
 import LifecycleActions from '@/components/shared/LifecycleActions';
+import { useFleet } from '@/hooks/useFleet';
+import GeofenceTargets, { type GeofenceWatch } from './GeofenceTargets';
 
 const TYPES = ['Trabajo', 'Almacén', 'Base', 'Zona restringida', 'Otro'];
 const COLORS = [
@@ -52,9 +54,9 @@ function ColorPicker({ value, onChange }: { value: string; onChange: (color: str
         onPress={() => setPage(target)}
         disabled={disabled}
         accessibilityLabel={label}
-        className={`w-8 h-8 rounded-lg border items-center justify-center ${t.card} ${t.border} ${disabled ? 'opacity-30' : 'active:opacity-70'}`}
+        className={`w-9 h-9 rounded-full items-center justify-center ${t.tonal} ${disabled ? 'opacity-30' : 'active:opacity-70'}`}
       >
-        <Icon size={16} color={t.hex.text} />
+        <Icon size={16} color={t.hex.brand} />
       </Pressable>
     );
   };
@@ -97,6 +99,13 @@ export default function GeofenceForm({ initial }: { initial?: Geofence }) {
   const [color, setColor] = useState(initial?.color || COLORS[0]);
   const [saving, setSaving] = useState(false);
   const [camera, setCamera] = useState<MapCamera | null>(() => initialCamera(initial));
+  const { units } = useFleet();
+  const [watch, setWatch] = useState<GeofenceWatch>({
+    alertOn: initial?.alertOn || 'BOTH',
+    allUnits: initial?.allUnits ?? true,
+    unitIds: initial ? [...initial.vehicleIds, ...initial.machineIds] : [],
+    groupIds: initial?.groupIds || [],
+  });
   const types = TYPES.includes(type) ? TYPES : [...TYPES, type];
 
   useEffect(() => {
@@ -142,9 +151,26 @@ export default function GeofenceForm({ initial }: { initial?: Geofence }) {
       toast('Mueve el mapa para ubicar el centro', 'error');
       return;
     }
+    if (!watch.allUnits && !watch.unitIds.length && !watch.groupIds.length) {
+      toast('Elige qué unidades vigila la geocerca', 'error');
+      return;
+    }
     setSaving(true);
     try {
-      const data = { name: name.trim(), type, color, radius, centerLat: center.lat, centerLng: center.lng };
+      const chosen = units.filter((u) => watch.unitIds.includes(u.id));
+      const data = {
+        name: name.trim(),
+        type,
+        color,
+        radius,
+        centerLat: center.lat,
+        centerLng: center.lng,
+        alertOn: watch.alertOn,
+        allUnits: watch.allUnits,
+        vehicleIds: watch.allUnits ? [] : chosen.filter((u) => u.kind === 'vehicle').map((u) => u.id),
+        machineIds: watch.allUnits ? [] : chosen.filter((u) => u.kind === 'machine').map((u) => u.id),
+        groupIds: watch.allUnits ? [] : watch.groupIds,
+      };
       if (initial) await api.geofences.update(initial.id, data);
       else await api.geofences.create(data);
       toast(initial ? 'Geocerca actualizada' : 'Geocerca creada', 'success');
@@ -169,11 +195,12 @@ export default function GeofenceForm({ initial }: { initial?: Geofence }) {
       <Pressable
         onPress={locateMe}
         accessibilityLabel="Mi ubicación"
-        className={`absolute right-4 top-4 w-11 h-11 rounded-xl items-center justify-center border ${t.card} ${t.border}`}
+        className={`absolute right-4 top-4 w-12 h-12 rounded-full items-center justify-center ${t.card}`}
+        style={FLOAT_SHADOW}
       >
-        <LocateFixed size={19} color={t.hex.text} />
+        <LocateFixed size={19} color={t.hex.brand} />
       </Pressable>
-      <View className={`absolute left-4 top-4 rounded-xl border px-3 py-2 ${t.card} ${t.border}`}>
+      <View className={`absolute left-4 top-4 rounded-full px-4 py-2.5 ${t.card}`} style={FLOAT_SHADOW}>
         <Text className={`text-[11px] ${t.muted}`}>Mueve el mapa para colocar el centro</Text>
       </View>
     </View>
@@ -183,7 +210,7 @@ export default function GeofenceForm({ initial }: { initial?: Geofence }) {
     <ScrollView contentContainerStyle={{ padding: 16, gap: 14 }} keyboardShouldPersistTaps="handled">
       <View>
         <View className="flex-row justify-between items-end mb-1">
-          <Text className={`text-[11px] font-semibold uppercase tracking-wider ${t.subtle}`}>Radio</Text>
+          <Text className={`text-[13px] font-semibold ml-1 ${t.muted}`}>Radio</Text>
           <Text className={`text-[18px] font-bold ${t.text}`}>{radiusLabel(radius)}</Text>
         </View>
         <Slider
@@ -204,17 +231,18 @@ export default function GeofenceForm({ initial }: { initial?: Geofence }) {
       </View>
       <Field label="Nombre" placeholder="Ej. Patio central" value={name} onChangeText={setName} />
       <View className="gap-1.5">
-        <Text className={`text-[11px] font-semibold uppercase tracking-wider ${t.subtle}`}>Tipo</Text>
+        <Text className={`text-[13px] font-semibold ml-1 ${t.muted}`}>Tipo</Text>
         <ChipRow>
           {types.map((ty) => (
-            <Chip key={ty} label={ty} active={type === ty} onPress={() => setType(ty)} />
+            <Chip key={ty} label={ty} active={type === ty} onPress={() => setType(ty)} surface />
           ))}
         </ChipRow>
       </View>
       <View className="gap-1.5">
-        <Text className={`text-[11px] font-semibold uppercase tracking-wider ${t.subtle}`}>Color</Text>
+        <Text className={`text-[13px] font-semibold ml-1 ${t.muted}`}>Color</Text>
         <ColorPicker value={color} onChange={setColor} />
       </View>
+      <GeofenceTargets value={watch} onChange={setWatch} />
       {center ? (
         <Text className={`text-[11px] ${t.subtle}`}>
           Centro: {center.lat.toFixed(5)}, {center.lng.toFixed(5)}
@@ -241,7 +269,7 @@ export default function GeofenceForm({ initial }: { initial?: Geofence }) {
   const header = (
     <View className={`flex-row items-center gap-2 px-4 py-3 border-b ${t.card} ${t.border}`}>
       <Pressable onPress={() => (router.canGoBack() ? router.back() : router.replace('/geofences'))} className="p-1.5" accessibilityLabel="Volver">
-        <ArrowLeft size={20} color={t.hex.text} />
+        <ArrowLeft size={20} color={t.hex.brand} />
       </Pressable>
       <Text className={`text-[16px] font-bold ${t.text}`}>{initial ? 'Editar geocerca' : 'Nueva geocerca'}</Text>
     </View>

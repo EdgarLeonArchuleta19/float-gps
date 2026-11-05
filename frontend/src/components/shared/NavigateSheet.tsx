@@ -37,9 +37,9 @@ export default function NavigateSheet({
             <Pressable
               key={app}
               onPress={() => open(app)}
-              className={`flex-row items-center gap-3 rounded-2xl border p-4 ${t.card} ${t.border} active:opacity-70`}
+              className={`flex-row items-center gap-3 rounded-2xl p-4 ${t.tonal} active:opacity-80`}
             >
-              <Navigation size={18} color={t.hex.primary} />
+              <Navigation size={18} color={t.hex.brand} />
               <Text className={`text-[14px] font-semibold ${t.text}`}>{navigationAppLabel(app)}</Text>
             </Pressable>
           ))}

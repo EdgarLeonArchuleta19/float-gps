@@ -1,7 +1,7 @@
 import type { LucideIcon } from 'lucide-react-native';
-import { Bell, CircleDot, FileBarChart, Home, Share2, Truck, Zap } from 'lucide-react-native';
+import { Bell, CircleDot, FileBarChart, Home, Share2, Truck, Wrench, Zap } from 'lucide-react-native';
 
-export type Permission = 'dashboard' | 'share' | 'engine' | 'alerts' | 'fleet' | 'geofences' | 'reports';
+export type Permission = 'dashboard' | 'share' | 'engine' | 'alerts' | 'fleet' | 'geofences' | 'reports' | 'maintenance';
 
 export const PERMISSION_OPTIONS: { key: Permission; label: string; hint: string; icon: LucideIcon }[] = [
   { key: 'dashboard', label: 'Inicio', hint: 'Resumen del día de la flota', icon: Home },
@@ -11,6 +11,7 @@ export const PERMISSION_OPTIONS: { key: Permission; label: string; hint: string;
   { key: 'fleet', label: 'Flota', hint: 'Listado y detalle de unidades', icon: Truck },
   { key: 'geofences', label: 'Geocercas', hint: 'Ver zonas en el mapa', icon: CircleDot },
   { key: 'reports', label: 'Reportes', hint: 'Kilómetros, horas y bitácora', icon: FileBarChart },
+  { key: 'maintenance', label: 'Mantenimiento', hint: 'Recordatorios de servicio por km o fecha', icon: Wrench },
 ];
 
 export const ROUTE_PERMISSIONS: Record<string, Permission> = {
@@ -22,6 +23,7 @@ export const ROUTE_PERMISSIONS: Record<string, Permission> = {
   '/units': 'fleet',
   '/geofences': 'geofences',
   '/reports': 'reports',
+  '/maintenance': 'maintenance',
 };
 
 export function permissionSummary(permissions: string[]) {

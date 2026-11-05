@@ -12,7 +12,7 @@ import { api } from '@/lib/api';
 import { formatHours, toDateInput } from '@/lib/format';
 import { hasPosition, kmToday, openUnit } from '@/lib/units';
 import type { TrackingEvent } from '@/lib/types';
-import { Card, ErrorBanner, Loading, Screen, SectionTitle } from '@/components/ui';
+import { ErrorBanner, Loading, Screen, SectionTitle } from '@/components/ui';
 import EventPreviewSheet from '@/components/events/EventPreviewSheet';
 import FleetStatusCard from '@/components/dashboard/FleetStatusCard';
 import EventCounters from '@/components/dashboard/EventCounters';
@@ -21,6 +21,8 @@ import MovingNow, { type LiveUnit } from '@/components/dashboard/MovingNow';
 import TopUnits from '@/components/dashboard/TopUnits';
 import AttentionList, { attentionFromEvent, type AttentionItem } from '@/components/dashboard/AttentionList';
 import MetricTile from '@/components/reports/MetricTile';
+import PersonalHome from '@/components/dashboard/PersonalHome';
+import { usePlan } from '@/hooks/usePlan';
 import { summarize } from '@/components/reports/summary';
 
 interface AlertUnit {
@@ -33,14 +35,19 @@ interface AlertUnit {
 function SeeAll({ label, onPress }: { label: string; onPress: () => void }) {
   const { t } = useTheme();
   return (
-    <Pressable onPress={onPress} className="flex-row items-center">
-      <Text className={`text-[12px] font-semibold ${t.muted}`}>{label}</Text>
-      <ChevronRight size={14} color={t.hex.muted} />
+    <Pressable onPress={onPress} className={`flex-row items-center gap-0.5 rounded-full pl-3 pr-2 py-1.5 ${t.card}`}>
+      <Text className={`text-[12.5px] font-bold ${t.brandText}`}>{label}</Text>
+      <ChevronRight size={14} color={t.hex.brand} />
     </Pressable>
   );
 }
 
 export default function Dashboard() {
+  const { isPersonal } = usePlan();
+  return isPersonal ? <PersonalHome /> : <BusinessDashboard />;
+}
+
+function BusinessDashboard() {
   const { t } = useTheme();
   const alarm = useAlarm();
   const isDesktop = useIsDesktop();
@@ -102,13 +109,15 @@ export default function Dashboard() {
         <MetricTile metric="km" value={totals.km.toFixed(1)} />
         <MetricTile metric="hours" value={formatHours(totals.hours)} />
         <MetricTile metric="idle" value={formatHours(totals.idle)} />
-        <MetricTile metric="offHours" value={offHours.total.toFixed(1)} />
+        {offHours.enabled ? <MetricTile metric="offHours" value={offHours.total.toFixed(1)} /> : null}
       </View>
       <SectionTitle right={<SeeAll label="Ver alertas" onPress={() => router.push('/notifications')} />}>Eventos de hoy</SectionTitle>
       <EventCounters events={todayEvents.data?.data || []} />
-      <Pressable onPress={() => router.push('/notifications')} className={`mt-2 flex-row items-center gap-3 rounded-2xl border p-3 ${t.card} ${t.border} active:opacity-70`}>
-        <BellRing size={17} color={alarm.active ? '#f87203' : t.hex.muted} />
-        <Text className={`flex-1 text-[13px] ${t.text}`}>
+      <Pressable onPress={() => router.push('/notifications')} className={`mt-2 flex-row items-center gap-3 rounded-2xl px-4 py-3.5 ${t.card} ${t.press}`}>
+        <View className={`w-10 h-10 rounded-full items-center justify-center ${alarm.active ? t.selected : t.tonal}`}>
+          <BellRing size={18} color={alarm.active ? '#f87203' : t.hex.muted} />
+        </View>
+        <Text className={`flex-1 text-[14px] ${t.text}`}>
           Modo alarma <Text className="font-semibold">{alarm.active ? `activo en ${alarm.unitIds.length} unidades` : 'apagado'}</Text>
         </Text>
         <ChevronRight size={16} color={t.hex.muted} />
@@ -142,9 +151,9 @@ export default function Dashboard() {
             alert={alertCount}
             working={utilization}
           />
-          <Card className="p-4 mt-3">
+          <View className="mt-5">
             <QuickActions alerts={data.alertsCount ?? 0} />
-          </Card>
+          </View>
           {isDesktop ? (
             <View className="flex-row gap-4 items-start">
               <View className="flex-1">{today}</View>

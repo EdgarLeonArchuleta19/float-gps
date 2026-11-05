@@ -22,7 +22,7 @@ export default function EngineScreen() {
       <Screen maxWidth={720}>
         <PageHeader title="Paro de motor" subtitle="Detén o reanuda el motor de una o varias unidades" />
         <Card className="p-3 mb-4 flex-row items-start gap-3">
-          <View className="w-9 h-9 rounded-xl items-center justify-center bg-amber-500/15">
+          <View className="w-9 h-9 rounded-full items-center justify-center bg-amber-500/15">
             <ShieldAlert size={17} color="#f59e0b" />
           </View>
           <Text className={`text-[12.5px] flex-1 ${t.muted}`}>

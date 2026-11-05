@@ -1,14 +1,15 @@
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import { AppError } from '../middleware/errorHandler';
-import { signToken, safeEqual } from '../middleware/auth';
-import { tenantLoginLimiter, accountLoginLimiter, ownerLoginLimiter, passwordChangeLimiter, passwordResetRequestLimiter } from '../middleware/rateLimit';
+import { signToken, safeEqual, type TenantContext } from '../middleware/auth';
+import { tenantLoginLimiter, accountLoginLimiter, passwordChangeLimiter, passwordResetRequestLimiter } from '../middleware/rateLimit';
 import { sendEmail } from './email.service';
 import crypto from 'crypto';
-import { writeAudit } from './audit.service';
 import { config } from '../config';
+import { normalizePlan } from '../utils/plans';
 import { permissionsFor } from '../utils/permissions';
-import { assertStrongPassword, OWNER_PASSWORD_MIN_LENGTH, PASSWORD_MIN_LENGTH } from '../utils/passwordPolicy';
+import { assertStrongPassword, PASSWORD_MIN_LENGTH } from '../utils/passwordPolicy';
+import { escapeHtml } from '../utils/html';
 
 const prisma = new PrismaClient();
 
@@ -22,9 +23,6 @@ function hashResetCode(userId: string, code: string) {
   return crypto.createHmac('sha256', config.jwtSecret).update(`${userId}:${code}`).digest('hex');
 }
 
-function escapeHtml(value: string) {
-  return value.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c] as string);
-}
 
 export interface LoginContext {
   ip: string;
@@ -40,7 +38,7 @@ async function verifyPassword(plain: string, hash: string | undefined) {
 }
 
 const SESSION_INCLUDE = {
-  company: { select: { name: true, slug: true, isActive: true, deletedAt: true } },
+  company: { select: { name: true, slug: true, plan: true, maxUnits: true, isActive: true, deletedAt: true } },
   customRole: { select: { name: true, permissions: true } },
 } as const;
 
@@ -50,11 +48,13 @@ function sessionUser(user: {
   name: string;
   role: string;
   companyId: string | null;
-  company: { name: string; slug: string } | null;
+  mustChangePassword: boolean;
+  company: { name: string; slug: string; plan: string; maxUnits: number } | null;
   customRole: { name: string; permissions: string[] } | null;
 }) {
   return {
     id: user.id,
+    mustChangePassword: user.mustChangePassword,
     email: user.email,
     name: user.name,
     role: user.role,
@@ -63,14 +63,41 @@ function sessionUser(user: {
     companyId: user.companyId,
     companyName: user.company?.name || null,
     companySlug: user.company?.slug || null,
+    plan: user.company ? normalizePlan(user.company.plan) : null,
+    maxUnits: user.company?.maxUnits ?? null,
   };
 }
 
 export class AuthService {
-  async me(userId: string) {
-    const user = await prisma.user.findUnique({ where: { id: userId }, include: SESSION_INCLUDE });
+  async me(tenant: TenantContext) {
+    if (tenant.support) return this.supportSessionUser(tenant);
+    const user = await prisma.user.findUnique({ where: { id: tenant.userId }, include: SESSION_INCLUDE });
     if (!user) throw new AppError('Usuario no encontrado', 404);
     return sessionUser(user);
+  }
+
+  // In Support Mode the app runs as the team member inside the company, with
+  // the permissions their team role allows there.
+  private async supportSessionUser(tenant: TenantContext) {
+    const company = await prisma.company.findUnique({
+      where: { id: tenant.companyId || '' },
+      select: { name: true, slug: true, plan: true, maxUnits: true },
+    });
+    if (!company) throw new AppError('Empresa no encontrada', 404);
+    return {
+      id: tenant.userId,
+      mustChangePassword: false,
+      email: tenant.email,
+      name: tenant.name || tenant.email,
+      role: tenant.role,
+      roleName: 'Soporte floaGPS',
+      permissions: tenant.permissions,
+      companyId: tenant.companyId,
+      companyName: company.name,
+      companySlug: company.slug,
+      plan: normalizePlan(company.plan),
+      maxUnits: company.maxUnits,
+    };
   }
 
   async login(email: string, password: string, ctx: LoginContext) {
@@ -101,19 +128,6 @@ export class AuthService {
       throw new AppError('Credenciales incorrectas', 401);
     }
 
-    if (user.role === 'superadmin') {
-      recordFailure();
-      await writeAudit({
-        actorId: user.id,
-        actorEmail: user.email,
-        action: 'OWNER_PUBLIC_LOGIN_BLOCKED',
-        success: false,
-        ip: ctx.ip,
-        userAgent: ctx.userAgent,
-      });
-      throw new AppError('Credenciales incorrectas', 401);
-    }
-
     if (user.deletedAt || user.company?.deletedAt) {
       recordFailure();
       throw new AppError('Credenciales incorrectas', 401);
@@ -137,95 +151,10 @@ export class AuthService {
       email: user.email,
       role: user.role,
       companyId: user.companyId,
-      scope: 'tenant',
       tokenVersion: user.tokenVersion,
     });
 
     return { token, user: sessionUser(user) };
-  }
-
-  async ownerLogin(email: string, password: string, masterKey: string, ctx: LoginContext) {
-    const generic = 'Credenciales de administración inválidas';
-    if (!email || !password || !masterKey) {
-      throw new AppError('Correo, contraseña y clave maestra son obligatorios', 400);
-    }
-
-    const normalized = email.trim().toLowerCase();
-    const keys = [`owner:${normalized}`, `owner-ip:${ctx.ip}`];
-    ownerLoginLimiter.assertAllowed(keys, 'Consola bloqueada temporalmente por intentos fallidos.');
-
-    const user = await prisma.user.findUnique({ where: { email: normalized } });
-    const passwordOk = await verifyPassword(password, user?.password);
-    const masterOk = safeEqual(String(masterKey), config.ownerMasterKey);
-
-    if (!user || user.role !== 'superadmin' || !passwordOk || !masterOk) {
-      ownerLoginLimiter.recordFailure(keys);
-      await writeAudit({
-        actorId: user?.id,
-        actorEmail: normalized,
-        action: 'OWNER_LOGIN_FAILED',
-        success: false,
-        details: {
-          reason: !user || user.role !== 'superadmin' ? 'cuenta_no_valida' : !passwordOk ? 'password' : 'clave_maestra',
-        },
-        ip: ctx.ip,
-        userAgent: ctx.userAgent,
-      });
-      throw new AppError(generic, 401);
-    }
-
-    ownerLoginLimiter.clear(keys);
-    await prisma.user.update({
-      where: { id: user.id },
-      data: { lastLoginAt: new Date(), lastLoginIp: ctx.ip },
-    });
-
-    await writeAudit({
-      actorId: user.id,
-      actorEmail: user.email,
-      action: 'OWNER_LOGIN_SUCCESS',
-      ip: ctx.ip,
-      userAgent: ctx.userAgent,
-    });
-
-    const token = signToken(
-      {
-        userId: user.id,
-        email: user.email,
-        role: user.role,
-        companyId: null,
-        scope: 'owner_portal',
-        tokenVersion: user.tokenVersion,
-      },
-      config.ownerTokenTtl,
-    );
-
-    return {
-      token,
-      user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        role: user.role,
-        companyId: null,
-        companyName: null,
-      },
-    };
-  }
-
-  async ownerLogoutAll(userId: string, email: string, ctx: LoginContext) {
-    await prisma.user.update({
-      where: { id: userId },
-      data: { tokenVersion: { increment: 1 } },
-    });
-    await writeAudit({
-      actorId: userId,
-      actorEmail: email,
-      action: 'OWNER_REVOKE_ALL_SESSIONS',
-      ip: ctx.ip,
-      userAgent: ctx.userAgent,
-    });
-    return { message: 'Todas las sesiones de administración fueron cerradas.' };
   }
 
   // Step 1 of password recovery: email a short-lived 6-digit code. The
@@ -241,7 +170,7 @@ export class AuthService {
     passwordResetRequestLimiter.recordFailure(keys);
 
     const user = await prisma.user.findUnique({ where: { email: normalized } });
-    if (!user || user.role === 'superadmin' || !user.isActive || user.deletedAt) return response;
+    if (!user || !user.companyId || !user.isActive || user.deletedAt) return response;
 
     const code = crypto.randomInt(0, 1_000_000).toString().padStart(6, '0');
     await prisma.user.update({
@@ -277,7 +206,7 @@ export class AuthService {
     const invalid = new AppError('El código es inválido o ya venció. Solicita uno nuevo.', 400);
     if (!email || !code || !newPassword) throw new AppError('Correo, código y nueva contraseña son obligatorios', 400);
     const user = await prisma.user.findUnique({ where: { email: email.trim().toLowerCase() } });
-    if (!user || user.role === 'superadmin' || !user.isActive || user.deletedAt || !user.resetCodeHash || !user.resetCodeExpiresAt) throw invalid;
+    if (!user || !user.companyId || !user.isActive || user.deletedAt || !user.resetCodeHash || !user.resetCodeExpiresAt) throw invalid;
     if (user.resetCodeExpiresAt.getTime() < Date.now() || user.resetCodeAttempts >= RESET_CODE_MAX_ATTEMPTS) throw invalid;
 
     if (!safeEqual(hashResetCode(user.id, String(code).trim()), user.resetCodeHash)) {
@@ -291,6 +220,7 @@ export class AuthService {
       data: {
         password: await bcrypt.hash(newPassword, 10),
         tokenVersion: { increment: 1 },
+        mustChangePassword: false,
         resetCodeHash: null,
         resetCodeExpiresAt: null,
         resetCodeAttempts: 0,
@@ -305,17 +235,20 @@ export class AuthService {
     if (!user) throw new AppError('Usuario no encontrado', 404);
 
     // 400 (not 401) so a typo doesn't log the client out; attempts are limited
-    // so a hijacked session can't brute-force the current password.
-    const keys = [`change:${userId}`];
-    passwordChangeLimiter.assertAllowed(keys, 'Demasiados intentos para cambiar la contraseña.');
-    const valid = await verifyPassword(currentPassword, user.password);
-    if (!valid) {
-      passwordChangeLimiter.recordFailure(keys);
-      throw new AppError('La contraseña actual es incorrecta', 400);
+    // so a hijacked session can't brute-force the current password. Right
+    // after signing in with a temporary password the person just typed it, so
+    // it isn't asked again.
+    if (!user.mustChangePassword) {
+      const keys = [`change:${userId}`];
+      passwordChangeLimiter.assertAllowed(keys, 'Demasiados intentos para cambiar la contraseña.');
+      const valid = await verifyPassword(currentPassword, user.password);
+      if (!valid) {
+        passwordChangeLimiter.recordFailure(keys);
+        throw new AppError('La contraseña actual es incorrecta', 400);
+      }
+      passwordChangeLimiter.clear(keys);
     }
-    passwordChangeLimiter.clear(keys);
-    const minLength = user.role === 'superadmin' ? OWNER_PASSWORD_MIN_LENGTH : PASSWORD_MIN_LENGTH;
-    assertStrongPassword(newPassword, 'La nueva contraseña', minLength);
+    assertStrongPassword(newPassword, 'La nueva contraseña', PASSWORD_MIN_LENGTH);
     if (await verifyPassword(newPassword, user.password)) {
       throw new AppError('La nueva contraseña debe ser distinta a la actual', 400);
     }
@@ -325,21 +258,16 @@ export class AuthService {
     const hash = await bcrypt.hash(newPassword, 10);
     const updated = await prisma.user.update({
       where: { id: userId },
-      data: { password: hash, tokenVersion: { increment: 1 } },
+      data: { password: hash, tokenVersion: { increment: 1 }, mustChangePassword: false },
     });
 
-    const isOwner = updated.role === 'superadmin';
-    const token = signToken(
-      {
-        userId: updated.id,
-        email: updated.email,
-        role: updated.role,
-        companyId: isOwner ? null : updated.companyId,
-        scope: isOwner ? 'owner_portal' : 'tenant',
-        tokenVersion: updated.tokenVersion,
-      },
-      isOwner ? config.ownerTokenTtl : undefined,
-    );
+    const token = signToken({
+      userId: updated.id,
+      email: updated.email,
+      role: updated.role,
+      companyId: updated.companyId,
+      tokenVersion: updated.tokenVersion,
+    });
 
     return { message: 'Contraseña actualizada correctamente', token };
   }

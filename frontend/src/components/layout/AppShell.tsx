@@ -7,6 +7,7 @@ import { useApi } from '@/hooks/useApi';
 import { api } from '@/lib/api';
 import { useCan } from '@/hooks/useCan';
 import { routePermission } from '@/lib/permissions';
+import { usePlan } from '@/hooks/usePlan';
 import Sidebar from './Sidebar';
 import DesktopTopBar from './DesktopTopBar';
 import MobileTopBar from './MobileTopBar';
@@ -23,8 +24,10 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const alerts = data?.alertsCount ?? 0;
   const required = routePermission(pathname);
+  const { isBlockedRoute } = usePlan();
 
   if (required && !can(required)) return <Redirect href="/live-map" />;
+  if (isBlockedRoute(pathname)) return <Redirect href="/more" />;
 
   if (isDesktop) {
     return (

@@ -109,7 +109,7 @@ export default function ForgotPassword({ initialEmail, onBack }: { initialEmail:
         {confirm && password !== confirm ? <ErrorBanner message="Las contraseñas no coinciden" /> : null}
         <LoginButton label="Cambiar contraseña" onPress={reset} loading={loading} disabled={!canReset} />
         <Pressable onPress={requestCode} disabled={loading} className="self-center py-2">
-          <Text className={`text-[13px] font-semibold ${t.isDark ? 'text-accent' : 'text-navy'}`}>Reenviar código</Text>
+          <Text className={`text-[13px] font-semibold text-accent`}>Reenviar código</Text>
         </Pressable>
       </View>
     );

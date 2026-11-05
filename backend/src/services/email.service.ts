@@ -14,6 +14,10 @@ interface EmailMessage {
 //      delivers to the account owner's address.
 // Returns false when nothing is configured or delivery failed, so callers can
 // fall back (e.g. print the code in development).
+export function emailAvailable() {
+  return !!((process.env.SMTP_USER && process.env.SMTP_PASS) || process.env.RESEND_API_KEY);
+}
+
 export async function sendEmail(message: EmailMessage): Promise<boolean> {
   if (process.env.SMTP_USER && process.env.SMTP_PASS) return sendWithSmtp(message);
   if (process.env.RESEND_API_KEY) return sendWithResend(message, process.env.RESEND_API_KEY);

@@ -80,7 +80,7 @@ export default function CompanyProfileCard({ editable }: { editable: boolean }) 
   return (
     <Card className="p-4">
       <View className="flex-row items-center gap-4 mb-4">
-        <View className={`w-16 h-16 rounded-2xl border items-center justify-center overflow-hidden ${t.input} ${t.border}`}>
+        <View className={`w-16 h-16 rounded-full items-center justify-center overflow-hidden ${t.tonal}`}>
           {profile.logo ? (
             <Image source={{ uri: profile.logo }} style={{ width: 64, height: 64 }} resizeMode="contain" />
           ) : (

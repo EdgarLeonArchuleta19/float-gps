@@ -1,4 +1,4 @@
-const CACHE = 'floa-mobile-v2';
+const CACHE = 'floa-mobile-v5';
 const SHELL = ['/', '/manifest.json', '/pwa-192x192.png', '/pwa-512x512.png'];
 
 self.addEventListener('install', (event) => {
@@ -18,7 +18,8 @@ self.addEventListener('fetch', (event) => {
   const request = event.request;
   if (request.method !== 'GET') return;
   const url = new URL(request.url);
-  if (url.origin !== self.location.origin || url.pathname.startsWith('/api')) return;
+  if (self.location.hostname === 'localhost') return;
+  if (url.origin !== self.location.origin || url.pathname.startsWith('/api') || url.pathname.startsWith('/console')) return;
 
   if (request.mode === 'navigate') {
     event.respondWith(
@@ -45,5 +46,37 @@ self.addEventListener('fetch', (event) => {
           return response;
         })
     )
+  );
+});
+
+self.addEventListener('push', (event) => {
+  let data = {};
+  try {
+    data = event.data ? event.data.json() : {};
+  } catch (err) {
+    data = { title: 'floaGPS', body: event.data ? event.data.text() : '' };
+  }
+  event.waitUntil(
+    self.registration.showNotification(data.title || 'floaGPS', {
+      body: data.body || '',
+      icon: '/pwa-192x192.png',
+      badge: '/pwa-192x192.png',
+      data: { url: data.url || '/notifications' },
+    })
+  );
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const url = (event.notification.data && event.notification.data.url) || '/notifications';
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {
+      const open = clients.find((client) => 'focus' in client);
+      if (open) {
+        open.navigate(url);
+        return open.focus();
+      }
+      return self.clients.openWindow(url);
+    })
   );
 });

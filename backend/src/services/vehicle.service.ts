@@ -4,6 +4,8 @@ import { AppError } from '../middleware/errorHandler';
 import { TenantContext } from '../middleware/auth';
 import { canAccessUnit, unitFilter, unitStatusFilter } from './unitAccess';
 import { number, text } from '../utils/validate';
+import { assertUnitCapacity } from './planLimits';
+import { pickLook } from '../utils/vehicleLook';
 
 const prisma = new PrismaClient();
 
@@ -29,7 +31,7 @@ function pickVehicleFields(data: any, creating = false) {
     if (!STATUSES.includes(data.status)) throw new AppError('Estado no válido', 400);
     picked.status = data.status;
   }
-  return picked as any;
+  return { ...picked, ...pickLook(data) } as any;
 }
 
 // Mutations must only touch vehicles of the caller's company. Not-found and
@@ -50,7 +52,7 @@ function assertGpsInTenant(device: { companyId: string | null } | null, companyI
 
 export class VehicleService {
   async findAll(
-    query: { search?: string; status?: string; state?: string; page?: string; limit?: string; sortBy?: string; sortOrder?: string },
+    query: { search?: string; status?: string; groupId?: string; state?: string; page?: string; limit?: string; sortBy?: string; sortOrder?: string },
     tenant?: TenantContext
   ) {
     const { page, limit, skip } = pageParams(query, 10);
@@ -69,6 +71,7 @@ export class VehicleService {
     if (query.status) {
       where.status = query.status;
     }
+    if (typeof query.groupId === 'string' && query.groupId) where.groupId = query.groupId === 'none' ? null : query.groupId;
 
     const orderBy: any = {};
     if (query.sortBy && SORTABLE.includes(query.sortBy)) {
@@ -81,6 +84,7 @@ export class VehicleService {
       prisma.vehicle.findMany({
         where,
         include: {
+          group: { select: { id: true, name: true, color: true } },
           gpsDevice: {
             include: {
               positions: { orderBy: { timestamp: 'desc' }, take: 1 },
@@ -113,6 +117,7 @@ export class VehicleService {
     const vehicle = await prisma.vehicle.findUnique({
       where: { id },
       include: {
+        group: { select: { id: true, name: true, color: true } },
         gpsDevice: {
           include: {
             positions: { orderBy: { timestamp: 'desc' }, take: 1 },
@@ -172,11 +177,12 @@ export class VehicleService {
     // Only accept known fields: spreading the raw body let a client pick any
     // companyId (or other columns) and create units inside another tenant.
     const vehicleData = pickVehicleFields(data, true);
-    const companyId = (tenant?.isSuperAdmin ? data.companyId : null) || tenant?.companyId || null;
+    const companyId = tenant?.companyId || null;
 
     if (gps && !gps.imei) {
       throw new AppError('El dispositivo GPS requiere un IMEI', 400);
     }
+    if (companyId) await assertUnitCapacity(companyId);
 
     let gpsDeviceData: any = null;
     let existingFreeGpsId: string | null = null;
@@ -219,9 +225,18 @@ export class VehicleService {
     });
   }
 
+  async updateAppearance(id: string, data: any, tenant?: TenantContext) {
+    await assertVehicleInTenant(id, tenant);
+    const name = data?.name !== undefined ? { name: text(data.name, 'El nombre', 1, 80) } : {};
+    return prisma.vehicle.update({ where: { id }, data: { ...name, ...pickLook(data) } });
+  }
+
   async update(id: string, data: any, tenant?: TenantContext) {
     await assertVehicleInTenant(id, tenant);
     const { gps } = data;
+    if (gps?.imei && !tenant?.support) {
+      throw new AppError('La vinculación de GPS la hace el equipo de floaGPS', 403);
+    }
     const vehicleData = pickVehicleFields(data);
 
     if (!gps || !gps.imei) {

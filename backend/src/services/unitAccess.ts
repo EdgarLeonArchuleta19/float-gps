@@ -10,6 +10,7 @@ interface OwnedUnit {
   isActive: boolean;
   deletedAt: Date | null;
   roleUnits: { id: string }[];
+  userUnits: { id: string }[];
 }
 
 // Admins (permissions === null) still reach deactivated units to manage them
@@ -19,18 +20,27 @@ function seesInactive(tenant: TenantContext) {
   return tenant.permissions === null;
 }
 
-// Single access rule for anything tied to a unit: the owner console sees all,
-// everyone else only units of their own company, and users whose role is
-// limited to some units only those units. Users without a company see nothing.
+// Single access rule for anything tied to a unit: only units of the caller's
+// company, and users whose role is limited to some units only those units.
+// Callers without a company see nothing.
 function tenantCanSee(unit: OwnedUnit | null, tenant: TenantContext): boolean {
-  if (tenant.isSuperAdmin) return true;
   if (!unit || !tenant.companyId || unit.companyId !== tenant.companyId || unit.deletedAt) return false;
   if (!unit.isActive && !seesInactive(tenant)) return false;
-  return !tenant.restrictToUserUnits || unit.roleUnits.length > 0;
+  if (!tenant.restrictToUserUnits) return true;
+  return tenant.unitsByUser ? unit.userUnits.length > 0 : unit.roleUnits.length > 0;
 }
 
-function assignedTo(tenant: TenantContext) {
-  return { where: { roleId: tenant.roleId || '' }, select: { id: true } };
+// A member sees the units of their role, unless the admin picked units for
+// that person (User.ownUnits): then only those, whatever the role says.
+function assignment(tenant: TenantContext) {
+  return {
+    roleUnits: { where: { roleId: tenant.roleId || '' }, select: { id: true } },
+    userUnits: { where: { userId: tenant.userId }, select: { id: true } },
+  };
+}
+
+function assignedFilter(tenant: TenantContext) {
+  return tenant.unitsByUser ? { userUnits: { some: { userId: tenant.userId } } } : { roleUnits: { some: { roleId: tenant.roleId || '' } } };
 }
 
 // Prisma filter for Vehicle/Machine rows the tenant may see.
@@ -39,12 +49,12 @@ export function unitFilter(tenant: TenantContext) {
     companyId: tenant.companyId,
     deletedAt: null,
     ...(seesInactive(tenant) ? {} : { isActive: true }),
-    ...(tenant.restrictToUserUnits ? { roleUnits: { some: { roleId: tenant.roleId || '' } } } : {}),
+    ...(tenant.restrictToUserUnits ? assignedFilter(tenant) : {}),
   };
 }
 
 // Prisma filter for rows linked to a vehicle or machine (work sessions,
-// GPS devices). null means no restriction: the owner console outside support.
+// GPS devices). null means no company scope, which never reaches these routes.
 export function linkedUnitFilter(tenant?: TenantContext) {
   if (!tenant?.companyId) return null;
   const unit = unitFilter(tenant);
@@ -70,7 +80,7 @@ export function unitStatusFilter(status: string | undefined, tenant?: TenantCont
 }
 
 export async function canAccessUnit(kind: UnitKind, unitId: string, tenant: TenantContext): Promise<boolean> {
-  const select = { companyId: true, isActive: true, deletedAt: true, roleUnits: assignedTo(tenant) };
+  const select = { companyId: true, isActive: true, deletedAt: true, ...assignment(tenant) };
   const unit =
     kind === 'vehicle'
       ? await prisma.vehicle.findUnique({ where: { id: unitId }, select })
@@ -79,8 +89,7 @@ export async function canAccessUnit(kind: UnitKind, unitId: string, tenant: Tena
 }
 
 export async function canAccessGpsDevice(gpsDeviceId: string, tenant: TenantContext): Promise<boolean> {
-  if (tenant.isSuperAdmin) return true;
-  const unitSelect = { select: { companyId: true, isActive: true, deletedAt: true, roleUnits: assignedTo(tenant) } };
+  const unitSelect = { select: { companyId: true, isActive: true, deletedAt: true, ...assignment(tenant) } };
   const device = await prisma.gpsDevice.findUnique({
     where: { id: gpsDeviceId },
     select: { vehicle: unitSelect, machine: unitSelect },

@@ -1,17 +1,18 @@
 import { useEffect, useState } from 'react';
 import { View } from 'react-native';
-import { KeyRound, Lock } from 'lucide-react-native';
+import { Lock } from 'lucide-react-native';
 import { useToast } from '@/context/ToastContext';
 import { useAuth } from '@/context/AuthContext';
 import { api } from '@/lib/api';
 import { forgetEngineCredential } from '@/lib/engineCredential';
 import { isStrongPassword } from '@/lib/passwordPolicy';
-import { Button, ErrorBanner, Field, Sheet } from '@/components/ui';
+import { Button, ErrorBanner, Sheet } from '@/components/ui';
 import PasswordChecklist from '@/components/shared/PasswordChecklist';
+import PasswordField from '@/components/shared/PasswordField';
 
 export default function ChangePasswordSheet({ visible, onClose }: { visible: boolean; onClose: () => void }) {
   const toast = useToast();
-  const { replaceToken } = useAuth();
+  const { passwordChanged } = useAuth();
   const [current, setCurrent] = useState('');
   const [next, setNext] = useState('');
   const [confirm, setConfirm] = useState('');
@@ -37,7 +38,7 @@ export default function ChangePasswordSheet({ visible, onClose }: { visible: boo
     setError('');
     try {
       const { token } = await api.auth.changePassword(current, next);
-      replaceToken(token);
+      passwordChanged(token);
       await forgetEngineCredential();
       toast('Contraseña actualizada. Se cerraron tus otras sesiones.', 'success');
       onClose();
@@ -54,18 +55,10 @@ export default function ChangePasswordSheet({ visible, onClose }: { visible: boo
     <Sheet visible={visible} onClose={onClose} title="Cambiar contraseña">
       <View className="gap-3 pb-2">
         {error ? <ErrorBanner message={error} /> : null}
-        <Field icon={Lock} label="Contraseña actual" secureTextEntry value={current} onChangeText={setCurrent} autoComplete="password" />
-        <Field icon={KeyRound} label="Nueva contraseña" secureTextEntry value={next} onChangeText={setNext} autoComplete="new-password" />
+        <PasswordField icon={Lock} label="Contraseña actual" value={current} onChangeText={setCurrent} autoComplete="password" />
+        <PasswordField label="Nueva contraseña" value={next} onChangeText={setNext} autoComplete="new-password" />
         <PasswordChecklist password={next} />
-        <Field
-          icon={KeyRound}
-          label="Confirmar nueva contraseña"
-          secureTextEntry
-          value={confirm}
-          onChangeText={setConfirm}
-          autoComplete="new-password"
-          onSubmitEditing={save}
-        />
+        <PasswordField label="Confirmar nueva contraseña" value={confirm} onChangeText={setConfirm} autoComplete="new-password" onSubmitEditing={save} />
         {hint ? <ErrorBanner message={hint} /> : null}
         <Button label="Actualizar contraseña" onPress={save} loading={saving} disabled={!canSave} />
       </View>

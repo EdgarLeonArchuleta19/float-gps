@@ -34,9 +34,9 @@ export function ActionIcon({
       disabled={disabled || busy}
       accessibilityRole="button"
       accessibilityLabel={label}
-      className={`w-8 h-8 rounded-lg border items-center justify-center ${t.card} ${t.border} ${disabled ? 'opacity-40' : 'active:opacity-60'}`}
+      className={`w-9 h-9 rounded-full items-center justify-center ${t.tonal} ${disabled ? 'opacity-40' : 'active:opacity-60'}`}
     >
-      {busy ? <ActivityIndicator size="small" color={tint} /> : <Icon size={15} color={tint} />}
+      {busy ? <ActivityIndicator size="small" color={tint} /> : <Icon size={16} color={tint} />}
     </Pressable>
   );
 }

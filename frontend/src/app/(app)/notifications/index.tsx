@@ -78,7 +78,7 @@ export default function Notifications() {
       ) : groups.length ? (
         groups.map((g) => (
           <View key={g.day} className="mb-4">
-            <Text className={`text-[11px] font-semibold uppercase tracking-wider mb-2 ${t.subtle}`}>
+            <Text className={`text-[15px] font-bold tracking-tight mb-2.5 mt-1 ml-1 ${t.text}`}>
               {g.day === today ? 'Hoy' : formatDayLabel(g.day)}
             </Text>
             <Card className="py-1">

@@ -1,6 +1,8 @@
 import { PrismaClient } from '@prisma/client';
-import haversine from 'haversine-distance';
 import { Gt06Fix, Gt06Message, normalizeImei } from './gt06';
+import { refreshWorkSessions } from '../services/workSession.service';
+import { alertTypeFor, dispatchAlert } from '../services/notify.service';
+import { alertsOn, crossings, geofencesFor, watches, type WatchedGeofence } from './geofenceWatch';
 
 const prisma = new PrismaClient();
 
@@ -27,23 +29,12 @@ export const thresholds: TrackerThresholds = {
   maxAgeHours: parseFloat(process.env.TRACKER_MAX_AGE_H || '48'),
 };
 
-interface GeofenceRow {
-  id: string;
-  name: string;
-  radius: number | null;
-  centerLat: number | null;
-  centerLng: number | null;
-}
-
-const insideState = new Map<string, Set<string>>();
 const lastOverspeedAt = new Map<string, number>();
 const lastLowBatteryAt = new Map<string, number>();
 
 const OVERSPEED_COOLDOWN_MS = 5 * 60 * 1000;
 const LOW_BATTERY_COOLDOWN_MS = 30 * 60 * 1000;
 
-let geofenceCache: { at: number; rows: GeofenceRow[] } = { at: 0, rows: [] };
-const GEOFENCE_TTL_MS = 60 * 1000;
 
 function isReasonableTimestamp(ts: number): boolean {
   const now = Date.now();
@@ -58,18 +49,55 @@ function throttle(key: string, store: Map<string, number>, cooldown: number): bo
   return true;
 }
 
-async function loadGeofences(): Promise<GeofenceRow[]> {
-  if (Date.now() - geofenceCache.at < GEOFENCE_TTL_MS) return geofenceCache.rows;
-  const rows = await prisma.geofence.findMany({
-    where: { isActive: true, deletedAt: null },
-    select: { id: true, name: true, radius: true, centerLat: true, centerLng: true },
-  });
-  geofenceCache = { at: Date.now(), rows };
-  return rows;
+interface TrackedDevice {
+  id: string;
+  companyId: string | null;
+  vehicleId: string | null;
+  machineId: string | null;
+  vehicle?: { name: string; companyId: string | null; groupId: string | null } | null;
+  machine?: { name: string; companyId: string | null; groupId: string | null } | null;
 }
 
-function distanceMeters(lat: number, lng: number, centerLat: number, centerLng: number): number {
-  return haversine({ lat, lon: lng }, { lat: centerLat, lon: centerLng });
+interface EventInput {
+  type: string;
+  severity: string;
+  message: string;
+  latitude?: number | null;
+  longitude?: number | null;
+  speed?: number | null;
+  timestamp: Date;
+}
+
+function companyOf(device: TrackedDevice) {
+  return device.vehicle?.companyId || device.machine?.companyId || device.companyId || null;
+}
+
+function unitOf(device: TrackedDevice) {
+  if (device.vehicleId) return { kind: 'vehicle' as const, id: device.vehicleId };
+  if (device.machineId) return { kind: 'machine' as const, id: device.machineId };
+  return undefined;
+}
+
+// Every tracking event is stored and then sent as an alert (push or
+// email) to the people of that company who chose that type of alert.
+export async function recordEvent(device: TrackedDevice, event: EventInput, notify = true) {
+  await prisma.trackingEvent.create({
+    data: {
+      type: event.type,
+      severity: event.severity,
+      message: event.message,
+      latitude: event.latitude ?? null,
+      longitude: event.longitude ?? null,
+      speed: event.speed ?? null,
+      timestamp: event.timestamp,
+      gpsDeviceId: device.id,
+    },
+  });
+  const companyId = companyOf(device);
+  const type = alertTypeFor(event.type);
+  if (!notify || !companyId || !type) return;
+  const unitName = device.vehicle?.name || device.machine?.name || 'Unidad';
+  dispatchAlert({ companyId, type, title: `${unitName}: ${event.message}`, body: event.message, url: '/notifications', unit: unitOf(device) });
 }
 
 export async function findDevice(imei: string) {
@@ -84,106 +112,59 @@ export async function findDevice(imei: string) {
   });
 }
 
-async function evaluateGeofences(
-  deviceId: string,
-  fix: Gt06Fix,
-  unitName: string,
-  unitType: string,
-  geofences: GeofenceRow[],
-): Promise<string[]> {
-  if (geofences.length === 0) return [];
-
-  const byId = new Map(geofences.map((gf) => [gf.id, gf]));
-  const previous = insideState.get(deviceId) || new Set<string>();
-  const current = new Set<string>();
+async function evaluateGeofences(device: TrackedDevice, fix: Gt06Fix, unitName: string, unitType: string, geofences: WatchedGeofence[]): Promise<string[]> {
   const changes: string[] = [];
-
-  for (const gf of geofences) {
-    if (gf.centerLat === null || gf.centerLng === null || !gf.radius) continue;
-    if (distanceMeters(fix.latitude, fix.longitude, gf.centerLat, gf.centerLng) > gf.radius) continue;
-    current.add(gf.id);
-  }
-
-  const transitions: Array<{ type: 'GEOFENCE_ENTER' | 'GEOFENCE_EXIT'; id: string }> = [];
-
-  for (const id of current) {
-    if (!previous.has(id)) transitions.push({ type: 'GEOFENCE_ENTER', id });
-  }
-  for (const id of previous) {
-    if (!current.has(id)) transitions.push({ type: 'GEOFENCE_EXIT', id });
-  }
-
-  for (const { type, id } of transitions) {
-    const gf = byId.get(id);
-    if (!gf) continue;
-
-    await prisma.trackingEvent.create({
-      data: {
+  for (const { type, geofence } of crossings(device.id, fix.latitude, fix.longitude, geofences)) {
+    await recordEvent(
+      device,
+      {
         type,
         severity: 'INFO',
-        message: `${type === 'GEOFENCE_ENTER' ? 'Entró a' : 'Salió de'} ${gf.name}`,
+        message: `${type === 'GEOFENCE_ENTER' ? 'Entró a' : 'Salió de'} ${geofence.name}`,
         latitude: fix.latitude,
         longitude: fix.longitude,
         speed: fix.speed,
         timestamp: fix.timestamp,
-        gpsDeviceId: deviceId,
       },
-    });
-
+      alertsOn(geofence, type),
+    );
     await prisma.geofenceEvent.create({
-      data: {
-        type,
-        timestamp: fix.timestamp,
-        latitude: fix.latitude,
-        longitude: fix.longitude,
-        unitName,
-        unitType,
-        geofenceId: gf.id,
-      },
+      data: { type, timestamp: fix.timestamp, latitude: fix.latitude, longitude: fix.longitude, unitName, unitType, geofenceId: geofence.id },
     });
-
     changes.push(type);
   }
-
-  insideState.set(deviceId, current);
   return changes;
 }
 
-async function evaluateOverspeed(deviceId: string, fix: Gt06Fix): Promise<string | null> {
+async function evaluateOverspeed(device: TrackedDevice, fix: Gt06Fix): Promise<string | null> {
   if (fix.speed < thresholds.overspeedKmh) return null;
-  if (!throttle(deviceId, lastOverspeedAt, OVERSPEED_COOLDOWN_MS)) return null;
+  if (!throttle(device.id, lastOverspeedAt, OVERSPEED_COOLDOWN_MS)) return null;
 
-  await prisma.trackingEvent.create({
-    data: {
-      type: 'OVERSPEED',
-      severity: 'WARNING',
-      message: `Exceso de velocidad: ${Math.round(fix.speed)} km/h (límite ${thresholds.overspeedKmh} km/h)`,
-      latitude: fix.latitude,
-      longitude: fix.longitude,
-      speed: fix.speed,
-      timestamp: fix.timestamp,
-      gpsDeviceId: deviceId,
-    },
+  await recordEvent(device, {
+    type: 'OVERSPEED',
+    severity: 'WARNING',
+    message: `Exceso de velocidad: ${Math.round(fix.speed)} km/h (límite ${thresholds.overspeedKmh} km/h)`,
+    latitude: fix.latitude,
+    longitude: fix.longitude,
+    speed: fix.speed,
+    timestamp: fix.timestamp,
   });
 
   return 'OVERSPEED';
 }
 
-async function evaluateLowBattery(deviceId: string, fix: Gt06Fix, voltage?: number): Promise<string | null> {
+async function evaluateLowBattery(device: TrackedDevice, fix: Gt06Fix, voltage?: number): Promise<string | null> {
   if (voltage === undefined || voltage >= thresholds.lowBatteryVolts) return null;
-  if (!throttle(deviceId, lastLowBatteryAt, LOW_BATTERY_COOLDOWN_MS)) return null;
+  if (!throttle(device.id, lastLowBatteryAt, LOW_BATTERY_COOLDOWN_MS)) return null;
 
-  await prisma.trackingEvent.create({
-    data: {
-      type: 'LOW_BATTERY',
-      severity: 'WARNING',
-      message: `Batería baja: ${voltage.toFixed(1)} V`,
-      latitude: fix.latitude,
-      longitude: fix.longitude,
-      speed: fix.speed,
-      timestamp: fix.timestamp,
-      gpsDeviceId: deviceId,
-    },
+  await recordEvent(device, {
+    type: 'LOW_BATTERY',
+    severity: 'WARNING',
+    message: `Batería baja: ${voltage.toFixed(1)} V`,
+    latitude: fix.latitude,
+    longitude: fix.longitude,
+    speed: fix.speed,
+    timestamp: fix.timestamp,
   });
 
   return 'LOW_BATTERY';
@@ -219,17 +200,14 @@ export async function ingestMessage(message: Gt06Message): Promise<IngestSummary
   const alarm = message.alarm;
   if (alarm) {
     const type = mapAlarmType(message, alarm.reason);
-    await prisma.trackingEvent.create({
-      data: {
-        type,
-        severity: type === 'SOS' ? 'CRITICAL' : 'WARNING',
-        message: buildAlarmMessage(type, message, alarm),
-        latitude: alarm.latitude ?? null,
-        longitude: alarm.longitude ?? null,
-        speed: alarm.speed ?? null,
-        timestamp: alarm.timestamp,
-        gpsDeviceId: device.id,
-      },
+    await recordEvent(device, {
+      type,
+      severity: type === 'SOS' ? 'CRITICAL' : 'WARNING',
+      message: buildAlarmMessage(type, message, alarm),
+      latitude: alarm.latitude ?? null,
+      longitude: alarm.longitude ?? null,
+      speed: alarm.speed ?? null,
+      timestamp: alarm.timestamp,
     });
     summary.events.push(`alarma:${type}`);
   }
@@ -272,6 +250,7 @@ interface FixIngest {
   discarded: number;
   events: string[];
   unitStatus?: string;
+  firstFix?: Gt06Fix;
   latestFix?: Gt06Fix;
 }
 
@@ -298,7 +277,9 @@ export async function ingestFixes(
   let lastTs = last ? last.timestamp.getTime() : 0;
   let lastIgnition: boolean | null = last ? last.ignition : null;
 
-  const geofences = await loadGeofences();
+  const companyId = companyOf(device);
+  const unit = { vehicleId: device.vehicleId, machineId: device.machineId, groupId: device.vehicle?.groupId || device.machine?.groupId || null };
+  const geofences = companyId && (device.vehicleId || device.machineId) ? (await geofencesFor(companyId)).filter((gf) => watches(gf, unit)) : [];
 
   for (const fix of fixes) {
     const ts = fix.timestamp.getTime();
@@ -327,35 +308,33 @@ export async function ingestFixes(
       },
     });
     result.inserted += 1;
+    result.firstFix = result.firstFix || fix;
     result.latestFix = fix;
 
     if (fix.ignition !== undefined && lastIgnition !== null && fix.ignition !== lastIgnition) {
       const eventType = fix.ignition ? 'IGNITION_ON' : 'IGNITION_OFF';
-      await prisma.trackingEvent.create({
-        data: {
-          type: eventType,
-          severity: 'INFO',
-          message: eventType === 'IGNITION_ON' ? 'Encendido activado' : 'Encendido desactivado',
-          latitude: fix.latitude,
-          longitude: fix.longitude,
-          speed: fix.speed,
-          timestamp: fix.timestamp,
-          gpsDeviceId: device.id,
-        },
+      await recordEvent(device, {
+        type: eventType,
+        severity: 'INFO',
+        message: eventType === 'IGNITION_ON' ? 'Encendido activado' : 'Encendido desactivado',
+        latitude: fix.latitude,
+        longitude: fix.longitude,
+        speed: fix.speed,
+        timestamp: fix.timestamp,
       });
       result.events.push(`evento:${eventType}`);
     }
     if (fix.ignition !== undefined) lastIgnition = fix.ignition;
 
     if (geofences.length > 0) {
-      const changes = await evaluateGeofences(device.id, fix, name, type, geofences);
+      const changes = await evaluateGeofences(device, fix, name, type, geofences);
       result.events.push(...changes.map((c) => `geocerca:${c}`));
     }
 
-    const overspeed = await evaluateOverspeed(device.id, fix);
+    const overspeed = await evaluateOverspeed(device, fix);
     if (overspeed) result.events.push(`evento:${overspeed}`);
 
-    const lowBattery = await evaluateLowBattery(device.id, fix, fix.voltage);
+    const lowBattery = await evaluateLowBattery(device, fix, fix.voltage);
     if (lowBattery) result.events.push(`evento:${lowBattery}`);
   }
 
@@ -373,6 +352,10 @@ export async function ingestFixes(
       await prisma.machine.update({ where: { id: device.machineId }, data: { status } });
     }
     result.unitStatus = status;
+  }
+
+  if (result.firstFix && result.latestFix) {
+    await refreshWorkSessions(device, result.firstFix.timestamp, result.latestFix.timestamp).catch((err) => console.error('[SESIONES]', err));
   }
 
   if (result.inserted > 0) {

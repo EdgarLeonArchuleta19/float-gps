@@ -25,7 +25,7 @@ export default function FleetTable({ units, actions }: { units: FleetUnit[]; act
         <Pressable
           key={u.id}
           onPress={() => openUnit(u)}
-          className={`flex-row items-center px-4 py-3 ${i < units.length - 1 ? `border-b ${t.border}` : ''} active:opacity-70`}
+          className={`flex-row items-center px-4 py-3 ${i < units.length - 1 ? `border-b ${t.border}` : ''} ${t.press}`}
         >
           <View className="flex-[3] flex-row items-center gap-3">
             {u.kind === 'machine' ? <Construction size={16} color={t.hex.muted} /> : <Car size={16} color={t.hex.muted} />}

@@ -8,23 +8,25 @@ import { useAuth } from '@/context/AuthContext';
 import { OnNavyTheme } from '@/context/ThemeContext';
 import { useIsDesktop } from '@/hooks/useBreakpoint';
 import { homeRoute } from '@/lib/session';
-import { MAKER_CREDIT } from '@/lib/brand';
+import { MAKER_BRAND } from '@/lib/brand';
 import { ErrorBanner } from '@/components/ui';
 import AnimatedBackdrop from '@/components/brand/AnimatedBackdrop';
 import ForgotPassword from '@/components/login/ForgotPassword';
 import LoginField from '@/components/login/LoginField';
 import LoginButton from '@/components/login/LoginButton';
+import ServerSettings, { ServerLink } from '@/components/login/ServerSettings';
+import { canChangeServer } from '@/lib/apiUrl';
 
 const logoOnNavy = require('../../../assets/images/logo-floa-black.png');
 
 export default function Login() {
-  const { user, restoring, login, isOwner, supportCompany } = useAuth();
+  const { user, staff, restoring, login, support } = useAuth();
   const isDesktop = useIsDesktop();
   const insets = useSafeAreaInsets();
   const params = useLocalSearchParams<{ empresa?: string }>();
   const company = typeof params.empresa === 'string' && params.empresa.trim() ? params.empresa.trim() : null;
 
-  const [view, setView] = useState<'login' | 'forgot'>('login');
+  const [view, setView] = useState<'login' | 'forgot' | 'server'>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -32,7 +34,7 @@ export default function Login() {
   const [error, setError] = useState('');
   const [attempt, setAttempt] = useState(0);
 
-  if (!restoring && user) return <Redirect href={homeRoute(isOwner, !!supportCompany)} />;
+  if (!restoring && (user || staff)) return <Redirect href={homeRoute(!!staff, !!support)} />;
 
   const submit = async () => {
     setAttempt((n) => n + 1);
@@ -49,7 +51,9 @@ export default function Login() {
   };
 
   const form =
-    view === 'forgot' ? (
+    view === 'server' ? (
+      <ServerSettings onBack={() => setView('login')} />
+    ) : view === 'forgot' ? (
       <ForgotPassword
         initialEmail={email}
         onBack={(confirmedEmail) => {
@@ -107,6 +111,7 @@ export default function Login() {
           </Pressable>
         </View>
         <LoginButton label="Entrar" loadingLabel="Entrando…" onPress={submit} loading={loading} />
+        {canChangeServer ? <ServerLink onPress={() => setView('server')} /> : null}
       </View>
     );
 
@@ -126,7 +131,7 @@ export default function Login() {
             </View>
             {form}
           </View>
-          <Text className="text-[12px] text-center text-white/45 pt-10">{MAKER_CREDIT}</Text>
+          <Text className="text-[12px] text-center text-white/45 pt-10">{MAKER_BRAND}</Text>
         </ScrollView>
       </KeyboardAvoidingView>
     </OnNavyTheme>

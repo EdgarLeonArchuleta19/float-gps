@@ -6,6 +6,7 @@ import { Card } from '@/components/ui';
 import { NUMERIC, type SortKey } from './sorting';
 import type { Totals } from './ReportTotals';
 import type { UnitSummary } from './summary';
+import { usePlan } from '@/hooks/usePlan';
 
 type Column = { label: string; flex: number; sort?: SortKey; value: (s: UnitSummary) => string };
 
@@ -31,6 +32,8 @@ export default function SummaryTable({
   onSort: (key: SortKey) => void;
 }) {
   const { t } = useTheme();
+  const { isPersonal } = usePlan();
+  const columns = isPersonal ? COLUMNS.filter((c) => c.sort !== 'offHoursKm') : COLUMNS;
   const head = `text-[11px] font-semibold uppercase tracking-wide`;
   const cell = `text-[13px] text-right ${t.text}`;
   const totalRow: UnitSummary = { unitName: 'Total', ...totals };
@@ -38,7 +41,7 @@ export default function SummaryTable({
     <Card className="overflow-hidden">
       <View className={`flex-row items-center px-4 py-2.5 border-b ${t.border} ${t.input}`}>
         <Text className={`${head} flex-[3] ${t.muted}`}>Unidad</Text>
-        {COLUMNS.map((c) => {
+        {columns.map((c) => {
           const active = c.sort === sort;
           const label = (
             <Text className={`${head} text-right ${active ? t.text : t.muted}`} numberOfLines={1}>
@@ -62,7 +65,7 @@ export default function SummaryTable({
           <Text className={`text-[13px] font-semibold flex-[3] ${t.text}`} numberOfLines={1}>
             {s.unitName}
           </Text>
-          {COLUMNS.map((c) => (
+          {columns.map((c) => (
             <Text
               key={c.label}
               className={`${cell} ${c.sort === 'alerts' && s.alerts ? 'text-accent font-semibold' : ''}`}
@@ -76,7 +79,7 @@ export default function SummaryTable({
       ))}
       <View className={`flex-row items-center px-4 py-3 ${t.input}`}>
         <Text className={`text-[13px] font-bold flex-[3] ${t.text}`}>Total ({totals.units})</Text>
-        {COLUMNS.map((c) => (
+        {columns.map((c) => (
           <Text key={c.label} className={`${cell} font-bold`} style={[NUMERIC, { flex: c.flex }]} numberOfLines={1}>
             {c.label === 'Días' ? '' : c.value(totalRow)}
           </Text>

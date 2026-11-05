@@ -16,6 +16,8 @@ import UnitRow from '@/components/shared/UnitRow';
 import Pagination from '@/components/shared/Pagination';
 import StatusFilter, { type StatusView } from '@/components/shared/StatusFilter';
 import FleetTable from '@/components/fleet/FleetTable';
+import AppearanceSheet from '@/components/units/AppearanceSheet';
+import { usePlan } from '@/hooks/usePlan';
 
 type KindFilter = 'all' | 'vehicle' | 'machine';
 
@@ -29,12 +31,20 @@ const STATUS_FILTERS: { key: 'ALL' | FleetUnit['status']; label: string }[] = [
 
 export default function Fleet() {
   const isDesktop = useIsDesktop();
+  const { isPersonal, isSupport, maxUnits } = usePlan();
   const canAdmin = useCanAdmin();
-  const { units: allUnits, loading, error, refreshing, refresh } = useFleet(30000, canAdmin ? 'all' : 'active');
+  const [lookUnit, setLookUnit] = useState<FleetUnit | null>(null);
+  const { units: allUnits, loading, error, refreshing, refresh } = useFleet(30000, isSupport ? 'all' : 'active');
   const [view, setView] = useState<StatusView>('active');
   const units = useMemo(() => allUnits.filter((u) => u.isActive === (view === 'active')), [allUnits, view]);
   const [kind, setKind] = useState<KindFilter>('all');
   const [status, setStatus] = useState<'ALL' | FleetUnit['status']>('ALL');
+  const [group, setGroup] = useState('all');
+  const groups = useMemo(() => {
+    const seen = new Map<string, { id: string; name: string; count: number }>();
+    for (const u of units) if (u.group) seen.set(u.group.id, { id: u.group.id, name: u.group.name, count: (seen.get(u.group.id)?.count || 0) + 1 });
+    return [...seen.values()].sort((a, b) => a.name.localeCompare(b.name));
+  }, [units]);
   const [search, setSearch] = useState('');
 
   const filtered = useMemo(() => {
@@ -43,15 +53,20 @@ export default function Fleet() {
       (u) =>
         (kind === 'all' || u.kind === kind) &&
         (status === 'ALL' || u.status === status) &&
+        (group === 'all' || (group === 'none' ? !u.group : u.group?.id === group)) &&
         (!q || [u.name, u.plate, u.brand, u.model, u.gpsDevice?.imei].some((v) => v?.toLowerCase().includes(q)))
     );
-  }, [units, kind, status, search]);
+  }, [units, kind, status, group, search]);
 
-  const { pageItems, pager } = usePagination(filtered, `${view}|${kind}|${status}|${search}`);
+  const { pageItems, pager } = usePagination(filtered, `${view}|${kind}|${status}|${group}|${search}`);
   const vehicles = units.filter((u) => u.kind === 'vehicle').length;
+  const atLimit = maxUnits !== null && allUnits.length >= maxUnits;
 
   const unitActions = (u: FleetUnit) => {
     const unitApi = u.kind === 'vehicle' ? api.vehicles : api.machines;
+    if (!isSupport) {
+      return u.kind === 'vehicle' ? <ActionIcon icon={Pencil} label={`Personalizar ${u.name}`} onPress={() => setLookUnit(u)} /> : null;
+    }
     return (
       <>
         {u.kind === 'vehicle' ? <ActionIcon icon={Pencil} label={`Editar ${u.name}`} onPress={() => router.push(`/fleet/${u.id}` as never)} /> : null}
@@ -71,15 +86,19 @@ export default function Fleet() {
   return (
     <Screen refreshing={refreshing} onRefresh={refresh}>
       <PageHeader
-        title="Flota"
+        title={isPersonal ? 'Mis vehículos' : 'Flota'}
         back="/more"
-        subtitle={`${vehicles} vehículos · ${units.length - vehicles} máquinas`}
-        right={canAdmin ? <Button label="Nueva" icon={Plus} compact onPress={() => router.push('/fleet/new')} /> : undefined}
+        subtitle={
+          isPersonal
+            ? `${allUnits.length}${maxUnits !== null ? ` de ${maxUnits}` : ''} vehículos en tu plan`
+            : `${vehicles} vehículos · ${units.length - vehicles} máquinas${maxUnits !== null ? ` · límite ${maxUnits}` : ''}`
+        }
+        right={isSupport ? <Button label="Nueva" icon={Plus} compact onPress={() => router.push('/fleet/new')} disabled={atLimit} /> : undefined}
       />
       <View className="gap-3 mb-4">
         <Field search placeholder="Buscar por nombre, placa o IMEI" value={search} onChangeText={setSearch} />
         <View className="flex-row flex-wrap gap-2">
-          {canAdmin ? (
+          {isSupport ? (
             <StatusFilter
               value={view}
               onChange={setView}
@@ -104,6 +123,18 @@ export default function Fleet() {
             onChange={(v) => setStatus(v as typeof status)}
             options={STATUS_FILTERS.map((f) => ({ value: f.key, label: f.label }))}
           />
+          {groups.length ? (
+            <FilterSelect
+              label="Grupo"
+              value={group}
+              onChange={setGroup}
+              options={[
+                { value: 'all', label: 'Todos', count: units.length },
+                ...groups.map((g) => ({ value: g.id, label: g.name, count: g.count })),
+                { value: 'none', label: 'Sin grupo', count: units.filter((u) => !u.group).length },
+              ]}
+            />
+          ) : null}
         </View>
       </View>
       {error ? <ErrorBanner message={error} /> : null}
@@ -133,6 +164,7 @@ export default function Fleet() {
           <Pagination {...pager} />
         </>
       )}
+      {lookUnit ? <AppearanceSheet unit={lookUnit} visible={!!lookUnit} onClose={() => setLookUnit(null)} onSaved={refresh} /> : null}
     </Screen>
   );
 }

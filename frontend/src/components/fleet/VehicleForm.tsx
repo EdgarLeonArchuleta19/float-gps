@@ -5,7 +5,9 @@ import { Plus, Save } from 'lucide-react-native';
 import { useTheme } from '@/context/ThemeContext';
 import { useToast } from '@/context/ToastContext';
 import { api } from '@/lib/api';
-import type { Vehicle } from '@/lib/types';
+import type { Figure, Vehicle } from '@/lib/types';
+import { NAVY } from '@/lib/brand';
+import { ColorPicker, FigurePicker } from '@/components/units/LookPickers';
 import { Button, Card, Chip, ChipRow, ErrorBanner, Field, SectionTitle } from '@/components/ui';
 
 const TYPES = ['Pickup', 'Sedán', 'SUV', 'Camión', 'Tractocamión', 'Autobús', 'Motocicleta'];
@@ -22,6 +24,8 @@ export default function VehicleForm({ initial }: { initial?: Vehicle }) {
   const [color, setColor] = useState(initial?.color || '');
   const [imei, setImei] = useState(initial?.gpsDevice?.imei || '');
   const [sim, setSim] = useState(initial?.gpsDevice?.simNumber || '');
+  const [figure, setFigure] = useState<Figure | null>(initial?.figure || null);
+  const [iconColor, setIconColor] = useState<string | null>(initial?.iconColor || null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
@@ -40,6 +44,8 @@ export default function VehicleForm({ initial }: { initial?: Vehicle }) {
       vehicleModel: model.trim() || undefined,
       year: year ? Number(year) : undefined,
       color: color.trim() || undefined,
+      figure,
+      iconColor,
       gps: imei.trim() ? { imei: imei.trim(), simNumber: sim.trim() || undefined } : undefined,
     };
     try {
@@ -61,10 +67,10 @@ export default function VehicleForm({ initial }: { initial?: Vehicle }) {
           <Field label="Nombre" placeholder="Ej. Pickup 12" value={name} onChangeText={setName} />
           <Field label="Placa" placeholder="ABC-1234" value={plate} onChangeText={setPlate} autoCapitalize="characters" />
           <View className="gap-1.5">
-            <Text className={`text-[11px] font-semibold uppercase tracking-wider ${t.subtle}`}>Tipo</Text>
+            <Text className={`text-[13px] font-semibold ml-1 ${t.muted}`}>Tipo</Text>
             <ChipRow>
               {types.map((ty) => (
-                <Chip key={ty} label={ty} active={type === ty} onPress={() => setType(ty)} />
+                <Chip key={ty} label={ty} active={type === ty} onPress={() => setType(ty)} surface />
               ))}
             </ChipRow>
           </View>
@@ -86,6 +92,13 @@ export default function VehicleForm({ initial }: { initial?: Vehicle }) {
           </View>
         </View>
       </Card>
+      <SectionTitle>En el mapa</SectionTitle>
+      <Card className="p-4">
+        <View className="gap-4">
+          <FigurePicker value={figure} kind="vehicle" color={iconColor || NAVY} onChange={setFigure} />
+          <ColorPicker value={iconColor} onChange={setIconColor} />
+        </View>
+      </Card>
       <SectionTitle>GPS</SectionTitle>
       <Card className="p-4">
         <View className="gap-3">
@@ -93,9 +106,6 @@ export default function VehicleForm({ initial }: { initial?: Vehicle }) {
           <Field label="Número SIM" value={sim} onChangeText={setSim} keyboardType="phone-pad" />
         </View>
       </Card>
-      {initial?.gpsDevice ? (
-        <Text className={`text-[11.5px] mt-2 ${t.subtle}`}>Para cambiar el GPS de esta unidad, contacta a soporte.</Text>
-      ) : null}
       <Button label={initial ? 'Guardar cambios' : 'Registrar unidad'} icon={initial ? Save : Plus} onPress={save} loading={saving} disabled={!canSave} className="mt-4" />
     </View>
   );

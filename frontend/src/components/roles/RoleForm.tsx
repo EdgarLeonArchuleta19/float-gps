@@ -2,19 +2,20 @@ import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { Check, ListChecks, Lock, Map, Save, Truck } from 'lucide-react-native';
-import type { LucideIcon } from 'lucide-react-native';
 import { useTheme } from '@/context/ThemeContext';
+import { ORANGE } from '@/lib/brand';
 import { useToast } from '@/context/ToastContext';
 import { useFleet } from '@/hooks/useFleet';
 import { api, type Role } from '@/lib/api';
 import { PERMISSION_OPTIONS, type Permission } from '@/lib/permissions';
 import { Button, Card, ErrorBanner, Field, Loading, SectionTitle } from '@/components/ui';
 import UnitMultiSelect from '@/components/shared/UnitMultiSelect';
+import ScopeOption from '@/components/shared/ScopeOption';
 import LifecycleActions from '@/components/shared/LifecycleActions';
 
 function CheckBox({ on }: { on: boolean }) {
   const { t } = useTheme();
-  const accent = t.isDark ? '#f87203' : '#032347';
+  const accent = ORANGE;
   return (
     <View
       className="w-5 h-5 rounded-md items-center justify-center border-2"
@@ -22,41 +23,6 @@ function CheckBox({ on }: { on: boolean }) {
     >
       {on ? <Check size={13} color="#ffffff" strokeWidth={3} /> : null}
     </View>
-  );
-}
-
-function ScopeOption({
-  icon: Icon,
-  title,
-  hint,
-  active,
-  disabled,
-  onPress,
-}: {
-  icon: LucideIcon;
-  title: string;
-  hint: string;
-  active: boolean;
-  disabled?: boolean;
-  onPress: () => void;
-}) {
-  const { t } = useTheme();
-  const accent = t.isDark ? '#f87203' : '#032347';
-  return (
-    <Pressable
-      onPress={onPress}
-      disabled={disabled}
-      accessibilityRole="radio"
-      accessibilityState={{ selected: active, disabled }}
-      className={`flex-1 flex-row items-center gap-3 rounded-2xl border p-3.5 ${t.card} ${active ? '' : t.border} active:opacity-80`}
-      style={active ? { borderColor: accent, borderWidth: 2 } : undefined}
-    >
-      <Icon size={19} color={active ? accent : t.hex.muted} />
-      <View className="flex-1">
-        <Text className={`text-[13.5px] font-semibold ${t.text}`}>{title}</Text>
-        <Text className={`text-[11.5px] ${t.muted}`}>{hint}</Text>
-      </View>
-    </Pressable>
   );
 }
 
@@ -125,7 +91,7 @@ export default function RoleForm({ initial }: { initial?: Role }) {
             onPress={() => setPermissions(allPermissions ? [] : PERMISSION_OPTIONS.map((p) => p.key))}
             className="py-1"
           >
-            <Text className="text-[12px] font-semibold" style={{ color: t.isDark ? '#f87203' : '#032347' }}>
+            <Text className={`text-[12px] font-bold ${t.brandText}`}>
               {allPermissions ? 'Quitar todas' : 'Seleccionar todas'}
             </Text>
           </Pressable>
@@ -151,7 +117,7 @@ export default function RoleForm({ initial }: { initial?: Role }) {
               disabled={readOnly}
               accessibilityRole="checkbox"
               accessibilityState={{ checked: on, disabled: readOnly }}
-              className={`flex-row items-center gap-3 px-4 py-3 active:opacity-70 ${i < PERMISSION_OPTIONS.length - 1 ? `border-b ${t.border}` : ''}`}
+              className={`flex-row items-center gap-3 px-4 py-3.5 ${t.press} ${i < PERMISSION_OPTIONS.length - 1 ? `border-b ${t.border}` : ''}`}
             >
               <p.icon size={18} color={on ? t.hex.primary : t.hex.muted} />
               <View className="flex-1">
@@ -171,7 +137,7 @@ export default function RoleForm({ initial }: { initial?: Role }) {
       </View>
       {!allUnits ? (
         <Card className="p-3">
-          {loadingUnits && !units.length ? <Loading /> : <UnitMultiSelect units={units} selected={selected} onChange={setSelected} />}
+          {loadingUnits && !units.length ? <Loading /> : <UnitMultiSelect units={units} selected={selected} onChange={setSelected} onSurface />}
         </Card>
       ) : null}
 

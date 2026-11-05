@@ -1,3 +1,7 @@
+export type Plan = 'PERSONAL' | 'EMPRESA';
+
+export type Figure = 'sedan' | 'suv' | 'pickup' | 'truck' | 'moto' | 'tractor';
+
 export interface User {
   id: string;
   email: string;
@@ -8,6 +12,9 @@ export interface User {
   companyId?: string | null;
   companyName?: string | null;
   companySlug?: string | null;
+  plan?: Plan | null;
+  maxUnits?: number | null;
+  mustChangePassword?: boolean;
 }
 
 export interface Vehicle {
@@ -19,11 +26,14 @@ export interface Vehicle {
   vehicleModel?: string;
   year?: number;
   color?: string;
+  figure?: Figure | null;
+  iconColor?: string | null;
   status: 'MOVING' | 'STOPPED' | 'OFFLINE' | 'ALERT';
   isActive: boolean;
   gpsDevice?: GpsDevice | null;
   currentPosition?: GpsPosition | null;
   todaySession?: WorkSession | null;
+  group?: GroupRef | null;
 }
 
 export interface Machine {
@@ -39,6 +49,7 @@ export interface Machine {
   gpsDevice?: GpsDevice | null;
   currentPosition?: GpsPosition | null;
   todaySession?: WorkSession | null;
+  group?: GroupRef | null;
 }
 
 interface GpsDevice {
@@ -90,8 +101,68 @@ export interface Geofence {
   centerLng?: number;
   points?: any;
   unitsInside?: number;
-  unitsOutside?: number;
-  totalUnits?: number;
+  alertOn: GeofenceAlertOn;
+  allUnits: boolean;
+  vehicleIds: string[];
+  machineIds: string[];
+  groupIds: string[];
+}
+
+export type GeofenceAlertOn = 'ENTER' | 'EXIT' | 'BOTH';
+
+export interface GroupRef {
+  id: string;
+  name: string;
+  color: string;
+}
+
+export interface UnitGroup extends GroupRef {
+  isActive: boolean;
+  vehicleIds: string[];
+  machineIds: string[];
+  unitCount: number;
+}
+
+export type MaintenanceKind = 'OIL' | 'TIRES' | 'BRAKES' | 'SERVICE' | 'INSURANCE' | 'TAX' | 'VERIFICATION' | 'OTHER';
+export type MaintenanceStatus = 'OK' | 'SOON' | 'DUE';
+
+export interface Maintenance {
+  id: string;
+  kind: MaintenanceKind;
+  title: string;
+  intervalKm: number | null;
+  intervalDays: number | null;
+  lastDoneAt: string;
+  notes: string | null;
+  isActive: boolean;
+  vehicleId: string | null;
+  machineId: string | null;
+  vehicle?: { id: string; name: string; plate: string } | null;
+  machine?: { id: string; name: string; serialNumber: string | null } | null;
+  kmSince: number;
+  kmLeft: number | null;
+  dueAt: string | null;
+  daysLeft: number | null;
+  status: MaintenanceStatus;
+}
+
+export interface MaintenanceLog {
+  id: string;
+  doneAt: string;
+  km: number | null;
+  cost: number | null;
+  notes: string | null;
+  doneBy: string;
+}
+
+export type AlertType = 'GEOFENCE' | 'SOS' | 'OVERSPEED' | 'LOW_BATTERY' | 'IGNITION' | 'MAINTENANCE';
+
+export interface NotificationSettings {
+  pushEnabled: boolean;
+  emailEnabled: boolean;
+  types: AlertType[];
+  devices: number;
+  channels: { webPush: boolean; email: boolean };
 }
 
 interface WorkSession {
@@ -150,7 +221,7 @@ export interface PaginatedResponse<T> {
   };
 }
 
-type UnitKind = 'vehicle' | 'machine';
+export type UnitKind = 'vehicle' | 'machine';
 
 export interface FleetUnit {
   id: string;
@@ -164,9 +235,12 @@ export interface FleetUnit {
   color?: string;
   status: Vehicle['status'];
   isActive: boolean;
+  figure?: Figure | null;
+  iconColor?: string | null;
   gpsDevice?: GpsDevice | null;
   position: GpsPosition | null;
   todaySession?: WorkSession | null;
+  group?: GroupRef | null;
 }
 
 export interface ReportRow {

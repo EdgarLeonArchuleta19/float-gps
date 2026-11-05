@@ -82,6 +82,14 @@ export function toDateInput(d: Date): string {
   return `${y}-${m}-${day}`;
 }
 
+export function localDayRange(dateInput: string) {
+  const [y, m, d] = dateInput.split('-').map(Number);
+  return {
+    startDate: new Date(y, m - 1, d, 0, 0, 0, 0).toISOString(),
+    endDate: new Date(y, m - 1, d, 23, 59, 59, 999).toISOString(),
+  };
+}
+
 export function shiftDate(value: string, days: number): string {
   const [y, m, d] = value.split('-').map(Number);
   const date = new Date(y, m - 1, d);

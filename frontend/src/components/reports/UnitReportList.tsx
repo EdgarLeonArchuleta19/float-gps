@@ -4,9 +4,11 @@ import { formatHours } from '@/lib/format';
 import { Card } from '@/components/ui';
 import { NUMERIC } from './sorting';
 import type { UnitSummary } from './summary';
+import { usePlan } from '@/hooks/usePlan';
 
 export default function UnitReportList({ items }: { items: UnitSummary[] }) {
   const { t } = useTheme();
+  const { isPersonal } = usePlan();
   return (
     <Card>
       {items.map((s, i) => {
@@ -15,7 +17,7 @@ export default function UnitReportList({ items }: { items: UnitSummary[] }) {
           { label: 'Movimiento', value: formatHours(s.moving) },
           { label: 'Ralentí', value: formatHours(s.idle) },
           { label: 'F. horario', value: `${s.offHoursKm.toFixed(1)} km` },
-        ];
+        ].filter((c) => !isPersonal || c.label !== 'F. horario');
         return (
           <View key={s.unitName} className={`px-4 py-3 ${i < items.length - 1 ? `border-b ${t.border}` : ''}`}>
             <View className="flex-row items-baseline gap-3">
@@ -35,7 +37,7 @@ export default function UnitReportList({ items }: { items: UnitSummary[] }) {
             <View className="flex-row mt-2">
               {cells.map((c) => (
                 <View key={c.label} className="flex-1">
-                  <Text className={`text-[10px] uppercase tracking-wide ${t.subtle}`} numberOfLines={1}>
+                  <Text className={`text-[11px] ${t.muted}`} numberOfLines={1}>
                     {c.label}
                   </Text>
                   <Text className={`text-[12.5px] font-semibold ${t.text}`} style={NUMERIC} numberOfLines={1}>

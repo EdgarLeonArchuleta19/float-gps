@@ -3,10 +3,11 @@ import cors from 'cors';
 import path from 'path';
 import fs from 'fs';
 import { errorHandler } from './middleware/errorHandler';
-import { authRequired, adminRequired, superAdminRequired, ownerIpAllowed, permissionRequired } from './middleware/auth';
+import { authRequired, adminRequired, permissionRequired, historyWindow, planRequired } from './middleware/auth';
+import { staffNetworkAllowed, staffNetworkRequired } from './middleware/staffAuth';
 import { config } from './config';
 import authRoutes from './routes/auth.routes';
-import ownerRoutes from './routes/owner.routes';
+import staffRoutes from './routes/staff.routes';
 import dashboardRoutes from './routes/dashboard.routes';
 import vehicleRoutes from './routes/vehicle.routes';
 import machineRoutes from './routes/machine.routes';
@@ -18,6 +19,9 @@ import userRoutes from './routes/user.routes';
 import ingestRoutes from './routes/ingest.routes';
 import companyRoutes from './routes/company.routes';
 import roleRoutes from './routes/role.routes';
+import groupRoutes from './routes/group.routes';
+import maintenanceRoutes from './routes/maintenance.routes';
+import notificationRoutes from './routes/notification.routes';
 import { handleEngineCommand } from './controllers/commands.controller';
 
 const app = express();
@@ -63,7 +67,7 @@ app.use((_req, res, next) => {
   }
   next();
 });
-app.use('/api/owner', (_req, res, next) => {
+app.use('/api/staff', (_req, res, next) => {
   res.setHeader('Cache-Control', 'no-store');
   next();
 });
@@ -77,50 +81,70 @@ app.get('/api/health', (_req, res) => {
 });
 
 app.use('/api/ingest', ingestRoutes);
-app.use('/api/auth/owner-login', ownerIpAllowed);
 app.use('/api/auth', authRoutes);
-app.use('/api/owner', ownerIpAllowed, authRequired, superAdminRequired, ownerRoutes);
+app.use('/api/staff', staffNetworkRequired, staffRoutes);
 app.use('/api/dashboard', authRequired, permissionRequired('dashboard', 'alerts'), dashboardRoutes);
 app.use('/api/vehicles', authRequired, vehicleRoutes);
 app.use('/api/machines', authRequired, machineRoutes);
-app.use('/api/gps', authRequired, gpsRoutes);
-app.use('/api/events', authRequired, permissionRequired('alerts', 'dashboard'), eventRoutes);
+app.use('/api/gps', authRequired, historyWindow, gpsRoutes);
+app.use('/api/events', authRequired, permissionRequired('alerts', 'dashboard'), historyWindow, eventRoutes);
 app.use('/api/geofences', authRequired, geofenceRoutes);
-app.use('/api/reports', authRequired, reportRoutes);
-app.use('/api/users', authRequired, adminRequired, userRoutes);
-app.use('/api/roles', authRequired, adminRequired, roleRoutes);
+app.use('/api/reports', authRequired, historyWindow, reportRoutes);
+app.use('/api/users', authRequired, adminRequired, planRequired('EMPRESA'), userRoutes);
+app.use('/api/roles', authRequired, adminRequired, planRequired('EMPRESA'), roleRoutes);
 app.use('/api/company', authRequired, companyRoutes);
+app.use('/api/groups', authRequired, planRequired('EMPRESA'), groupRoutes);
+app.use('/api/maintenance', authRequired, permissionRequired('maintenance'), maintenanceRoutes);
+app.use('/api/notifications', authRequired, notificationRoutes);
 app.post('/api/commands/engine-stop', authRequired, permissionRequired('engine'), handleEngineCommand);
 
-// The client app is the Expo universal build in frontend/ (`npx expo export -p web`).
-const webDistPath = path.resolve(__dirname, '../../frontend/dist');
-const localDistPath = path.resolve(__dirname, '../public');
+// Two web builds from frontend/: dist is the customer app (the console is
+// stubbed out of it) and dist-console is the floaGPS team console. With
+// STAFF_HOST set, that host only serves the console and the customer host
+// never serves it; without it (local dev or a single tunnel) the console
+// lives under /console on the same host.
+const clientDist = path.resolve(__dirname, '../../frontend/dist');
+const consoleDist = path.resolve(__dirname, '../../frontend/dist-console');
+const hasClient = fs.existsSync(clientDist);
+const hasConsole = fs.existsSync(consoleDist);
+const serveClient = express.static(clientDist);
+const serveConsole = express.static(consoleDist, { index: false });
+const CONSOLE_PATH = /^\/console(-login)?(\/|$)/;
 
-let staticPath: string | null = null;
-if (fs.existsSync(webDistPath)) {
-  staticPath = webDistPath;
-} else if (fs.existsSync(localDistPath)) {
-  staticPath = localDistPath;
+function isConsoleHost(req: express.Request) {
+  return !!config.staffHost && req.hostname.toLowerCase() === config.staffHost;
 }
 
-if (staticPath) {
-  app.use(express.static(staticPath));
-  app.get('*', (req, res, next) => {
-    if (req.path.startsWith('/api')) {
-      return next();
-    }
-    res.sendFile(path.join(staticPath!, 'index.html'));
+app.use((req, res, next) => {
+  if (req.path.startsWith('/api')) return next();
+  if (isConsoleHost(req)) {
+    if (!hasConsole || !staffNetworkAllowed(req)) return res.status(404).end();
+    return serveConsole(req, res, next);
+  }
+  if (!hasClient) return next();
+  return serveClient(req, res, () => {
+    if (!config.staffHost && hasConsole && staffNetworkAllowed(req)) return serveConsole(req, res, next);
+    next();
   });
-} else {
-  app.get('/', (_req, res) => {
-    res.json({
-      name: 'Floa GPS API',
-      version: '1.0.0',
-      status: 'running',
-      message: 'Build web no detectado. Corre `npx expo export -p web` en frontend para servirlo desde aquí.',
-    });
+});
+
+app.get('*', (req, res, next) => {
+  if (req.path.startsWith('/api')) return next();
+  if (isConsoleHost(req)) {
+    if (!CONSOLE_PATH.test(req.path)) return res.redirect('/console');
+    return res.sendFile(path.join(consoleDist, 'index.html'));
+  }
+  if (CONSOLE_PATH.test(req.path)) {
+    if (config.staffHost || !hasConsole || !staffNetworkAllowed(req)) return res.status(404).end();
+    return res.sendFile(path.join(consoleDist, 'index.html'));
+  }
+  if (hasClient) return res.sendFile(path.join(clientDist, 'index.html'));
+  res.json({
+    name: 'Floa GPS API',
+    status: 'running',
+    message: 'Build web no detectado. Corre `npm run build:web` en frontend para servirlo desde aquí.',
   });
-}
+});
 
 app.use(errorHandler);
 

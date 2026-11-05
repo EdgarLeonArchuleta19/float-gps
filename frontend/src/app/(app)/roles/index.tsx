@@ -61,10 +61,10 @@ export default function Roles() {
               <Pressable
                 key={r.id}
                 onPress={() => router.push(`/roles/${r.id}` as never)}
-                className={`flex-row items-center gap-3 px-4 py-3 active:opacity-70 ${i < pageItems.length - 1 ? `border-b ${t.border}` : ''}`}
+                className={`flex-row items-center gap-3 px-4 py-3.5 ${t.press}`}
               >
-                <View className={`w-10 h-10 rounded-xl items-center justify-center ${t.input}`}>
-                  <ShieldCheck size={18} color={t.hex.primary} />
+                <View className={`w-10 h-10 rounded-full items-center justify-center ${t.tonal}`}>
+                  <ShieldCheck size={18} color={t.hex.brand} />
                 </View>
                 <View className="flex-1 min-w-0">
                   <View className="flex-row items-center gap-2">

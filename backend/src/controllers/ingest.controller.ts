@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import crypto from 'crypto';
 import { PrismaClient } from '@prisma/client';
 import { config } from '../config';
-import { ingestFixes, findDevice } from '../tracker/ingest';
+import { ingestFixes, findDevice, recordEvent } from '../tracker/ingest';
 import {
   TraccarPosition,
   TraccarDevice,
@@ -67,17 +67,14 @@ export async function handleTraccarWebhook(req: Request, res: Response) {
 
       if (eventType === 'alarm' || eventType === 'sos' || event.attributes?.alarm) {
         const alarmDesc = (event.attributes?.alarm as string) || 'Alarma recibida';
-        await prisma.trackingEvent.create({
-          data: {
-            type: alarmDesc.toLowerCase().includes('sos') ? 'SOS' : 'ALARM',
-            severity: 'CRITICAL',
-            message: `Alarma Traccar: ${alarmDesc}`,
-            latitude: position?.latitude ?? null,
-            longitude: position?.longitude ?? null,
-            speed: position?.speed ?? null,
-            timestamp: eventTime,
-            gpsDeviceId: matchedDevice.id,
-          },
+        await recordEvent(matchedDevice, {
+          type: alarmDesc.toLowerCase().includes('sos') ? 'SOS' : 'ALARM',
+          severity: 'CRITICAL',
+          message: `Alarma Traccar: ${alarmDesc}`,
+          latitude: position?.latitude ?? null,
+          longitude: position?.longitude ?? null,
+          speed: position?.speed ?? null,
+          timestamp: eventTime,
         }).catch(() => {});
       }
     }

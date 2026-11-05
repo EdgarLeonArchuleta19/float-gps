@@ -14,7 +14,7 @@ export default function LoginField({
     <View className="gap-2">
       <Text className="text-[12.5px] font-semibold text-white/85">{label}</Text>
       <View
-        className="flex-row items-center gap-3 rounded-2xl px-4 h-14"
+        className="flex-row items-center gap-3 rounded-xl px-4 h-14"
         style={{ borderWidth: 1.5, borderColor: focused ? accent : 'rgba(255,255,255,0.16)', backgroundColor: 'rgba(255,255,255,0.08)' }}
       >
         <Icon size={18} color={focused ? accent : 'rgba(255,255,255,0.6)'} />

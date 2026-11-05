@@ -1,19 +1,80 @@
 import { useEffect, useMemo, useRef } from 'react';
-import { Platform, View } from 'react-native';
-import MapView, { Circle, Marker, Polyline, PROVIDER_DEFAULT, Region } from 'react-native-maps';
+import { Text, View } from 'react-native';
+import {
+  Camera,
+  GeoJSONSource,
+  Layer,
+  Map,
+  Marker,
+  type CameraRef,
+  type LngLat,
+  type LngLatBounds,
+  type StyleSpecification,
+} from '@maplibre/maplibre-react-native';
 import { useTheme } from '@/context/ThemeContext';
-import { DARK_GOOGLE_STYLE } from './darkGoogleStyle';
-import NativeUnitMarker from './NativeUnitMarker';
-import type { FleetMapProps, MapCamera } from './types';
+import VehicleIcon from '@/components/shared/VehicleIcon';
+import type { FleetMapProps, MapCamera, MapCircle, MapMarker, MapRoute } from './types';
+import { ORANGE } from '@/lib/brand';
 
-const DEFAULT_REGION: Region = { latitude: 24.7994, longitude: -107.394, latitudeDelta: 0.15, longitudeDelta: 0.15 };
+const STREET_STYLE = 'https://tiles.openfreemap.org/styles/positron';
+const DARK_STYLE = 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json';
+const SATELLITE_STYLE: StyleSpecification = {
+  version: 8,
+  sources: {
+    satellite: {
+      type: 'raster',
+      tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
+      tileSize: 256,
+      attribution: 'Esri, Maxar, Earthstar Geographics',
+    },
+  },
+  layers: [{ id: 'satellite', type: 'raster', source: 'satellite' }],
+};
+const DEFAULT_CENTER: LngLat = [-107.394, 24.7994];
+const DEFAULT_PADDING = { top: 60, bottom: 60, left: 40, right: 40 };
+const EARTH_RADIUS_M = 6378137;
 
 function isValid(lat: number, lng: number) {
   return Number.isFinite(lat) && Number.isFinite(lng) && Math.abs(lat) <= 90 && Math.abs(lng) <= 180 && !(lat === 0 && lng === 0);
 }
 
-function zoomFromRegion(region: Region) {
-  return Math.log2(360 / Math.max(region.longitudeDelta, 0.000001));
+function circleRing(c: MapCircle): LngLat[] {
+  const latRad = (c.lat * Math.PI) / 180;
+  return Array.from({ length: 65 }, (_, i) => {
+    const a = (i / 64) * Math.PI * 2;
+    const dLat = ((c.radius * Math.cos(a)) / EARTH_RADIUS_M) * (180 / Math.PI);
+    const dLng = ((c.radius * Math.sin(a)) / (EARTH_RADIUS_M * Math.cos(latRad))) * (180 / Math.PI);
+    return [c.lng + dLng, c.lat + dLat];
+  });
+}
+
+function routeCoords(r: MapRoute): LngLat[] {
+  return r.path.filter(([lat, lng]) => isValid(lat, lng)).map(([lat, lng]) => [lng, lat]);
+}
+
+function boundsOf(coords: LngLat[]): LngLatBounds {
+  const lngs = coords.map((c) => c[0]);
+  const lats = coords.map((c) => c[1]);
+  return [Math.min(...lngs), Math.min(...lats), Math.max(...lngs), Math.max(...lats)];
+}
+
+function UnitMarker({ marker, onPress }: { marker: MapMarker; onPress?: (id: string) => void }) {
+  return (
+    <Marker id={marker.id} lngLat={[marker.lng, marker.lat]} anchor="center" onPress={() => onPress?.(marker.id)}>
+      <View style={{ alignItems: 'center' }}>
+        {marker.selected ? (
+          <View style={{ backgroundColor: '#1b1b1f', borderColor: '#33343c', borderWidth: 1, borderRadius: 999, paddingHorizontal: 8, paddingVertical: 3, marginBottom: 2 }}>
+            <Text style={{ color: '#ffffff', fontSize: 11, fontWeight: '600' }} numberOfLines={1}>
+              {marker.name}
+            </Text>
+          </View>
+        ) : null}
+        <View style={{ borderRadius: 999, borderWidth: marker.selected ? 2 : 0, borderColor: ORANGE, backgroundColor: marker.selected ? 'rgba(248,114,3,0.22)' : 'transparent' }}>
+          <VehicleIcon kind={marker.kind} figure={marker.figure} color={marker.color} statusColor={marker.statusColor} size={marker.selected ? 40 : 34} heading={marker.heading ?? 0} />
+        </View>
+      </View>
+    </Marker>
+  );
 }
 
 export default function FleetMap({
@@ -30,37 +91,63 @@ export default function FleetMap({
   style,
 }: FleetMapProps) {
   const { t } = useTheme();
-  const mapRef = useRef<MapView>(null);
-  const lastCamera = useRef<string | null>(null);
+  const cameraRef = useRef<CameraRef>(null);
   const ready = useRef(false);
+  const lastCamera = useRef<string | null>(null);
   const pendingCamera = useRef<MapCamera | null>(null);
 
-  const allCoords = useMemo(() => {
-    const coords: { latitude: number; longitude: number }[] = [];
-    markers.forEach((m) => isValid(m.lat, m.lng) && coords.push({ latitude: m.lat, longitude: m.lng }));
-    routes.forEach((r) => r.path.forEach(([lat, lng]) => isValid(lat, lng) && coords.push({ latitude: lat, longitude: lng })));
-    points.forEach((p) => isValid(p.lat, p.lng) && coords.push({ latitude: p.lat, longitude: p.lng }));
-    circles.forEach((c) => {
-      if (!isValid(c.lat, c.lng)) return;
-      const dLat = c.radius / 111320;
-      const dLng = c.radius / (111320 * Math.cos((c.lat * Math.PI) / 180));
-      coords.push({ latitude: c.lat + dLat, longitude: c.lng + dLng }, { latitude: c.lat - dLat, longitude: c.lng - dLng });
-    });
-    return coords;
-  }, [markers, routes, points, circles]);
+  const mapStyle = layer === 'satellite' ? SATELLITE_STYLE : t.isDark ? DARK_STYLE : STREET_STYLE;
+  const visibleMarkers = markers.filter((m) => isValid(m.lat, m.lng));
+
+  const shapes = useMemo(() => {
+    const validCircles = circles.filter((c) => isValid(c.lat, c.lng) && c.radius > 0);
+    const validRoutes = routes.map((r) => ({ ...r, coords: routeCoords(r) })).filter((r) => r.coords.length > 1);
+    const validPoints = points.filter((p) => isValid(p.lat, p.lng));
+    return {
+      circles: {
+        type: 'FeatureCollection' as const,
+        features: validCircles.map((c) => ({
+          type: 'Feature' as const,
+          properties: { color: c.color },
+          geometry: { type: 'Polygon' as const, coordinates: [circleRing(c)] },
+        })),
+      },
+      routes: {
+        type: 'FeatureCollection' as const,
+        features: validRoutes.map((r) => ({
+          type: 'Feature' as const,
+          properties: { color: r.color, dashed: !!r.dashed },
+          geometry: { type: 'LineString' as const, coordinates: r.coords },
+        })),
+      },
+      points: {
+        type: 'FeatureCollection' as const,
+        features: validPoints.map((p) => ({
+          type: 'Feature' as const,
+          properties: { color: p.color },
+          geometry: { type: 'Point' as const, coordinates: [p.lng, p.lat] },
+        })),
+      },
+      coords: [
+        ...visibleMarkers.map((m): LngLat => [m.lng, m.lat]),
+        ...validRoutes.flatMap((r) => r.coords),
+        ...validPoints.map((p): LngLat => [p.lng, p.lat]),
+        ...validCircles.flatMap((c) => circleRing(c).filter((_, i) => i % 16 === 0)),
+      ],
+    };
+  }, [circles, routes, points, visibleMarkers]);
 
   const applyCamera = (cam: MapCamera) => {
-    const map = mapRef.current;
-    if (!map) return;
-    const pad = cam.padding || { top: 60, bottom: 60, left: 40, right: 40 };
+    const ref = cameraRef.current;
+    if (!ref) return;
     if (cam.type === 'center' && cam.lat !== undefined && cam.lng !== undefined) {
-      map.animateCamera({ center: { latitude: cam.lat, longitude: cam.lng }, zoom: cam.zoom ?? 15 }, { duration: 600 });
+      ref.easeTo({ center: [cam.lng, cam.lat], zoom: cam.zoom ?? 15, padding: cam.padding, duration: 600 });
       return;
     }
-    if (allCoords.length === 1) {
-      map.animateCamera({ center: allCoords[0], zoom: 15 }, { duration: 600 });
-    } else if (allCoords.length > 1) {
-      map.fitToCoordinates(allCoords, { edgePadding: pad, animated: true });
+    if (shapes.coords.length === 1) {
+      ref.easeTo({ center: shapes.coords[0], zoom: 15, duration: 600 });
+    } else if (shapes.coords.length > 1) {
+      ref.fitBounds(boundsOf(shapes.coords), { padding: cam.padding || DEFAULT_PADDING, duration: 600 });
     }
   };
 
@@ -73,11 +160,11 @@ export default function FleetMap({
 
   useEffect(() => {
     if (!follow || !ready.current) return;
-    const m = markers.find((x) => x.id === follow);
-    if (m && isValid(m.lat, m.lng)) mapRef.current?.animateCamera({ center: { latitude: m.lat, longitude: m.lng } }, { duration: 800 });
+    const m = visibleMarkers.find((x) => x.id === follow);
+    if (m) cameraRef.current?.easeTo({ center: [m.lng, m.lat], duration: 800 });
   }, [follow, markers]);
 
-  const onReady = () => {
+  const onLoaded = () => {
     ready.current = true;
     if (pendingCamera.current) {
       applyCamera(pendingCamera.current);
@@ -86,53 +173,55 @@ export default function FleetMap({
   };
 
   return (
-    <View style={[{ flex: 1, overflow: 'hidden' }, style]}>
-      <MapView
-        ref={mapRef}
+    <View style={[{ flex: 1, overflow: 'hidden', backgroundColor: t.hex.screen }, style]}>
+      <Map
         style={{ flex: 1 }}
-        provider={PROVIDER_DEFAULT}
-        initialRegion={DEFAULT_REGION}
-        mapType={layer === 'satellite' ? 'hybrid' : 'standard'}
-        userInterfaceStyle={t.isDark ? 'dark' : 'light'}
-        customMapStyle={Platform.OS === 'android' && t.isDark && layer !== 'satellite' ? DARK_GOOGLE_STYLE : []}
-        rotateEnabled={false}
-        pitchEnabled={false}
-        toolbarEnabled={false}
-        showsCompass={false}
-        onMapReady={onReady}
-        onPanDrag={() => onUserPan?.()}
-        onRegionChangeComplete={(region) => onMove?.({ lat: region.latitude, lng: region.longitude, zoom: zoomFromRegion(region) })}
+        mapStyle={mapStyle}
+        touchRotate={false}
+        touchPitch={false}
+        compass={false}
+        logo={false}
+        attribution={false}
+        onDidFinishLoadingMap={onLoaded}
+        onRegionWillChange={(e) => {
+          if (e.nativeEvent.userInteraction) onUserPan?.();
+        }}
+        onRegionDidChange={(e) => {
+          const [lng, lat] = e.nativeEvent.center;
+          onMove?.({ lat, lng, zoom: e.nativeEvent.zoom });
+        }}
       >
-        {circles.filter((c) => isValid(c.lat, c.lng)).map((c, i) => (
-          <Circle
-            key={`c-${i}-${c.lat}-${c.lng}`}
-            center={{ latitude: c.lat, longitude: c.lng }}
-            radius={c.radius}
-            strokeColor={c.color}
-            strokeWidth={2}
-            fillColor={`${c.color}24`}
+        <Camera ref={cameraRef} initialViewState={{ center: DEFAULT_CENTER, zoom: 11 }} />
+        <GeoJSONSource id="floa-circles" data={shapes.circles}>
+          <Layer id="floa-circles-fill" type="fill" paint={{ 'fill-color': ['get', 'color'], 'fill-opacity': 0.14 }} />
+          <Layer id="floa-circles-line" type="line" paint={{ 'line-color': ['get', 'color'], 'line-width': 2 }} />
+        </GeoJSONSource>
+        <GeoJSONSource id="floa-routes" data={shapes.routes}>
+          <Layer
+            id="floa-routes-solid"
+            type="line"
+            filter={['!=', ['get', 'dashed'], true]}
+            layout={{ 'line-cap': 'round', 'line-join': 'round' }}
+            paint={{ 'line-color': ['get', 'color'], 'line-width': 4, 'line-opacity': 0.9 }}
           />
-        ))}
-        {routes.map((r, i) => (
-          <Polyline
-            key={`r-${i}-${r.path.length}`}
-            coordinates={r.path.filter(([lat, lng]) => isValid(lat, lng)).map(([latitude, longitude]) => ({ latitude, longitude }))}
-            strokeColor={r.color}
-            strokeWidth={r.dashed ? 3 : 4}
-            lineDashPattern={r.dashed ? [8, 8] : undefined}
-            lineCap="round"
-            lineJoin="round"
+          <Layer
+            id="floa-routes-dashed"
+            type="line"
+            filter={['==', ['get', 'dashed'], true]}
+            paint={{ 'line-color': ['get', 'color'], 'line-width': 3, 'line-dasharray': [2, 2] }}
           />
+        </GeoJSONSource>
+        <GeoJSONSource id="floa-points" data={shapes.points}>
+          <Layer
+            id="floa-points-dot"
+            type="circle"
+            paint={{ 'circle-radius': 7, 'circle-color': ['get', 'color'], 'circle-stroke-color': '#ffffff', 'circle-stroke-width': 3 }}
+          />
+        </GeoJSONSource>
+        {visibleMarkers.map((m) => (
+          <UnitMarker key={m.id} marker={m} onPress={onMarkerPress} />
         ))}
-        {points.filter((p) => isValid(p.lat, p.lng)).map((p, i) => (
-          <Marker key={`p-${i}-${p.lat}-${p.lng}`} coordinate={{ latitude: p.lat, longitude: p.lng }} anchor={{ x: 0.5, y: 0.5 }} tracksViewChanges={false}>
-            <View style={{ width: 16, height: 16, borderRadius: 8, borderWidth: 3, borderColor: '#ffffff', backgroundColor: p.color }} />
-          </Marker>
-        ))}
-        {markers.filter((m) => isValid(m.lat, m.lng)).map((m) => (
-          <NativeUnitMarker key={m.id} marker={m} onPress={onMarkerPress} />
-        ))}
-      </MapView>
+      </Map>
     </View>
   );
 }

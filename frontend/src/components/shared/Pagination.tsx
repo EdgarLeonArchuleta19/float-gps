@@ -24,15 +24,15 @@ export default function Pagination({
       onPress={() => onChange(target)}
       disabled={disabled}
       accessibilityLabel={label}
-      className={`flex-row items-center gap-1 rounded-xl border px-3 py-2 ${t.card} ${t.border} ${disabled ? 'opacity-40' : 'active:opacity-70'}`}
+      className={`flex-row items-center gap-1 rounded-full px-3.5 h-10 ${t.card} ${disabled ? 'opacity-40' : t.press}`}
     >
-      {icon === 'prev' ? <ChevronLeft size={16} color={t.hex.text} /> : null}
-      <Text className={`text-[12.5px] font-semibold ${t.text}`}>{label}</Text>
-      {icon === 'next' ? <ChevronRight size={16} color={t.hex.text} /> : null}
+      {icon === 'prev' ? <ChevronLeft size={16} color={t.hex.brand} /> : null}
+      <Text className={`text-[13px] font-bold ${t.brandText}`}>{label}</Text>
+      {icon === 'next' ? <ChevronRight size={16} color={t.hex.brand} /> : null}
     </Pressable>
   );
   return (
-    <View className="flex-row items-center justify-between mt-3">
+    <View className="flex-row items-center justify-between mt-4">
       {button('Anterior', page - 1, page <= 1, 'prev')}
       <View className="items-center">
         <Text className={`text-[12.5px] font-semibold ${t.text}`}>

@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+import { AppError } from '../middleware/errorHandler';
 
 const prisma = new PrismaClient();
 
@@ -20,20 +21,11 @@ export class GpsService {
     return positions;
   }
 
-  async getTracking(gpsDeviceId: string, query: { date?: string; startTime?: string; endTime?: string }) {
-    const date = query.date ? new Date(query.date) : new Date();
-    date.setHours(0, 0, 0, 0);
-
-    const endDate = new Date(date);
-    endDate.setHours(23, 59, 59, 999);
-
-    if (query.startTime) {
-      const [h, m, s] = query.startTime.split(':').map(Number);
-      date.setHours(h, m, s || 0);
-    }
-    if (query.endTime) {
-      const [h, m, s] = query.endTime.split(':').map(Number);
-      endDate.setHours(h, m, s || 59);
+  async getTracking(gpsDeviceId: string, query: { startDate?: string; endDate?: string }) {
+    const date = query.startDate ? new Date(query.startDate) : new Date(Date.now() - 86400000);
+    const endDate = query.endDate ? new Date(query.endDate) : new Date();
+    if (Number.isNaN(date.getTime()) || Number.isNaN(endDate.getTime())) {
+      throw new AppError('Rango de fechas inválido', 400);
     }
 
     const positions = await prisma.gpsPosition.findMany({

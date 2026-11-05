@@ -69,7 +69,8 @@
       entry.body.innerHTML = m.svg.replace('width="28" height="44"', 'width="22" height="34"');
     }
     entry.body.style.transform = 'rotate(' + (m.heading || 0) + 'deg)' + (m.selected ? ' scale(1.2)' : '');
-    entry.halo.style.background = m.color + '40';
+    entry.halo.style.background = 'rgba(248,114,3,0.22)';
+    entry.halo.style.border = '2px solid #f87203';
     entry.halo.style.opacity = m.selected ? '1' : '0';
     entry.label.style.display = m.selected ? 'block' : 'none';
     entry.label.textContent = m.name;
@@ -89,7 +90,7 @@
       style: STYLES.street,
       center: DEFAULT_CENTER,
       zoom: 11,
-      attributionControl: { compact: true },
+      attributionControl: false,
       dragRotate: false,
       pitchWithRotate: false
     });

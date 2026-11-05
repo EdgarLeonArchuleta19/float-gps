@@ -27,14 +27,16 @@ export default function MovingNow({ units }: { units: LiveUnit[] }) {
     );
   }
   return (
-    <Card className="py-1">
+    <Card className="py-1.5 overflow-hidden">
       {units.map((u, i) => (
         <Pressable
           key={u.id}
           onPress={() => router.replace(`/live-map?unit=${u.id}` as never)}
-          className={`flex-row items-center gap-3 px-4 py-3 ${i < units.length - 1 ? `border-b ${t.border}` : ''} active:opacity-70`}
+          className={`flex-row items-center gap-3 px-4 py-3 ${t.press}`}
         >
-          <VehicleIcon kind={u.unitType} color={markerColor(u.status)} size={30} heading={u.heading ?? 0} />
+          <View className="w-11 h-11 rounded-full items-center justify-center" style={{ backgroundColor: `${markerColor(u.status)}1f` }}>
+            <VehicleIcon kind={u.unitType} color={markerColor(u.status)} size={28} heading={u.heading ?? 0} />
+          </View>
           <View className="flex-1 min-w-0">
             <Text className={`text-[14px] font-semibold ${t.text}`} numberOfLines={1}>
               {u.name}

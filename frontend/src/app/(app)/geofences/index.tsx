@@ -16,6 +16,14 @@ import FleetMap from '@/components/map/FleetMap';
 import type { MapCamera, MapCircle } from '@/components/map/types';
 import { Button, Card, EmptyState, ErrorBanner, Loading, PageHeader, Screen } from '@/components/ui';
 
+const ALERT_LABELS = { ENTER: 'avisa al entrar', EXIT: 'avisa al salir', BOTH: 'avisa al entrar y salir' };
+
+function watchLabel(g: Geofence) {
+  if (g.allUnits) return 'todas las unidades';
+  const units = g.vehicleIds.length + g.machineIds.length;
+  return [g.groupIds.length ? `${g.groupIds.length} grupo${g.groupIds.length === 1 ? '' : 's'}` : null, units ? `${units} unidad${units === 1 ? '' : 'es'}` : null].filter(Boolean).join(' y ');
+}
+
 function formatRadius(radius?: number) {
   if (!radius) return '—';
   return radius >= 1000 ? `${(radius / 1000).toFixed(1)} km` : `${Math.round(radius)} m`;
@@ -69,9 +77,9 @@ export default function Geofences() {
           <Pressable
             key={g.id}
             onPress={() => setFocus(g)}
-            className={`flex-row items-center gap-3 px-4 py-3 ${focus?.id === g.id ? t.active : ''} active:opacity-70`}
+            className={`flex-row items-center gap-3 px-4 py-3.5 ${focus?.id === g.id ? t.selected : t.press}`}
           >
-            <View className="w-10 h-10 rounded-xl items-center justify-center" style={{ backgroundColor: `${g.color}1f` }}>
+            <View className="w-10 h-10 rounded-full items-center justify-center" style={{ backgroundColor: `${g.color}1f` }}>
               <CircleDot size={18} color={g.color} />
             </View>
             <View className="flex-1 min-w-0">
@@ -81,8 +89,11 @@ export default function Geofences() {
                 </Text>
                 {g.isActive ? null : <InactiveBadge feminine />}
               </View>
-              <Text className={`text-[12px] ${t.muted}`}>
-                {g.type} · radio {formatRadius(g.radius)}
+              <Text className={`text-[12px] ${t.muted}`} numberOfLines={1}>
+                {g.type} · radio {formatRadius(g.radius)} · {g.unitsInside || 0} dentro ahora
+              </Text>
+              <Text className={`text-[12px] ${t.subtle}`} numberOfLines={1}>
+                Vigila {watchLabel(g)} · {ALERT_LABELS[g.alertOn] || ALERT_LABELS.BOTH}
               </Text>
             </View>
             {canAdmin ? (

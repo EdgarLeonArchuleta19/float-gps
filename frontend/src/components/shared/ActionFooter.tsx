@@ -8,7 +8,7 @@ export default function ActionFooter({ children }: { children: React.ReactNode }
   const { t } = useTheme();
   const isDesktop = useIsDesktop();
   return (
-    <View className={`border-t px-4 pt-3 ${t.card} ${t.border}`} style={{ paddingBottom: isDesktop ? 12 : 12 + TAB_OVERHANG }}>
+    <View className={`px-4 pt-3 ${t.screen}`} style={{ paddingBottom: isDesktop ? 14 : 14 + TAB_OVERHANG }}>
       <View className="w-full max-w-[720px] self-center flex-row gap-2">{children}</View>
     </View>
   );

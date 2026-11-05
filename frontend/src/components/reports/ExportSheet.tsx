@@ -5,11 +5,11 @@ import { exportPdf, exportSpreadsheet, shareEmail, shareWhatsApp, type ExportTab
 import { Sheet } from '@/components/ui';
 import MenuRow from '@/components/shared/MenuRow';
 
-const OPTIONS: { icon: LucideIcon; label: string; hint: string; run: (table: ExportTable) => Promise<unknown> | void }[] = [
-  { icon: FileText, label: 'PDF', hint: 'Documento para imprimir o archivar', run: exportPdf },
-  { icon: FileSpreadsheet, label: 'Excel', hint: 'Hoja de cálculo con todas las filas', run: exportSpreadsheet },
-  { icon: MessageCircle, label: 'WhatsApp', hint: 'Resumen en texto', run: shareWhatsApp },
-  { icon: Mail, label: 'Correo', hint: 'Resumen en un correo nuevo', run: shareEmail },
+const OPTIONS: { icon: LucideIcon; color: string; label: string; hint: string; run: (table: ExportTable) => Promise<unknown> | void }[] = [
+  { icon: FileText, color: '#ef4444', label: 'PDF', hint: 'Documento para imprimir o archivar', run: exportPdf },
+  { icon: FileSpreadsheet, color: '#16a34a', label: 'Excel', hint: 'Hoja de cálculo con todas las filas', run: exportSpreadsheet },
+  { icon: MessageCircle, color: '#25d366', label: 'WhatsApp', hint: 'Resumen en texto', run: shareWhatsApp },
+  { icon: Mail, color: '#3b82f6', label: 'Correo', hint: 'Resumen en un correo nuevo', run: shareEmail },
 ];
 
 export default function ExportSheet({ table, visible, onClose }: { table: ExportTable; visible: boolean; onClose: () => void }) {
@@ -20,6 +20,7 @@ export default function ExportSheet({ table, visible, onClose }: { table: Export
         <MenuRow
           key={o.label}
           icon={o.icon}
+          iconColor={o.color}
           label={o.label}
           hint={o.hint}
           last={i === OPTIONS.length - 1}

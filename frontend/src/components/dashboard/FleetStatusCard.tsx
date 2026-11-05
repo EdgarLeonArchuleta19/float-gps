@@ -27,21 +27,23 @@ export default function FleetStatusCard({
     { key: 'OFFLINE', value: offline },
   ];
   return (
-    <Card className="p-4">
+    <Card className="p-5">
       <View className="flex-row items-end justify-between mb-3">
         <View>
-          <Text className={`text-[11px] font-semibold uppercase tracking-wider ${t.subtle}`}>Flota</Text>
-          <Text className={`text-[28px] font-bold ${t.text}`}>
+          <Text className={`text-[14px] font-medium ${t.muted}`}>Tu flota</Text>
+          <Text className={`text-[34px] font-extrabold tracking-tight ${t.text}`}>
             {total} <Text className={`text-[14px] font-medium ${t.muted}`}>unidades</Text>
           </Text>
         </View>
         <View className="items-end">
-          <Text className="text-[20px] font-bold" style={{ color: t.hex.primary }}>{working}%</Text>
-          <Text className={`text-[11px] ${t.muted}`}>trabajó hoy</Text>
+          <View className={`rounded-full px-3 py-1 ${t.selected}`}>
+            <Text className="text-[14px] font-extrabold" style={{ color: t.hex.onSelected }}>{working}%</Text>
+          </View>
+          <Text className={`text-[12px] mt-1 ${t.muted}`}>trabajó hoy</Text>
         </View>
       </View>
-      <View className={`flex-row h-2.5 rounded-full overflow-hidden mb-3 ${t.input}`}>
-        {total > 0 ? parts.map((p) => (p.value > 0 ? <View key={p.key} style={{ flex: p.value, backgroundColor: markerColor(p.key) }} /> : null)) : null}
+      <View className={`flex-row h-2 rounded-full overflow-hidden mb-4 gap-0.5 ${t.tonal}`}>
+        {total > 0 ? parts.map((p) => (p.value > 0 ? <View key={p.key} className="rounded-full" style={{ flex: p.value, backgroundColor: markerColor(p.key) }} /> : null)) : null}
       </View>
       <View className="flex-row flex-wrap gap-2">
         <StatusTile status="MOVING" label="En movimiento" value={moving} />

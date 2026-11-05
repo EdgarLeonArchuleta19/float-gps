@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { AuthService } from '../services/auth.service';
-import { asyncHandler } from '../middleware/errorHandler';
+import { AppError, asyncHandler } from '../middleware/errorHandler';
+import { getTenant } from '../middleware/auth';
 import { getClientIp } from '../services/audit.service';
 
 const authService = new AuthService();
@@ -16,19 +17,7 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
 });
 
 export const me = asyncHandler(async (req: Request, res: Response) => {
-  res.json(await authService.me((req as any).user.userId));
-});
-
-export const ownerLogin = asyncHandler(async (req: Request, res: Response) => {
-  const { email, password, masterKey } = req.body || {};
-  const result = await authService.ownerLogin(email, password, masterKey, loginContext(req));
-  res.json(result);
-});
-
-export const ownerLogoutAll = asyncHandler(async (req: Request, res: Response) => {
-  const user = (req as any).user;
-  const result = await authService.ownerLogoutAll(user.userId, user.email, loginContext(req));
-  res.json(result);
+  res.json(await authService.me(getTenant(req)));
 });
 
 export const forgotPassword = asyncHandler(async (req: Request, res: Response) => {
@@ -45,7 +34,8 @@ export const resetPassword = asyncHandler(async (req: Request, res: Response) =>
 
 export const changePassword = asyncHandler(async (req: Request, res: Response) => {
   const { currentPassword, newPassword } = req.body || {};
-  const userId = (req as any).user?.userId;
-  const result = await authService.changePassword(userId, currentPassword, newPassword);
+  const tenant = getTenant(req);
+  if (tenant.support) throw new AppError('Cambia tu contraseña desde la consola de floaGPS.', 403);
+  const result = await authService.changePassword(tenant.userId, currentPassword, newPassword);
   res.json(result);
 });

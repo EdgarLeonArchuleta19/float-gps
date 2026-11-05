@@ -45,8 +45,8 @@ export class AttemptLimiter {
 
 export const tenantLoginLimiter = new AttemptLimiter(8, 10 * 60 * 1000);
 export const accountLoginLimiter = new AttemptLimiter(30, 30 * 60 * 1000);
-export const ownerLoginLimiter = new AttemptLimiter(5, 15 * 60 * 1000);
-export const masterKeyLimiter = new AttemptLimiter(5, 15 * 60 * 1000);
+export const staffLoginLimiter = new AttemptLimiter(5, 15 * 60 * 1000);
+export const staffStepUpLimiter = new AttemptLimiter(5, 15 * 60 * 1000);
 export const engineCommandLimiter = new AttemptLimiter(5, 15 * 60 * 1000);
 export const passwordChangeLimiter = new AttemptLimiter(5, 15 * 60 * 1000);
 export const passwordResetRequestLimiter = new AttemptLimiter(5, 15 * 60 * 1000);

@@ -1,102 +1,147 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { Platform } from 'react-native';
-import { api, onUnauthorized, setSessionToken, setSupportCompanyId } from '@/lib/api';
+import { router } from 'expo-router';
+import { api, onSupportEnded, onUnauthorized, setSessionToken, setSupportSessionId } from '@/lib/api';
 import { storage } from '@/lib/storage';
+import { loadServerUrl } from '@/lib/apiUrl';
 import { forgetEngineCredential } from '@/lib/engineCredential';
+import { forgetPush, refreshPush } from '@/lib/push';
 import type { User } from '@/lib/types';
+import type { StaffMember, SupportSession } from '@/lib/staff';
+import { consoleApi } from '@/components/console/consoleApi';
 
 const TOKEN_KEY = 'floa_mobile_token';
 const USER_KEY = 'floa_mobile_user';
-const SUPPORT_KEY = 'floa_support_company';
+const STAFF_KEY = 'floa_staff';
+const SUPPORT_KEY = 'floa_support_session';
 
 const USER_REFRESH_MS = 120000;
-
-const OWNER_BLOCKED_MESSAGE = 'Esta app es solo para empresas cliente. El acceso de dueño se realiza desde el portal web.';
 
 interface LoginResult {
   ok: boolean;
   error?: string;
 }
 
-interface SupportCompany {
-  id: string;
-  name: string;
-}
-
 interface AuthContextValue {
   user: User | null;
+  staff: StaffMember | null;
+  support: SupportSession | null;
   restoring: boolean;
-  isOwner: boolean;
-  supportCompany: SupportCompany | null;
   login: (email: string, password: string, companySlug?: string | null) => Promise<LoginResult>;
-  startSession: (token: string, user: User) => Promise<void>;
+  startStaffSession: (token: string, staff: StaffMember) => Promise<void>;
   logout: () => void;
-  enterSupport: (company: SupportCompany) => void;
-  exitSupport: () => void;
+  enterSupport: (session: SupportSession) => Promise<void>;
+  exitSupport: () => Promise<void>;
   renameCompany: (name: string) => void;
   replaceToken: (token: string) => void;
+  passwordChanged: (token: string) => void;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
-function isOwnerAccount(user: User | null | undefined) {
-  return user?.role === 'superadmin';
+function consoleAllowedHere() {
+  return Platform.OS === 'web';
 }
 
-function ownerAllowedHere() {
-  return Platform.OS === 'web';
+function parse<T>(raw: string | null): T | null {
+  try {
+    return raw ? (JSON.parse(raw) as T) : null;
+  } catch {
+    return null;
+  }
+}
+
+function stillOpen(session: SupportSession | null) {
+  return !!session && new Date(session.expiresAt).getTime() > Date.now();
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [supportCompany, setSupportCompany] = useState<SupportCompany | null>(null);
+  const [staff, setStaff] = useState<StaffMember | null>(null);
+  const [support, setSupport] = useState<SupportSession | null>(null);
   const [restoring, setRestoring] = useState(true);
 
   const clearSession = useCallback(() => {
+    forgetPush();
     setSessionToken(null);
-    setSupportCompanyId(null);
+    setSupportSessionId(null);
     setUser(null);
-    setSupportCompany(null);
+    setStaff(null);
+    setSupport(null);
     storage.remove(TOKEN_KEY);
     storage.remove(USER_KEY);
+    storage.remove(STAFF_KEY);
     storage.remove(SUPPORT_KEY);
     forgetEngineCredential();
   }, []);
 
+  const leaveSupportLocally = useCallback(() => {
+    setSupportSessionId(null);
+    setSupport(null);
+    setUser(null);
+    storage.remove(SUPPORT_KEY);
+    storage.remove(USER_KEY);
+  }, []);
+
   useEffect(() => {
     onUnauthorized(clearSession);
-    return () => onUnauthorized(null);
-  }, [clearSession]);
+    onSupportEnded(() => {
+      leaveSupportLocally();
+      router.replace('/console');
+    });
+    return () => {
+      onUnauthorized(null);
+      onSupportEnded(null);
+    };
+  }, [clearSession, leaveSupportLocally]);
 
   useEffect(() => {
     (async () => {
-      const [token, savedUser, savedSupport] = await Promise.all([
+      await loadServerUrl();
+      const [token, savedUser, savedStaff, savedSupport] = await Promise.all([
         storage.get(TOKEN_KEY),
         storage.get(USER_KEY),
+        storage.get(STAFF_KEY),
         storage.get(SUPPORT_KEY),
       ]);
-      let parsed: User | null = null;
-      let support: SupportCompany | null = null;
-      try {
-        parsed = savedUser ? JSON.parse(savedUser) : null;
-        support = savedSupport ? JSON.parse(savedSupport) : null;
-      } catch {
-        parsed = null;
-      }
-      const allowed = parsed && (!isOwnerAccount(parsed) || ownerAllowedHere());
-      if (token && parsed && allowed) {
+      const parsedUser = parse<User>(savedUser);
+      const parsedStaff = parse<StaffMember>(savedStaff);
+      const parsedSupport = parse<SupportSession>(savedSupport);
+      if (token && parsedStaff && consoleAllowedHere()) {
         setSessionToken(token);
-        setUser(parsed);
-        if (support && isOwnerAccount(parsed)) {
-          setSupportCompanyId(support.id);
-          setSupportCompany(support);
+        setStaff(parsedStaff);
+        if (stillOpen(parsedSupport) && parsedUser) {
+          setSupportSessionId(parsedSupport!.id);
+          setSupport(parsedSupport);
+          setUser(parsedUser);
+        } else if (parsedSupport) {
+          storage.remove(SUPPORT_KEY);
+          storage.remove(USER_KEY);
         }
-      } else if (token || savedUser) {
+      } else if (token && parsedUser && !parsedStaff) {
+        setSessionToken(token);
+        setUser(parsedUser);
+      } else if (token || savedUser || savedStaff) {
         clearSession();
       }
       setRestoring(false);
     })();
   }, [clearSession]);
+
+  useEffect(() => {
+    if (!support) return;
+    const left = new Date(support.expiresAt).getTime() - Date.now();
+    const id = setTimeout(() => {
+      leaveSupportLocally();
+      router.replace('/console');
+    }, Math.max(left, 0));
+    return () => clearTimeout(id);
+  }, [support, leaveSupportLocally]);
+
+  const customerId = user && !staff ? user.id : null;
+  useEffect(() => {
+    if (customerId) refreshPush();
+  }, [customerId]);
 
   const loggedIn = !!user;
   useEffect(() => {
@@ -118,44 +163,51 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => clearInterval(id);
   }, [loggedIn]);
 
-  const startSession = useCallback(async (token: string, next: User) => {
-    setSessionToken(token);
-    setSupportCompanyId(null);
-    setSupportCompany(null);
-    await Promise.all([storage.set(TOKEN_KEY, token), storage.set(USER_KEY, JSON.stringify(next)), storage.remove(SUPPORT_KEY)]);
-    setUser(next);
-  }, []);
-
-  const login = useCallback(
-    async (email: string, password: string, companySlug?: string | null): Promise<LoginResult> => {
-      try {
-        const res = await api.auth.login(email.trim(), password);
-        if (isOwnerAccount(res.user)) {
-          return { ok: false, error: OWNER_BLOCKED_MESSAGE };
-        }
-        if (companySlug && res.user.companySlug && res.user.companySlug !== companySlug) {
-          return { ok: false, error: `Esta cuenta no pertenece a la empresa "${companySlug}".` };
-        }
-        await startSession(res.token, res.user);
-        return { ok: true };
-      } catch (err: any) {
-        return { ok: false, error: err?.message || 'Credenciales incorrectas' };
+  const login = useCallback(async (email: string, password: string, companySlug?: string | null): Promise<LoginResult> => {
+    try {
+      const res = await api.auth.login(email.trim(), password);
+      if (companySlug && res.user.companySlug && res.user.companySlug !== companySlug) {
+        return { ok: false, error: `Esta cuenta no pertenece a la empresa "${companySlug}".` };
       }
-    },
-    [startSession]
-  );
-
-  const enterSupport = useCallback((company: SupportCompany) => {
-    setSupportCompanyId(company.id);
-    setSupportCompany(company);
-    storage.set(SUPPORT_KEY, JSON.stringify(company));
+      setSessionToken(res.token);
+      setSupportSessionId(null);
+      await Promise.all([storage.set(TOKEN_KEY, res.token), storage.set(USER_KEY, JSON.stringify(res.user)), storage.remove(STAFF_KEY), storage.remove(SUPPORT_KEY)]);
+      setStaff(null);
+      setSupport(null);
+      setUser(res.user);
+      return { ok: true };
+    } catch (err: any) {
+      return { ok: false, error: err?.message || 'Credenciales incorrectas' };
+    }
   }, []);
 
-  const exitSupport = useCallback(() => {
-    setSupportCompanyId(null);
-    setSupportCompany(null);
-    storage.remove(SUPPORT_KEY);
+  const startStaffSession = useCallback(async (token: string, member: StaffMember) => {
+    setSessionToken(token);
+    setSupportSessionId(null);
+    await Promise.all([storage.set(TOKEN_KEY, token), storage.set(STAFF_KEY, JSON.stringify(member)), storage.remove(USER_KEY), storage.remove(SUPPORT_KEY)]);
+    setUser(null);
+    setSupport(null);
+    setStaff(member);
   }, []);
+
+  const enterSupport = useCallback(async (session: SupportSession) => {
+    setSupportSessionId(session.id);
+    try {
+      const companyUser = await api.auth.me();
+      await Promise.all([storage.set(SUPPORT_KEY, JSON.stringify(session)), storage.set(USER_KEY, JSON.stringify(companyUser))]);
+      setSupport(session);
+      setUser(companyUser);
+    } catch (err) {
+      setSupportSessionId(null);
+      throw err;
+    }
+  }, []);
+
+  const exitSupport = useCallback(async () => {
+    const current = support;
+    leaveSupportLocally();
+    if (current) await consoleApi.endSupport(current.id).catch(() => {});
+  }, [support, leaveSupportLocally]);
 
   const renameCompany = useCallback((name: string) => {
     setUser((prev) => {
@@ -171,21 +223,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     storage.set(TOKEN_KEY, token);
   }, []);
 
+  const passwordChanged = useCallback(
+    (token: string) => {
+      replaceToken(token);
+      setUser((prev) => {
+        if (!prev) return prev;
+        const next = { ...prev, mustChangePassword: false };
+        storage.set(USER_KEY, JSON.stringify(next));
+        return next;
+      });
+    },
+    [replaceToken]
+  );
+
   const value = useMemo(
     () => ({
       user,
+      staff,
+      support,
       restoring,
-      isOwner: isOwnerAccount(user),
-      supportCompany,
       login,
-      startSession,
+      startStaffSession,
       logout: clearSession,
       enterSupport,
       exitSupport,
       renameCompany,
       replaceToken,
+      passwordChanged,
     }),
-    [user, restoring, supportCompany, login, startSession, clearSession, enterSupport, exitSupport, renameCompany, replaceToken]
+    [user, staff, support, restoring, login, startStaffSession, clearSession, enterSupport, exitSupport, renameCompany, replaceToken, passwordChanged]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

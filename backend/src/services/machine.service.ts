@@ -15,7 +15,7 @@ async function assertMachineInTenant(id: string, tenant: TenantContext) {
 }
 
 export class MachineService {
-  async findAll(query: { search?: string; status?: string; state?: string; page?: string; limit?: string }, tenant?: TenantContext) {
+  async findAll(query: { search?: string; status?: string; groupId?: string; state?: string; page?: string; limit?: string }, tenant?: TenantContext) {
     const { page, limit, skip } = pageParams(query, 10);
 
     const where: any = { deletedAt: null, ...unitStatusFilter(query.state, tenant) };
@@ -28,11 +28,13 @@ export class MachineService {
       ];
     }
     if (query.status) where.status = query.status;
+    if (typeof query.groupId === 'string' && query.groupId) where.groupId = query.groupId === 'none' ? null : query.groupId;
 
     const [machines, total] = await Promise.all([
       prisma.machine.findMany({
         where,
         include: {
+          group: { select: { id: true, name: true, color: true } },
           gpsDevice: { include: { positions: { orderBy: { timestamp: 'desc' }, take: 1 } } },
           workSessions: { where: { date: { gte: new Date(new Date().setHours(0, 0, 0, 0)) } }, take: 1 },
         },
@@ -58,6 +60,7 @@ export class MachineService {
     const machine = await prisma.machine.findUnique({
       where: { id },
       include: {
+        group: { select: { id: true, name: true, color: true } },
         gpsDevice: {
           include: {
             positions: { orderBy: { timestamp: 'desc' }, take: 1 },

@@ -31,7 +31,7 @@ export default function EventRow({ event, onPress }: { event: TrackingEvent; onP
   const hasLocation = event.latitude !== undefined && event.latitude !== null && event.longitude !== undefined && event.longitude !== null;
   return (
     <Pressable onPress={onPress} disabled={!onPress} className="flex-row items-center gap-3 px-4 py-3 active:opacity-70">
-      <View className="w-10 h-10 rounded-xl items-center justify-center" style={{ backgroundColor: `${color}1f` }}>
+      <View className="w-10 h-10 rounded-full items-center justify-center" style={{ backgroundColor: `${color}1f` }}>
         <Icon size={18} color={color} />
       </View>
       <View className="flex-1 min-w-0">

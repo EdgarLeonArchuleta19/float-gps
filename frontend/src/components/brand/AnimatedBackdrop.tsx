@@ -81,25 +81,16 @@ function DrivingCar({ width, y }: { width: number; y: number }) {
   );
 }
 
-type Variant = 'full' | 'bar';
+const CURVE = [0.5, 0.38, 0.62, 0.42];
 
-const LAYOUT: Record<Variant, { road: boolean; curve: [number, number, number, number]; radarDot: boolean }> = {
-  full: { road: true, curve: [0.5, 0.38, 0.62, 0.42], radarDot: true },
-  bar: { road: false, curve: [0.3, 0.1, 0.55, 0.2], radarDot: false },
-};
-
-export default function AnimatedBackdrop({ variant = 'full' }: { variant?: Variant }) {
+export default function AnimatedBackdrop() {
   const [size, setSize] = useState({ width: 0, height: 0 });
   const onLayout = (e: LayoutChangeEvent) => setSize({ width: e.nativeEvent.layout.width, height: e.nativeEvent.layout.height });
   const { width, height } = size;
-  const cfg = LAYOUT[variant];
 
   const roadY = height * 0.86;
-  const radar =
-    variant === 'full'
-      ? { x: width * 0.82, y: height * 0.14, size: Math.max(width, 360) * 0.95 }
-      : { x: width * 0.6, y: height * 0.5, size: height * 2.6 };
-  const [c0, c1, c2, c3] = cfg.curve;
+  const radar = { x: width * 0.82, y: height * 0.14, size: Math.max(width, 360) * 0.95 };
+  const [c0, c1, c2, c3] = CURVE;
 
   return (
     <View pointerEvents="none" onLayout={onLayout} style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, overflow: 'hidden' }}>
@@ -109,33 +100,23 @@ export default function AnimatedBackdrop({ variant = 'full' }: { variant?: Varia
             <Path
               d={`M ${-20} ${height * c0} C ${width * 0.3} ${height * c1}, ${width * 0.55} ${height * c2}, ${width + 20} ${height * c3}`}
               stroke="#f87203"
-              strokeOpacity={variant === 'bar' ? 0.22 : 0.35}
-              strokeWidth={variant === 'bar' ? 1.5 : 2}
+              strokeOpacity={0.35}
+              strokeWidth={2}
               strokeDasharray="6 8"
               fill="none"
             />
-            {cfg.road ? (
-              <>
-                <Line x1={0} y1={roadY} x2={width} y2={roadY} stroke="#ffffff" strokeOpacity={0.08} strokeWidth={14} />
-                <Line x1={0} y1={roadY} x2={width} y2={roadY} stroke="#ffffff" strokeOpacity={0.18} strokeWidth={1} strokeDasharray="10 12" />
-              </>
-            ) : null}
+            <Line x1={0} y1={roadY} x2={width} y2={roadY} stroke="#ffffff" strokeOpacity={0.08} strokeWidth={14} />
+            <Line x1={0} y1={roadY} x2={width} y2={roadY} stroke="#ffffff" strokeOpacity={0.18} strokeWidth={1} strokeDasharray="10 12" />
           </Svg>
           <Pulse x={radar.x} y={radar.y} size={radar.size} delay={0} />
           <Pulse x={radar.x} y={radar.y} size={radar.size} delay={1060} />
           <Pulse x={radar.x} y={radar.y} size={radar.size} delay={2120} />
-          {cfg.radarDot ? (
-            <View style={{ position: 'absolute', left: radar.x - 6, top: radar.y - 6, width: 12, height: 12, borderRadius: 6, backgroundColor: '#f87203' }} />
-          ) : null}
-          {variant === 'full' ? (
-            <>
-              <FloatingDot x={width * 0.12} y={height * 0.22} size={6} color="#f87203" delay={0} />
-              <FloatingDot x={width * 0.28} y={height * 0.66} size={4} color="#ffffff" delay={700} />
-              <FloatingDot x={width * 0.68} y={height * 0.5} size={5} color="#ffffff" delay={1300} />
-              <FloatingDot x={width * 0.9} y={height * 0.7} size={6} color="#f87203" delay={1900} />
-            </>
-          ) : null}
-          {cfg.road ? <DrivingCar width={width} y={roadY} /> : null}
+          <View style={{ position: 'absolute', left: radar.x - 6, top: radar.y - 6, width: 12, height: 12, borderRadius: 6, backgroundColor: '#f87203' }} />
+          <FloatingDot x={width * 0.12} y={height * 0.22} size={6} color="#f87203" delay={0} />
+          <FloatingDot x={width * 0.28} y={height * 0.66} size={4} color="#ffffff" delay={700} />
+          <FloatingDot x={width * 0.68} y={height * 0.5} size={5} color="#ffffff" delay={1300} />
+          <FloatingDot x={width * 0.9} y={height * 0.7} size={6} color="#f87203" delay={1900} />
+          <DrivingCar width={width} y={roadY} />
         </>
       ) : null}
     </View>

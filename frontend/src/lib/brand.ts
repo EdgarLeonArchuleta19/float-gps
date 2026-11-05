@@ -1,3 +1,4 @@
 export const APP_NAME = 'floaGPS';
-const MAKER_NAME = 'TechPoint Software';
-export const MAKER_CREDIT = `© ${new Date().getFullYear()} ${MAKER_NAME}™`;
+export const NAVY = '#032347';
+export const ORANGE = '#f87203';
+export const MAKER_BRAND = 'TechPoint Software™';

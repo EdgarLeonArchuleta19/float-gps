@@ -8,54 +8,214 @@ datasource db {
 }
 
 model Company {
-  id           String      @id @default(uuid())
-  name         String
-  slug         String      @unique
-  contactEmail String?
-  contactPhone String?
-  plan         String      @default("PRO")
-  maxUnits     Int         @default(50)
-  isActive     Boolean     @default(true)
-  deletedAt    DateTime?
-  notes        String?
-  legalName    String?
-  taxId        String?
-  address      String?
-  website      String?
-  logo         String?
-  workStartHour Int        @default(7)
-  workEndHour   Int        @default(19)
-  workDays      String     @default("1,2,3,4,5,6")
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
-  users        User[]
-  vehicles     Vehicle[]
-  machines     Machine[]
-  geofences    Geofence[]
-  gpsDevices   GpsDevice[]
-  roles        Role[]
+  id              String           @id @default(uuid())
+  name            String
+  slug            String           @unique
+  contactEmail    String?
+  contactPhone    String?
+  plan            String           @default("EMPRESA")
+  maxUnits        Int              @default(50)
+  isActive        Boolean          @default(true)
+  deletedAt       DateTime?
+  notes           String?
+  legalName       String?
+  taxId           String?
+  address         String?
+  website         String?
+  logo            String?
+  workSchedule    Json?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  users           User[]
+  vehicles        Vehicle[]
+  machines        Machine[]
+  geofences       Geofence[]
+  gpsDevices      GpsDevice[]
+  roles           Role[]
+  subscription    Subscription?
+  supportSessions SupportSession[]
+  unitGroups      UnitGroup[]
+  maintenances    Maintenance[]
+}
+
+model UnitGroup {
+  id              String           @id @default(uuid())
+  name            String
+  nameKey         String
+  color           String           @default("#032347")
+  isActive        Boolean          @default(true)
+  deletedAt       DateTime?
+  companyId       String
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  company         Company          @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  vehicles        Vehicle[]
+  machines        Machine[]
+  geofenceTargets GeofenceTarget[]
+
+  @@unique([companyId, nameKey])
+}
+
+model UserUnit {
+  id        String   @id @default(uuid())
+  userId    String
+  vehicleId String?
+  machineId String?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vehicle   Vehicle? @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  machine   Machine? @relation(fields: [machineId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model GeofenceTarget {
+  id         String     @id @default(uuid())
+  geofenceId String
+  vehicleId  String?
+  machineId  String?
+  groupId    String?
+  geofence   Geofence   @relation(fields: [geofenceId], references: [id], onDelete: Cascade)
+  vehicle    Vehicle?   @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  machine    Machine?   @relation(fields: [machineId], references: [id], onDelete: Cascade)
+  group      UnitGroup? @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@index([geofenceId])
+}
+
+model NotificationSetting {
+  id           String   @id @default(uuid())
+  userId       String   @unique
+  pushEnabled  Boolean  @default(true)
+  emailEnabled Boolean  @default(false)
+  types        String[] @default(["GEOFENCE", "SOS", "OVERSPEED", "MAINTENANCE"])
+  updatedAt    DateTime @updatedAt
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model PushDevice {
+  id         String   @id @default(uuid())
+  userId     String
+  kind       String
+  token      String   @unique
+  label      String?
+  createdAt  DateTime @default(now())
+  lastUsedAt DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Maintenance {
+  id             String           @id @default(uuid())
+  companyId      String
+  vehicleId      String?
+  machineId      String?
+  kind           String
+  title          String
+  intervalKm     Float?
+  intervalDays   Int?
+  lastDoneAt     DateTime
+  notes          String?
+  notifiedStatus String?
+  notifiedAt     DateTime?
+  isActive       Boolean          @default(true)
+  deletedAt      DateTime?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  company        Company          @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  vehicle        Vehicle?         @relation(fields: [vehicleId], references: [id], onDelete: Restrict)
+  machine        Machine?         @relation(fields: [machineId], references: [id], onDelete: Restrict)
+  logs           MaintenanceLog[]
+
+  @@index([companyId])
+}
+
+model MaintenanceLog {
+  id            String      @id @default(uuid())
+  maintenanceId String
+  doneAt        DateTime
+  km            Float?
+  cost          Float?
+  notes         String?
+  doneBy        String
+  createdAt     DateTime    @default(now())
+  maintenance   Maintenance @relation(fields: [maintenanceId], references: [id], onDelete: Restrict)
+
+  @@index([maintenanceId, doneAt])
+}
+
+model StaffUser {
+  id              String           @id @default(uuid())
+  email           String           @unique
+  name            String
+  password        String
+  role            String
+  isActive        Boolean          @default(true)
+  tokenVersion    Int              @default(0)
+  lastLoginAt     DateTime?
+  lastLoginIp     String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  supportSessions SupportSession[]
+}
+
+model SupportSession {
+  id        String    @id @default(uuid())
+  staffId   String
+  companyId String
+  reason    String
+  ip        String?
+  startedAt DateTime  @default(now())
+  expiresAt DateTime
+  endedAt   DateTime?
+  staff     StaffUser @relation(fields: [staffId], references: [id], onDelete: Restrict)
+  company   Company   @relation(fields: [companyId], references: [id], onDelete: Restrict)
+
+  @@index([companyId, startedAt])
+  @@index([staffId, startedAt])
+}
+
+model Subscription {
+  id            String    @id @default(uuid())
+  companyId     String    @unique
+  status        String    @default("ACTIVE")
+  billingCycle  String    @default("MONTHLY")
+  pricePerUnit  Float     @default(0)
+  currency      String    @default("MXN")
+  startedAt     DateTime  @default(now())
+  nextBillingAt DateTime?
+  notes         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  company       Company   @relation(fields: [companyId], references: [id], onDelete: Restrict)
 }
 
 model User {
-  id           String     @id @default(uuid())
-  email        String     @unique
-  password     String
-  name         String
-  role         String     @default("admin")
-  roleId       String?
-  isActive     Boolean    @default(true)
-  deletedAt    DateTime?
-  companyId    String?
-  tokenVersion Int        @default(0)
-  lastLoginAt  DateTime?
-  lastLoginIp  String?
-  resetCodeHash      String?
-  resetCodeExpiresAt DateTime?
-  resetCodeAttempts  Int        @default(0)
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
-  company      Company?   @relation(fields: [companyId], references: [id], onDelete: SetNull)
-  customRole   Role?      @relation(fields: [roleId], references: [id], onDelete: Restrict)
+  id                  String               @id @default(uuid())
+  email               String               @unique
+  password            String
+  name                String
+  role                String               @default("admin")
+  roleId              String?
+  isActive            Boolean              @default(true)
+  deletedAt           DateTime?
+  companyId           String?
+  tokenVersion        Int                  @default(0)
+  lastLoginAt         DateTime?
+  lastLoginIp         String?
+  resetCodeHash       String?
+  resetCodeExpiresAt  DateTime?
+  resetCodeAttempts   Int                  @default(0)
+  mustChangePassword  Boolean              @default(false)
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  ownUnits            Boolean              @default(false)
+  company             Company?             @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  customRole          Role?                @relation(fields: [roleId], references: [id], onDelete: Restrict)
+  units               UserUnit[]
+  notificationSetting NotificationSetting?
+  pushDevices         PushDevice[]
 
   @@index([companyId])
   @@index([roleId])
@@ -81,10 +241,12 @@ model Role {
   @@unique([companyId, systemKey])
 }
 
-model OwnerAuditLog {
+model StaffAuditLog {
   id         String   @id @default(uuid())
   actorId    String?
   actorEmail String
+  actorRole  String?
+  companyId  String?
   action     String
   targetType String?
   targetId   String?
@@ -96,6 +258,8 @@ model OwnerAuditLog {
 
   @@index([createdAt])
   @@index([action])
+  @@index([companyId, createdAt])
+  @@map("OwnerAuditLog")
 }
 
 model RoleUnit {
@@ -134,46 +298,58 @@ model GpsDevice {
 }
 
 model Vehicle {
-  id           String        @id @default(uuid())
-  name         String
-  plate        String
-  type         String
-  brand        String?
-  vehicleModel String?
-  year         Int?
-  color        String?
-  status       String        @default("OFFLINE")
-  isActive     Boolean       @default(true)
-  deletedAt    DateTime?
-  companyId    String?
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  company      Company?      @relation(fields: [companyId], references: [id], onDelete: SetNull)
-  gpsDevice    GpsDevice?
-  roleUnits    RoleUnit[]
-  workSessions WorkSession[]
+  id              String           @id @default(uuid())
+  name            String
+  plate           String
+  type            String
+  brand           String?
+  vehicleModel    String?
+  year            Int?
+  color           String?
+  figure          String?
+  iconColor       String?
+  status          String           @default("OFFLINE")
+  isActive        Boolean          @default(true)
+  deletedAt       DateTime?
+  companyId       String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  company         Company?         @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  gpsDevice       GpsDevice?
+  roleUnits       RoleUnit[]
+  workSessions    WorkSession[]
+  groupId         String?
+  group           UnitGroup?       @relation(fields: [groupId], references: [id], onDelete: SetNull)
+  userUnits       UserUnit[]
+  geofenceTargets GeofenceTarget[]
+  maintenances    Maintenance[]
 
   @@index([companyId])
 }
 
 model Machine {
-  id           String        @id @default(uuid())
-  name         String
-  serialNumber String?
-  type         String
-  brand        String?
-  machineModel String?
-  year         Int?
-  status       String        @default("OFFLINE")
-  isActive     Boolean       @default(true)
-  deletedAt    DateTime?
-  companyId    String?
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  company      Company?      @relation(fields: [companyId], references: [id], onDelete: SetNull)
-  gpsDevice    GpsDevice?
-  roleUnits    RoleUnit[]
-  workSessions WorkSession[]
+  id              String           @id @default(uuid())
+  name            String
+  serialNumber    String?
+  type            String
+  brand           String?
+  machineModel    String?
+  year            Int?
+  status          String           @default("OFFLINE")
+  isActive        Boolean          @default(true)
+  deletedAt       DateTime?
+  companyId       String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  company         Company?         @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  gpsDevice       GpsDevice?
+  roleUnits       RoleUnit[]
+  workSessions    WorkSession[]
+  groupId         String?
+  group           UnitGroup?       @relation(fields: [groupId], references: [id], onDelete: SetNull)
+  userUnits       UserUnit[]
+  geofenceTargets GeofenceTarget[]
+  maintenances    Maintenance[]
 
   @@index([companyId])
 }
@@ -213,21 +389,24 @@ model IgnitionEvent {
 }
 
 model Geofence {
-  id        String          @id @default(uuid())
+  id        String           @id @default(uuid())
   name      String
   type      String
-  color     String          @default("#3B82F6")
-  isActive  Boolean         @default(true)
+  color     String           @default("#3B82F6")
+  isActive  Boolean          @default(true)
   deletedAt DateTime?
   radius    Float?
   centerLat Float?
   centerLng Float?
   points    String?
   companyId String?
-  createdAt DateTime        @default(now())
-  updatedAt DateTime        @updatedAt
-  company   Company?        @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  company   Company?         @relation(fields: [companyId], references: [id], onDelete: SetNull)
   events    GeofenceEvent[]
+  alertOn   String           @default("BOTH")
+  allUnits  Boolean          @default(true)
+  targets   GeofenceTarget[]
 
   @@index([companyId])
 }

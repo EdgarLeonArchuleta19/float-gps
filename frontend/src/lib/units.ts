@@ -1,5 +1,6 @@
 import { router } from 'expo-router';
-import type { FleetUnit, Machine, Vehicle } from './types';
+import type { Figure, FleetUnit, Machine, UnitKind, Vehicle } from './types';
+import { markerColor } from './format';
 
 export function vehicleToUnit(v: Vehicle): FleetUnit {
   return {
@@ -12,11 +13,14 @@ export function vehicleToUnit(v: Vehicle): FleetUnit {
     model: v.vehicleModel,
     year: v.year,
     color: v.color,
+    figure: v.figure,
+    iconColor: v.iconColor,
     status: v.status,
     isActive: v.isActive !== false,
     gpsDevice: v.gpsDevice,
     position: v.currentPosition || null,
     todaySession: v.todaySession,
+    group: v.group || null,
   };
 }
 
@@ -35,6 +39,20 @@ export function machineToUnit(m: Machine): FleetUnit {
     gpsDevice: m.gpsDevice,
     position: m.currentPosition || null,
     todaySession: m.todaySession,
+    group: m.group || null,
+  };
+}
+
+export function defaultFigure(kind: UnitKind): Figure {
+  return kind === 'machine' ? 'tractor' : 'sedan';
+}
+
+export function unitLook(unit: Pick<FleetUnit, 'kind' | 'status' | 'figure' | 'iconColor'>) {
+  const status = markerColor(unit.status);
+  return {
+    figure: unit.figure || defaultFigure(unit.kind),
+    color: unit.iconColor || status,
+    statusColor: unit.iconColor ? status : undefined,
   };
 }
 

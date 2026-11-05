@@ -4,11 +4,13 @@ import { useLocalSearchParams } from 'expo-router';
 import Slider from '@react-native-community/slider';
 import { Bell, ChevronDown, Pause, Play, Route } from 'lucide-react-native';
 import { useTheme } from '@/context/ThemeContext';
+import { ORANGE } from '@/lib/brand';
+import { unitLook } from '@/lib/units';
 import { useFleet } from '@/hooks/useFleet';
 import { useApi } from '@/hooks/useApi';
 import { useIsDesktop } from '@/hooks/useBreakpoint';
 import { api } from '@/lib/api';
-import { formatHours, formatTime, markerColor, toDateInput } from '@/lib/format';
+import { formatHours, formatTime, localDayRange, toDateInput } from '@/lib/format';
 import type { FleetUnit, TrackingEvent } from '@/lib/types';
 import FleetMap from '@/components/map/FleetMap';
 import type { MapCamera, MapMarker, MapPoint, MapRoute } from '@/components/map/types';
@@ -38,7 +40,7 @@ export default function Tracking() {
   const gpsId = unit?.gpsDevice?.id;
 
   const { data, loading, error } = useApi(
-    async () => (gpsId ? api.gps.tracking(gpsId, { date }) : null),
+    async () => (gpsId ? api.gps.tracking(gpsId, localDayRange(date)) : null),
     [gpsId, date]
   );
 
@@ -64,7 +66,7 @@ export default function Tracking() {
   }, [playing, positions.length]);
 
   const path = useMemo(() => positions.map((p) => [p.latitude, p.longitude] as [number, number]), [positions]);
-  const routeColor = t.isDark ? '#f87203' : '#032347';
+  const routeColor = ORANGE;
 
   const routes: MapRoute[] = useMemo(() => {
     if (path.length < 2) return [];
@@ -83,7 +85,7 @@ export default function Tracking() {
               id: unit.id,
               lat: current.latitude,
               lng: current.longitude,
-              color: markerColor(current.speed > 2 ? 'MOVING' : 'STOPPED'),
+              ...unitLook({ ...unit, status: current.speed > 2 ? 'MOVING' : 'STOPPED' }),
               name: `${unit.name} · ${formatTime(current.timestamp).slice(0, 5)}`,
               kind: unit.kind,
               heading: current.heading,
@@ -111,7 +113,7 @@ export default function Tracking() {
     <View className="gap-3">
       <Pressable
         onPress={() => setPickerOpen(true)}
-        className={`flex-row items-center justify-between rounded-xl border px-4 py-3 ${t.card} ${t.border}`}
+        className={`flex-row items-center justify-between rounded-2xl px-4 py-3.5 ${t.card}`}
       >
         <View className="flex-1">
           <Text className={`text-[11px] ${t.subtle}`}>Unidad</Text>
@@ -134,7 +136,7 @@ export default function Tracking() {
             setPlaying((p) => !p);
           }}
           accessibilityLabel={playing ? 'Pausar' : 'Reproducir'}
-          className={`w-11 h-11 rounded-full items-center justify-center ${t.isDark ? 'bg-accent' : 'bg-navy'}`}
+          className={`w-11 h-11 rounded-full items-center justify-center bg-navy`}
         >
           {playing ? <Pause size={18} color="#fff" /> : <Play size={18} color="#fff" />}
         </Pressable>

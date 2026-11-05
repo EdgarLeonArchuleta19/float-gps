@@ -7,6 +7,7 @@ import { ThemeProvider, useTheme } from '@/context/ThemeContext';
 import { AuthProvider } from '@/context/AuthContext';
 import { ToastProvider } from '@/context/ToastContext';
 import { ConfirmProvider } from '@/context/ConfirmContext';
+import InstallPrompt from '@/components/pwa/InstallPrompt';
 
 function ThemedStack() {
   const { t } = useTheme();
@@ -14,6 +15,7 @@ function ThemedStack() {
     <>
       <StatusBar style={t.isDark ? 'light' : 'dark'} />
       <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: t.hex.screen } }} />
+      <InstallPrompt />
     </>
   );
 }

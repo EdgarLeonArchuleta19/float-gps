@@ -16,7 +16,7 @@ export default function AlarmCard() {
   return (
     <>
       <Card onPress={() => setOpen(true)} className="p-4 mb-4 flex-row items-center gap-3">
-        <View className="w-10 h-10 rounded-xl items-center justify-center" style={{ backgroundColor: `${color}1f` }}>
+        <View className="w-10 h-10 rounded-full items-center justify-center" style={{ backgroundColor: `${color}1f` }}>
           <BellRing size={19} color={color} />
         </View>
         <View className="flex-1">

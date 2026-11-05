@@ -1,13 +1,16 @@
 import { Request, Response, NextFunction } from 'express';
 import { getClientIp, sanitizeDetails, writeAudit } from '../services/audit.service';
+import type { StaffContext } from './staffAuth';
 
-export function auditOwnerAction(action: string, targetType?: string) {
+export function auditStaffAction(action: string, targetType?: string) {
   return (req: Request, res: Response, next: NextFunction) => {
     res.on('finish', () => {
-      const user = (req as any).user;
+      const staff = (req as any).staff as StaffContext | undefined;
       writeAudit({
-        actorId: user?.userId,
-        actorEmail: user?.email || 'desconocido',
+        actorId: staff?.id,
+        actorEmail: staff?.email || 'desconocido',
+        actorRole: staff?.role,
+        companyId: res.locals.auditCompanyId || (targetType === 'company' ? req.params.id || null : null),
         action,
         targetType: targetType || null,
         targetId: req.params.id || null,

@@ -35,23 +35,24 @@ export default function SelectField({
   };
 
   return (
-    <View className="gap-1.5">
-      {label ? <Text className={`text-[11px] font-semibold uppercase tracking-wider ${t.subtle}`}>{label}</Text> : null}
+    <View className="gap-2">
+      {label ? <Text className={`text-[13px] font-semibold ml-1 ${t.muted}`}>{label}</Text> : null}
       <Pressable
         onPress={() => setOpen((o) => !o)}
         disabled={disabled}
         accessibilityRole="combobox"
         accessibilityState={{ expanded: open, disabled }}
-        className={`flex-row items-center gap-2 rounded-xl border px-3.5 py-3 ${t.input} ${t.border} ${disabled ? 'opacity-60' : 'active:opacity-80'}`}
+        className={`flex-row items-center gap-2 rounded-xl px-4 min-h-[54px] ${t.input} ${disabled ? 'opacity-60' : 'active:opacity-80'}`}
+        style={{ borderWidth: 1.5, borderColor: open ? t.hex.onSelected : 'transparent' }}
       >
-        <Text className={`flex-1 text-[14px] ${current ? t.text : t.muted}`} numberOfLines={1}>
+        <Text className={`flex-1 text-[15px] ${current ? t.text : t.muted}`} numberOfLines={1}>
           {current?.label || placeholder}
         </Text>
         {disabled ? null : <Chevron size={16} color={t.hex.muted} />}
       </Pressable>
       {open ? (
-        <View className={`rounded-xl border overflow-hidden ${t.card} ${t.border}`}>
-          {options.map((o, i) => {
+        <View className={`rounded-xl overflow-hidden p-1 ${t.input}`}>
+          {options.map((o) => {
             const selected = o.value === value;
             return (
               <Pressable
@@ -59,13 +60,13 @@ export default function SelectField({
                 onPress={() => choose(o.value)}
                 accessibilityRole="menuitem"
                 accessibilityState={{ selected }}
-                className={`flex-row items-center gap-3 px-3.5 py-2.5 ${selected ? t.active : ''} ${i < options.length - 1 ? `border-b ${t.border}` : ''} active:opacity-70`}
+                className={`flex-row items-center gap-3 rounded-lg px-3.5 py-3 ${selected ? t.selected : t.press}`}
               >
                 <View className="flex-1">
                   <Text className={`text-[13.5px] font-semibold ${t.text}`}>{o.label}</Text>
                   {o.hint ? <Text className={`text-[11.5px] ${t.muted}`}>{o.hint}</Text> : null}
                 </View>
-                {selected ? <Check size={16} color={t.hex.primary} /> : null}
+                {selected ? <Check size={17} color={t.hex.onSelected} /> : null}
               </Pressable>
             );
           })}

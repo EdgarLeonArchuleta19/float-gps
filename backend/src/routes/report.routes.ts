@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { permissionRequired } from '../middleware/auth';
+import { permissionRequired, planRequired } from '../middleware/auth';
 import { getDailyReport, getWeeklyReport, getMonthlyReport, getHoursReport, getEventsReport, getOffHoursReport } from '../controllers/report.controller';
 
 const reports = permissionRequired('reports');
@@ -10,6 +10,6 @@ router.get('/weekly', reports, getWeeklyReport);
 router.get('/monthly', reports, getMonthlyReport);
 router.get('/hours', reports, getHoursReport);
 router.get('/events', reports, getEventsReport);
-router.get('/off-hours', getOffHoursReport);
+router.get('/off-hours', planRequired('EMPRESA'), getOffHoursReport);
 
 export default router;

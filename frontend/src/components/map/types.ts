@@ -1,10 +1,13 @@
 import type { StyleProp, ViewStyle } from 'react-native';
+import type { Figure } from '@/lib/types';
 
 export interface MapMarker {
   id: string;
   lat: number;
   lng: number;
   color: string;
+  statusColor?: string;
+  figure: Figure;
   name: string;
   kind: 'vehicle' | 'machine';
   heading?: number;

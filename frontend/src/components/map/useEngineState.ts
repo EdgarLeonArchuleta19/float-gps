@@ -11,7 +11,7 @@ export function useEngineState(props: FleetMapProps) {
     () => ({
       dark: t.isDark,
       layer: layer || 'street',
-      markers: (markers || []).map((m) => ({ ...m, svg: vehicleSvg(m.kind, m.color) })),
+      markers: (markers || []).map((m) => ({ ...m, svg: vehicleSvg(m.figure, m.color, m.statusColor) })),
       routes: routes || [],
       circles: circles || [],
       points: points || [],

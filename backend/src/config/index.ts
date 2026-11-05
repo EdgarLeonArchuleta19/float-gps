@@ -8,10 +8,12 @@ if (isProduction && (!jwtSecret || jwtSecret === 'demo-jwt-secret' || jwtSecret.
   throw new Error('FATAL: JWT_SECRET debe estar configurado con un valor seguro en producción.');
 }
 
-const ownerMasterKey = process.env.OWNER_MASTER_KEY || (isProduction ? '' : 'FLOA-MASTER-DEV-2026');
+// The floaGPS team console signs its own tokens with a key separate from the
+// customer app, so a leaked customer token never opens the console.
+const staffJwtSecret = process.env.STAFF_JWT_SECRET || (isProduction ? '' : 'demo-staff-jwt-secret');
 
-if (isProduction && (!ownerMasterKey || ownerMasterKey.length < 16)) {
-  throw new Error('FATAL: OWNER_MASTER_KEY debe estar configurada (mínimo 16 caracteres) en producción.');
+if (isProduction && (staffJwtSecret.length < 32 || staffJwtSecret === jwtSecret)) {
+  throw new Error('FATAL: STAFF_JWT_SECRET debe tener al menos 32 caracteres y ser distinta de JWT_SECRET en producción.');
 }
 
 const traccarWebhookSecret = process.env.TRACCAR_WEBHOOK_SECRET || '';
@@ -34,11 +36,12 @@ function parseList(value: string | undefined): string[] {
 }
 
 export const config = {
-  ownerMasterKey,
-  ownerTokenTtl: process.env.OWNER_TOKEN_TTL || '8h',
-  ownerAllowedIps: process.env.OWNER_ALLOWED_IPS
-    ? process.env.OWNER_ALLOWED_IPS.split(',').map((s) => s.trim()).filter(Boolean)
-    : [],
+  staffJwtSecret,
+  staffTokenTtl: process.env.STAFF_TOKEN_TTL || '8h',
+  staffAllowedIps: parseList(process.env.STAFF_ALLOWED_IPS),
+  staffHost: (process.env.STAFF_HOST || '').trim().toLowerCase(),
+  supportSessionMinutes: parseInt(process.env.SUPPORT_SESSION_MINUTES || '120', 10),
+  appUrl: (process.env.APP_URL || '').trim().replace(/\/+$/, ''),
   port: parseInt(process.env.PORT || '3001', 10),
   nodeEnv: process.env.NODE_ENV || 'development',
   isProduction,

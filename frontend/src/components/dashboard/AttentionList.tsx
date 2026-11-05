@@ -27,7 +27,9 @@ export default function AttentionList({ items }: { items: AttentionItem[] }) {
   if (!items.length) {
     return (
       <Card className="p-4 flex-row items-center gap-3">
-        <CheckCircle2 size={22} color={t.hex.primary} />
+        <View className={`w-11 h-11 rounded-full items-center justify-center ${t.selected}`}>
+          <CheckCircle2 size={22} color={t.hex.onSelected} />
+        </View>
         <View className="flex-1">
           <Text className={`text-[14px] font-semibold ${t.text}`}>Todo en orden</Text>
           <Text className={`text-[12px] ${t.muted}`}>No hay unidades ni alertas que requieran tu atención.</Text>
@@ -36,14 +38,14 @@ export default function AttentionList({ items }: { items: AttentionItem[] }) {
     );
   }
   return (
-    <Card className="py-1">
+    <Card className="py-1.5 overflow-hidden">
       {items.map((item, i) => (
         <Pressable
           key={item.key}
           onPress={item.onPress}
-          className={`flex-row items-center gap-3 px-4 py-3 ${i < items.length - 1 ? `border-b ${t.border}` : ''} active:opacity-70`}
+          className={`flex-row items-center gap-3 px-4 py-3.5 ${t.press}`}
         >
-          <View className="w-9 h-9 rounded-xl items-center justify-center" style={{ backgroundColor: '#f872031f' }}>
+          <View className="w-10 h-10 rounded-full items-center justify-center" style={{ backgroundColor: '#f872031f' }}>
             <AlertTriangle size={17} color="#f87203" />
           </View>
           <View className="flex-1 min-w-0">

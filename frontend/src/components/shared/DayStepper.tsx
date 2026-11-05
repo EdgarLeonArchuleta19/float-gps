@@ -8,20 +8,20 @@ export default function DayStepper({ value, onChange }: { value: string; onChang
   const today = toDateInput(new Date());
   const isToday = value === today;
   return (
-    <View className={`flex-row items-center rounded-xl border ${t.card} ${t.border}`}>
-      <Pressable onPress={() => onChange(shiftDate(value, -1))} accessibilityLabel="Día anterior" className="p-2.5 active:opacity-60">
-        <ChevronLeft size={18} color={t.hex.text} />
+    <View className={`flex-row items-center rounded-full p-1 ${t.card}`}>
+      <Pressable onPress={() => onChange(shiftDate(value, -1))} accessibilityLabel="Día anterior" className={`w-9 h-9 rounded-full items-center justify-center ${t.tonal} active:opacity-60`}>
+        <ChevronLeft size={18} color={t.hex.brand} />
       </Pressable>
       <Pressable onPress={() => onChange(today)} className="flex-1 items-center py-2">
-        <Text className={`text-[13px] font-semibold ${t.text}`}>{isToday ? 'Hoy' : formatDayLabel(value)}</Text>
+        <Text className={`text-[14px] font-bold ${t.text}`}>{isToday ? 'Hoy' : formatDayLabel(value)}</Text>
       </Pressable>
       <Pressable
         onPress={() => !isToday && onChange(shiftDate(value, 1))}
         disabled={isToday}
         accessibilityLabel="Día siguiente"
-        className={`p-2.5 ${isToday ? 'opacity-30' : 'active:opacity-60'}`}
+        className={`w-9 h-9 rounded-full items-center justify-center ${t.tonal} ${isToday ? 'opacity-30' : 'active:opacity-60'}`}
       >
-        <ChevronRight size={18} color={t.hex.text} />
+        <ChevronRight size={18} color={t.hex.brand} />
       </Pressable>
     </View>
   );

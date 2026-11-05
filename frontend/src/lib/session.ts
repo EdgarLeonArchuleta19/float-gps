@@ -1,3 +1,3 @@
-export function homeRoute(isOwner: boolean, inSupport: boolean): '/owner-panel' | '/live-map' {
-  return isOwner && !inSupport ? '/owner-panel' : '/live-map';
+export function homeRoute(isStaff: boolean, inSupport: boolean): '/console' | '/live-map' {
+  return isStaff && !inSupport ? '/console' : '/live-map';
 }

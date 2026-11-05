@@ -4,7 +4,7 @@ import { Loading } from '@/components/ui';
 import { homeRoute } from '@/lib/session';
 
 export default function Index() {
-  const { user, restoring, isOwner, supportCompany } = useAuth();
+  const { user, staff, restoring, support } = useAuth();
   if (restoring) return <Loading />;
-  return <Redirect href={user ? homeRoute(isOwner, !!supportCompany) : '/login'} />;
+  return <Redirect href={user || staff ? homeRoute(!!staff, !!support) : '/login'} />;
 }

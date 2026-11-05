@@ -6,6 +6,8 @@ const prisma = new PrismaClient();
 export interface AuditEntry {
   actorId?: string | null;
   actorEmail: string;
+  actorRole?: string | null;
+  companyId?: string | null;
   action: string;
   targetType?: string | null;
   targetId?: string | null;
@@ -15,7 +17,7 @@ export interface AuditEntry {
   userAgent?: string | null;
 }
 
-const SENSITIVE_KEYS = ['password', 'newPassword', 'currentPassword', 'masterKey', 'token'];
+const SENSITIVE_KEYS = ['password', 'newPassword', 'currentPassword', 'confirmPassword', 'code', 'token', 'logo'];
 
 export function sanitizeDetails(input: unknown): Record<string, unknown> | null {
   if (!input || typeof input !== 'object') return null;
@@ -32,10 +34,12 @@ export function getClientIp(req: Request): string {
 
 export async function writeAudit(entry: AuditEntry) {
   try {
-    await prisma.ownerAuditLog.create({
+    await prisma.staffAuditLog.create({
       data: {
         actorId: entry.actorId || null,
         actorEmail: entry.actorEmail,
+        actorRole: entry.actorRole || null,
+        companyId: entry.companyId || null,
         action: entry.action,
         targetType: entry.targetType || null,
         targetId: entry.targetId || null,
@@ -52,7 +56,7 @@ export async function writeAudit(entry: AuditEntry) {
 
 export async function listAudit(limit = 100, action?: string) {
   const take = Math.min(Math.max(limit, 1), 500);
-  return prisma.ownerAuditLog.findMany({
+  return prisma.staffAuditLog.findMany({
     where: action ? { action } : undefined,
     orderBy: { createdAt: 'desc' },
     take,

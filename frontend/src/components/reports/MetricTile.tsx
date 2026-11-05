@@ -6,14 +6,16 @@ export default function MetricTile({ metric, value, large }: { metric: MetricKey
   const { t } = useTheme();
   const { label, icon: Icon } = METRICS[metric];
   return (
-    <View className={`flex-1 min-w-[44%] rounded-xl ${large ? 'p-3.5' : 'p-3'} border ${t.card} ${t.border}`}>
-      <View className="flex-row items-center gap-1.5">
-        <Icon size={large ? 15 : 14} color={t.hex.primary} />
-        <Text className={`text-[11px] font-semibold ${t.muted}`}>
+    <View className={`flex-1 min-w-[44%] rounded-2xl ${large ? 'p-4' : 'p-3.5'} ${t.card}`}>
+      <View className="flex-row items-center gap-2">
+        <View className={`w-7 h-7 rounded-full items-center justify-center ${t.tonal}`}>
+          <Icon size={14} color={t.hex.brand} />
+        </View>
+        <Text className={`text-[12.5px] font-medium flex-1 ${t.muted}`} numberOfLines={1}>
           {label}
         </Text>
       </View>
-      <Text className={`${large ? 'text-[22px]' : 'text-[17px]'} font-bold mt-1 ${t.text}`}>{value}</Text>
+      <Text className={`${large ? 'text-[24px]' : 'text-[20px]'} font-extrabold tracking-tight mt-2 ${t.text}`}>{value}</Text>
     </View>
   );
 }

@@ -2,9 +2,9 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { FlatList, Pressable, Text, TextInput, View, useWindowDimensions } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import type { LucideIcon } from 'lucide-react-native';
-import { Bell, Layers, List, LocateFixed, Maximize, Navigation, Navigation2, Search, X } from 'lucide-react-native';
+import { Bell, CircleDot, Layers, List, LocateFixed, Maximize, Navigation, Navigation2, Search, SignalZero, X } from 'lucide-react-native';
 import FleetMap from '@/components/map/FleetMap';
-import type { MapCamera, MapMarker, MapPoint, MapRoute } from '@/components/map/types';
+import type { MapCamera, MapCircle, MapMarker, MapPoint, MapRoute } from '@/components/map/types';
 import DraggableSheet, { SheetSnap } from '@/components/live-map/DraggableSheet';
 import UnitQuickPanel from '@/components/live-map/UnitQuickPanel';
 import UnitRow from '@/components/shared/UnitRow';
@@ -13,21 +13,25 @@ import AlarmSheet from '@/components/shared/AlarmSheet';
 import EngineCommandSheet from '@/components/shared/EngineCommandSheet';
 import NavigateSheet from '@/components/shared/NavigateSheet';
 import Pagination from '@/components/shared/Pagination';
-import { Chip, ChipRow, EmptyState } from '@/components/ui';
+import { EmptyState, FLOAT_SHADOW } from '@/components/ui';
+import FilterSelect from '@/components/shared/FilterSelect';
+import Tappable from '@/components/shared/Tappable';
+import { NAVY, ORANGE } from '@/lib/brand';
 import { useTheme } from '@/context/ThemeContext';
 import { useToast } from '@/context/ToastContext';
 import { useAlarm } from '@/context/AlarmContext';
 import { useFleet } from '@/hooks/useFleet';
+import { useApi } from '@/hooks/useApi';
 import { useIsDesktop } from '@/hooks/useBreakpoint';
 import { useCan } from '@/hooks/useCan';
 import { usePagination } from '@/hooks/usePagination';
 import { useOffHours } from '@/hooks/useOffHours';
 import { api } from '@/lib/api';
-import { markerColor, toDateInput } from '@/lib/format';
+import { localDayRange, toDateInput } from '@/lib/format';
 import { shareLocations } from '@/lib/shareLocation';
 import { getMyLocation } from '@/lib/myLocation';
 import { drivingRoute, type DrivingRoute } from '@/lib/routing';
-import { hasPosition, kmToday } from '@/lib/units';
+import { hasPosition, kmToday, unitLook } from '@/lib/units';
 import { TAB_OVERHANG } from '@/components/layout/FeaturedTab';
 import type { FleetUnit } from '@/lib/types';
 
@@ -42,6 +46,7 @@ const FILTERS: { key: StatusFilter; label: string }[] = [
 ];
 
 const ME_COLOR = '#3b82f6';
+const ALL_GROUPS = 'all';
 
 let cameraSeq = 0;
 const nextKey = () => `cam-${++cameraSeq}`;
@@ -49,14 +54,17 @@ const nextKey = () => `cam-${++cameraSeq}`;
 function MapButton({ icon: Icon, label, onPress, active, dot }: { icon: LucideIcon; label: string; onPress: () => void; active?: boolean; dot?: boolean }) {
   const { t } = useTheme();
   return (
-    <Pressable
+    <Tappable
       onPress={onPress}
+      haptic
+      scaleTo={0.9}
       accessibilityLabel={label}
-      className={`w-11 h-11 rounded-xl items-center justify-center border ${t.card} ${t.border} active:opacity-70`}
+      className={`w-12 h-12 rounded-full items-center justify-center ${active ? t.selected : t.card}`}
+      style={FLOAT_SHADOW}
     >
-      <Icon size={19} color={active ? '#f87203' : t.hex.text} />
-      {dot ? <View className="absolute top-2 right-2 w-2 h-2 rounded-full bg-red-500" /> : null}
-    </Pressable>
+      <Icon size={20} color={active ? ORANGE : t.hex.text} />
+      {dot ? <View className="absolute top-2.5 right-2.5 w-2.5 h-2.5 rounded-full bg-red-500" /> : null}
+    </Tappable>
   );
 }
 
@@ -76,9 +84,11 @@ export default function LiveMap() {
   const initialFilter = FILTERS.some((f) => f.key === params.status) ? (params.status as StatusFilter) : 'ALL';
   const [filter, setFilter] = useState<StatusFilter>(initialFilter);
   const [search, setSearch] = useState('');
+  const [group, setGroup] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(typeof params.unit === 'string' ? params.unit : null);
   const [listOpen, setListOpen] = useState(false);
   const [snap, setSnap] = useState<SheetSnap>('half');
+  const [sheetCover, setSheetCover] = useState(0);
   const [layer, setLayer] = useState<'street' | 'satellite'>('street');
   const [camera, setCamera] = useState<MapCamera | null>(null);
   const [trail, setTrail] = useState<{ unitId: string; path: [number, number][] } | null>(null);
@@ -92,6 +102,21 @@ export default function LiveMap() {
   const [initialFit, setInitialFit] = useState(false);
 
   const located = useMemo(() => units.filter(hasPosition), [units]);
+  const noSignal = units.length - located.length;
+  const [showZones, setShowZones] = useState(false);
+  const zones = useApi(() => (showZones ? api.geofences.list() : Promise.resolve(null)), [showZones]);
+  const zoneCircles: MapCircle[] = useMemo(
+    () =>
+      (zones.data || [])
+        .filter((g) => g.isActive && g.radius && g.centerLat !== undefined && g.centerLng !== undefined)
+        .map((g) => ({ lat: g.centerLat as number, lng: g.centerLng as number, radius: g.radius as number, color: g.color })),
+    [zones.data]
+  );
+  const toggleZones = () => setShowZones((v) => !v);
+
+  useEffect(() => {
+    if (showZones && zones.data && !zoneCircles.length) toast('Aún no hay geocercas creadas en tu cuenta', 'info');
+  }, [showZones, zones.data, zoneCircles.length]);
   const selected = useMemo(() => units.find((u) => u.id === selectedId) || null, [units, selectedId]);
   const sheetVisible = !isDesktop && (listOpen || !!selected);
 
@@ -101,13 +126,20 @@ export default function LiveMap() {
       .catch(() => {});
   }, []);
 
+  const groups = useMemo(() => {
+    const seen = new Map<string, { id: string; name: string; count: number }>();
+    for (const u of units) if (u.group) seen.set(u.group.id, { id: u.group.id, name: u.group.name, count: (seen.get(u.group.id)?.count || 0) + 1 });
+    return [...seen.values()].sort((a, b) => a.name.localeCompare(b.name));
+  }, [units]);
+  const inGroup = (u: FleetUnit) => !group || u.group?.id === group;
+
   const visible = useMemo(() => {
     const q = search.trim().toLowerCase();
     return units.filter(
-      (u) => (filter === 'ALL' || u.status === filter) && (!q || u.name.toLowerCase().includes(q) || u.plate.toLowerCase().includes(q))
+      (u) => (filter === 'ALL' || u.status === filter) && (!group || u.group?.id === group) && (!q || u.name.toLowerCase().includes(q) || u.plate.toLowerCase().includes(q))
     );
-  }, [units, filter, search]);
-  const { pageItems, pager } = usePagination(visible, `${filter}|${search}`, 10);
+  }, [units, filter, group, search]);
+  const { pageItems, pager } = usePagination(visible, `${filter}|${group}|${search}`, 10);
 
   const counts = useMemo(() => {
     const c: Record<string, number> = { ALL: units.length };
@@ -124,8 +156,8 @@ export default function LiveMap() {
   );
 
   const focusPadding = useMemo(
-    () => (isDesktop ? padding : { top: 80, bottom: Math.round(height * 0.52), left: 40, right: 70 }),
-    [isDesktop, padding, height]
+    () => (isDesktop ? padding : { top: 130, bottom: (sheetCover || Math.round(height * 0.52)) + 24, left: 40, right: 70 }),
+    [isDesktop, padding, height, sheetCover]
   );
 
   useEffect(() => {
@@ -139,32 +171,37 @@ export default function LiveMap() {
     );
   }, [located, initialFit, selectedId, padding, focusPadding]);
 
+  useEffect(() => {
+    if (isDesktop || !sheetCover || following) return;
+    const u = units.find((x) => x.id === selectedId);
+    if (u && hasPosition(u)) setCamera({ key: nextKey(), type: 'center', lat: u.position.latitude, lng: u.position.longitude, zoom: 15, padding: focusPadding });
+  }, [sheetCover]);
+
   const markers: MapMarker[] = useMemo(
     () =>
       located
-        .filter((u) => filter === 'ALL' || u.status === filter || u.id === selectedId)
+        .filter((u) => ((filter === 'ALL' || u.status === filter) && inGroup(u)) || u.id === selectedId)
         .map((u) => ({
           id: u.id,
           lat: u.position.latitude,
           lng: u.position.longitude,
-          color: markerColor(u.status),
+          ...unitLook(u),
           name: `${u.name} · ${kmToday(u).toFixed(1)} km hoy`,
           kind: u.kind,
           heading: u.position.heading,
           speed: u.position.speed,
           selected: u.id === selectedId,
         })),
-    [located, filter, selectedId]
+    [located, filter, group, selectedId]
   );
 
-  const brand = t.isDark ? '#f87203' : '#032347';
 
   const routes: MapRoute[] = useMemo(() => {
     const list: MapRoute[] = [];
-    if (trail && trail.unitId === selectedId) list.push({ path: trail.path, color: brand });
+    if (trail && trail.unitId === selectedId) list.push({ path: trail.path, color: ORANGE });
     if (guide) list.push({ path: guide.path, color: '#22c55e', dashed: !guide.byRoad });
     return list;
-  }, [trail, guide, selectedId, brand]);
+  }, [trail, guide, selectedId]);
 
   const points: MapPoint[] = useMemo(() => {
     const list: MapPoint[] = [];
@@ -240,8 +277,8 @@ export default function LiveMap() {
     }
     setRouteLoading(true);
     try {
-      const today = toDateInput(new Date());
-      const positions = await api.gps.positions(selected.gpsDevice.id, `${today}T00:00:00`, `${today}T23:59:59`);
+      const today = localDayRange(toDateInput(new Date()));
+      const positions = await api.gps.positions(selected.gpsDevice.id, today.startDate, today.endDate);
       const path = positions.map((p) => [p.latitude, p.longitude] as [number, number]);
       if (path.length < 2) {
         toast('Sin recorrido registrado hoy', 'info');
@@ -283,27 +320,70 @@ export default function LiveMap() {
     }
   };
 
+  const searchBox = (
+    <View className={`flex-row items-center gap-2.5 rounded-full px-4 h-12 ${t.tonal}`}>
+      <Search size={18} color={t.hex.muted} />
+      <TextInput
+        value={search}
+        onChangeText={setSearch}
+        placeholder="Buscar unidad o placa"
+        placeholderTextColor={t.hex.muted}
+        className={`flex-1 py-3 text-[15px] ${t.text}`}
+        style={{ outlineStyle: 'none' } as any}
+      />
+      {search ? (
+        <Pressable onPress={() => setSearch('')} accessibilityLabel="Borrar búsqueda" hitSlop={8}>
+          <X size={17} color={t.hex.muted} />
+        </Pressable>
+      ) : null}
+    </View>
+  );
+
+  const filterSelects = (floating: boolean) => (
+    <View className={`flex-row flex-wrap gap-2 ${floating ? 'px-4 py-1' : ''}`} pointerEvents="box-none">
+      <FilterSelect
+        label="Estado"
+        value={filter}
+        options={FILTERS.map((f) => ({ value: f.key, label: f.label, count: counts[f.key] || 0 }))}
+        onChange={(v) => setFilter(v as StatusFilter)}
+        tonal={!floating}
+        floating={floating}
+      />
+      {groups.length ? (
+        <FilterSelect
+          label="Grupo"
+          value={group || ALL_GROUPS}
+          options={[{ value: ALL_GROUPS, label: 'Todos', count: units.length }, ...groups.map((g) => ({ value: g.id, label: g.name, count: g.count }))]}
+          onChange={(v) => setGroup(v === ALL_GROUPS ? null : v)}
+          tonal={!floating}
+          floating={floating}
+        />
+      ) : null}
+    </View>
+  );
+
+  const signalPill = noSignal ? (
+    <Pressable
+      onPress={() => {
+        setListOpen(true);
+        setSnap('half');
+      }}
+      accessibilityLabel="Ver vehículos sin señal"
+      className={`self-start flex-row items-center gap-1.5 rounded-full px-3.5 py-2 ${isDesktop ? t.tonal : t.card}`}
+      style={isDesktop ? undefined : FLOAT_SHADOW}
+    >
+      <SignalZero size={14} color="#f87203" />
+      <Text className={`text-[12.5px] font-semibold ${t.text}`}>
+        {noSignal === 1 ? '1 vehículo sin señal de GPS' : `${noSignal} vehículos sin señal de GPS`}
+      </Text>
+    </Pressable>
+  ) : null;
+
   const controls = (
     <View className="gap-2">
-      <View className={`flex-row items-center gap-2 rounded-2xl border px-3.5 ${t.card} ${t.border}`}>
-        <Search size={17} color={t.hex.muted} />
-        <TextInput
-          value={search}
-          onChangeText={(v) => {
-            setSearch(v);
-            if (v && !isDesktop) setListOpen(true);
-          }}
-          placeholder="Buscar unidad o placa"
-          placeholderTextColor={t.hex.muted}
-          className={`flex-1 py-3 text-[14px] ${t.text}`}
-          style={{ outlineStyle: 'none' } as any}
-        />
-      </View>
-      <ChipRow>
-        {FILTERS.map((f) => (
-          <Chip key={f.key} label={f.label} count={counts[f.key] || 0} active={filter === f.key} onPress={() => setFilter(f.key)} />
-        ))}
-      </ChipRow>
+      {searchBox}
+      {filterSelects(false)}
+      {signalPill}
     </View>
   );
 
@@ -325,7 +405,7 @@ export default function LiveMap() {
   const panel = selected ? (
     <UnitQuickPanel
       unit={selected}
-      offHoursKm={offHours.byUnit[selected.id] ?? 0}
+      offHoursKm={offHours.enabled ? offHours.byUnit[selected.id] ?? 0 : undefined}
       following={following}
       routeShown={trail?.unitId === selected.id}
       routeLoading={routeLoading}
@@ -333,14 +413,18 @@ export default function LiveMap() {
       onFollow={toggleFollow}
       onRoute={toggleTodayRoute}
       onHistory={() => router.push(`/tracking?unit=${selected.id}` as never)}
-      onNavigate={() => navigateTo(selected)}
+      onNavigate={() => routeToUnit(selected)}
+      navigateLoading={guideLoading}
       onShare={can('share') ? share : undefined}
       onEngine={can('engine') ? () => setEngineUnit(selected) : undefined}
     />
   ) : null;
 
   const mapButtons = (
-    <View className="absolute right-4 gap-2" style={{ top: isDesktop ? 16 : 120 }}>
+    <View className="absolute right-4 top-4 gap-2.5">
+      {can('geofences') ? (
+        <MapButton icon={CircleDot} label={showZones ? 'Ocultar geocercas' : 'Ver geocercas'} active={showZones} onPress={toggleZones} />
+      ) : null}
       <MapButton icon={Layers} label="Cambiar capa" active={layer === 'satellite'} onPress={() => setLayer((l) => (l === 'street' ? 'satellite' : 'street'))} />
       <MapButton
         icon={Maximize}
@@ -350,7 +434,7 @@ export default function LiveMap() {
           setCamera({ key: nextKey(), type: 'fit', padding });
         }}
       />
-      <MapButton icon={LocateFixed} label="Mi ubicación" active={!!me} onPress={locateMe} />
+      <MapButton icon={LocateFixed} label="Mi ubicación" onPress={locateMe} />
       <MapButton icon={Navigation2} label="Ruta hacia una unidad" active={!!guide || guideLoading} onPress={() => setOverlay('route')} />
       {can('alerts') ? <MapButton icon={Bell} label="Modo alarma" dot={alarm.active} onPress={() => setOverlay('alarm')} /> : null}
     </View>
@@ -360,6 +444,7 @@ export default function LiveMap() {
     <FleetMap
       markers={markers}
       routes={routes}
+      circles={zoneCircles}
       points={points}
       camera={camera}
       follow={following ? selectedId : null}
@@ -370,22 +455,22 @@ export default function LiveMap() {
   );
 
   const guideBanner = guideUnit ? (
-    <View className={`flex-row items-center gap-2 rounded-2xl border p-2 pl-4 ${t.card} ${t.border}`}>
+    <View className={`flex-row items-center gap-2 rounded-3xl p-2 pl-5 ${t.card}`} style={FLOAT_SHADOW}>
       <View className="flex-1">
-        <Text className={`text-[13px] font-semibold ${t.text}`} numberOfLines={1}>
+        <Text className={`text-[14px] font-bold ${t.text}`} numberOfLines={1}>
           Ruta hacia {guideUnit.name}
         </Text>
-        <Text className={`text-[11px] ${t.muted}`}>
+        <Text className={`text-[12px] ${t.muted}`}>
           {guide ? `${guide.distanceKm.toFixed(1)} km · ${guide.durationMin} min aprox. ${guide.byRoad ? 'por calles' : 'en línea recta'}` : ''}
         </Text>
       </View>
-      <Pressable onPress={() => navigateTo(guideUnit)} className="flex-row items-center gap-1.5 rounded-xl px-3 py-2 active:opacity-80" style={{ backgroundColor: brand }}>
+      <Tappable onPress={() => navigateTo(guideUnit)} haptic className="flex-row items-center gap-1.5 rounded-full px-4 h-10" style={{ backgroundColor: NAVY }}>
         <Navigation size={15} color="#ffffff" />
-        <Text className="text-white text-[12px] font-semibold">Abrir en Maps</Text>
-      </Pressable>
-      <Pressable onPress={() => setGuide(null)} accessibilityLabel="Quitar ruta" className="p-2">
-        <X size={18} color={t.hex.muted} />
-      </Pressable>
+        <Text className="text-white text-[12.5px] font-bold">Abrir en Maps</Text>
+      </Tappable>
+      <Tappable onPress={() => setGuide(null)} accessibilityLabel="Quitar ruta" className={`w-10 h-10 rounded-full items-center justify-center ${t.tonal}`}>
+        <X size={17} color={t.hex.muted} />
+      </Tappable>
     </View>
   ) : null;
 
@@ -424,22 +509,35 @@ export default function LiveMap() {
   return (
     <View className="flex-1">
       {map}
-      {!selected ? <View className="absolute left-0 right-0 top-0 px-4 pt-3">{controls}</View> : null}
+      {!selected ? (
+        <View className="absolute left-0 top-3 gap-1" style={{ right: 76 }} pointerEvents="box-none">
+          {filterSelects(true)}
+          {signalPill ? <View className="px-4">{signalPill}</View> : null}
+        </View>
+      ) : null}
       {!selected ? mapButtons : null}
       {sheetVisible ? (
         <DraggableSheet
           snap={snap}
           onSnapChange={setSnap}
+          fit={!!selected}
+          onCoverChange={setSheetCover}
           header={
             selected ? null : (
-              <View className="flex-row items-center justify-between px-5 pb-2">
-                <Text className={`text-[13px] font-semibold ${t.muted}`}>
-                  {visible.length} unidades · {counts.MOVING || 0} en movimiento
-                </Text>
-                <Pressable onPress={() => setListOpen(false)} accessibilityLabel="Cerrar lista" className="p-1">
-                  <X size={18} color={t.hex.muted} />
-                </Pressable>
-              </View>
+              <>
+                <View className="flex-row items-center justify-between pl-6 pr-4 pb-2">
+                  <View>
+                    <Text className={`text-[19px] font-extrabold tracking-tight ${t.text}`}>Unidades</Text>
+                    <Text className={`text-[12.5px] ${t.muted}`}>
+                      {visible.length} en lista · {counts.MOVING || 0} en movimiento
+                    </Text>
+                  </View>
+                  <Tappable onPress={() => setListOpen(false)} accessibilityLabel="Cerrar lista" className={`w-9 h-9 rounded-full items-center justify-center ${t.tonal}`}>
+                    <X size={18} color={t.hex.muted} />
+                  </Tappable>
+                </View>
+                <View className="px-4 pt-1 pb-2">{searchBox}</View>
+              </>
             )
           }
         >
@@ -448,17 +546,18 @@ export default function LiveMap() {
       ) : (
         <View className="absolute left-0 right-0 items-center gap-2 px-4" style={{ bottom: 16 + TAB_OVERHANG }} pointerEvents="box-none">
           {guideBanner ? <View className="w-full max-w-[520px]">{guideBanner}</View> : null}
-          <Pressable
+          <Tappable
             onPress={() => {
               setListOpen(true);
               setSnap('half');
             }}
-            className="flex-row items-center gap-2 rounded-full px-5 py-3 active:opacity-80"
-            style={{ backgroundColor: brand }}
+            haptic
+            className="flex-row items-center gap-2 rounded-full px-6 h-12"
+            style={[FLOAT_SHADOW, { backgroundColor: NAVY }]}
           >
-            <List size={17} color="#ffffff" />
-            <Text className="text-white text-[13px] font-semibold">Ver unidades ({units.length})</Text>
-          </Pressable>
+            <List size={18} color="#ffffff" />
+            <Text className="text-white text-[14px] font-bold">Ver unidades ({units.length})</Text>
+          </Tappable>
         </View>
       )}
       {sheets}

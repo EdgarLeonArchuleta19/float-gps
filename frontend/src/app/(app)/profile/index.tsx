@@ -8,7 +8,6 @@ import MenuRow from '@/components/shared/MenuRow';
 import ChangePasswordSheet from '@/components/profile/ChangePasswordSheet';
 
 const ROLE_LABELS: Record<string, string> = {
-  superadmin: 'Dueño',
   admin: 'Administrador',
   operator: 'Operador',
   viewer: 'Solo lectura',

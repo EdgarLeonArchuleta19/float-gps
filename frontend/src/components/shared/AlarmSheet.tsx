@@ -46,7 +46,7 @@ export default function AlarmSheet({ visible, units, onClose }: { visible: boole
 
   return (
     <Sheet visible={visible} onClose={onClose} title="Modo alarma">
-      <View className={`flex-row items-center justify-between rounded-2xl p-4 mb-3 ${t.card} border ${t.border}`}>
+      <View className={`flex-row items-center justify-between rounded-2xl p-4 mb-3 ${t.tonal}`}>
         <View className="flex-1 pr-3">
           <Text className={`text-[14px] font-semibold ${t.text}`}>{active ? 'Alarma activada' : 'Alarma desactivada'}</Text>
           <Text className={`text-[12px] ${t.muted}`}>Te avisamos con un aviso en pantalla y vibración mientras la app esté abierta.</Text>
@@ -73,7 +73,7 @@ export default function AlarmSheet({ visible, units, onClose }: { visible: boole
       <View className="gap-2 mb-3">
         {WATCHES.map((w) => (
           <View key={w.title} className="flex-row items-center gap-3 px-1">
-            <w.icon size={16} color={t.hex.primary} />
+            <w.icon size={16} color={t.hex.brand} />
             <View className="flex-1">
               <Text className={`text-[13px] font-semibold ${t.text}`}>{w.title}</Text>
               <Text className={`text-[11.5px] ${t.muted}`}>{w.desc}</Text>
@@ -81,7 +81,7 @@ export default function AlarmSheet({ visible, units, onClose }: { visible: boole
           </View>
         ))}
       </View>
-      {active ? <UnitMultiSelect units={units} selected={selected} onChange={setSelected} /> : null}
+      {active ? <UnitMultiSelect units={units} selected={selected} onChange={setSelected} onSurface /> : null}
       <Button label="Guardar" onPress={save} className="mt-3 mb-2" />
     </Sheet>
   );

@@ -1,9 +1,11 @@
 import { useMemo, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { router } from 'expo-router';
-import { Plus, ShieldCheck, Users } from 'lucide-react-native';
+import { KeyRound, Plus, ShieldCheck, Users } from 'lucide-react-native';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
+import { useConfirm } from '@/context/ConfirmContext';
+import { useToast } from '@/context/ToastContext';
 import { useApi } from '@/hooks/useApi';
 import { api, type CompanyUser, type Role } from '@/lib/api';
 import { Button, Card, EmptyState, ErrorBanner, Field, Loading, PageHeader, Screen } from '@/components/ui';
@@ -12,7 +14,8 @@ import AdminOnly from '@/components/shared/AdminOnly';
 import Pagination from '@/components/shared/Pagination';
 import { usePagination } from '@/hooks/usePagination';
 import UserFormSheet from '@/components/users/UserFormSheet';
-import LifecycleActions from '@/components/shared/LifecycleActions';
+import LifecycleActions, { ActionIcon } from '@/components/shared/LifecycleActions';
+import AccessResultSheet, { type AccessResult } from '@/components/users/AccessResultSheet';
 import StatusFilter, { InactiveBadge, type StatusView } from '@/components/shared/StatusFilter';
 
 const ALL = 'all';
@@ -30,6 +33,10 @@ export default function AdminUsers() {
   const [filter, setFilter] = useState(ALL);
   const [query, setQuery] = useState('');
   const [view, setView] = useState<StatusView>('active');
+  const [access, setAccess] = useState<AccessResult | null>(null);
+  const [resetting, setResetting] = useState<string | null>(null);
+  const confirm = useConfirm();
+  const toast = useToast();
 
   const users = data?.[0] || [];
   const roles: Role[] = data?.[1] || [];
@@ -40,6 +47,25 @@ export default function AdminUsers() {
     [inView, filter, q]
   );
   const { pageItems, pager } = usePagination(filtered, `${view}|${filter}|${q}`);
+
+  const resetPassword = async (target: CompanyUser) => {
+    const ok = await confirm({
+      title: 'Restablecer contraseña',
+      message: `Le enviaremos a ${target.name} una contraseña temporal a ${target.email}. Se cerrarán sus sesiones y al entrar tendrá que crear una nueva.`,
+      confirmLabel: 'Restablecer',
+      icon: KeyRound,
+    });
+    if (!ok) return;
+    setResetting(target.id);
+    try {
+      const res = await api.users.resetPassword(target.id);
+      setAccess({ ...res, name: target.name, email: target.email, reset: true });
+    } catch (err: any) {
+      toast(err.message, 'error');
+    } finally {
+      setResetting(null);
+    }
+  };
 
   const openForm = (target: CompanyUser | null) => {
     setEditing(target);
@@ -60,7 +86,7 @@ export default function AdminUsers() {
           subtitle={`${users.length} accesos en tu empresa`}
           right={
             <View className="flex-row gap-2">
-              <Button label="Roles" icon={ShieldCheck} variant="secondary" compact onPress={() => router.push('/roles' as never)} />
+              <Button label="Roles" icon={ShieldCheck} variant="surface" compact onPress={() => router.push('/roles' as never)} />
               <Button label="Nuevo" icon={Plus} compact onPress={() => openForm(null)} />
             </View>
           }
@@ -86,7 +112,7 @@ export default function AdminUsers() {
               <Pressable
                 key={u.id}
                 onPress={() => openForm(u)}
-                className={`flex-row items-center gap-3 px-4 py-3 active:opacity-70 ${i < pageItems.length - 1 ? `border-b ${t.border}` : ''}`}
+                className={`flex-row items-center gap-3 px-4 py-3.5 ${t.press}`}
               >
                 <View className="flex-1 min-w-0">
                   <Text className={`text-[14px] font-semibold ${t.text}`} numberOfLines={1}>
@@ -103,6 +129,9 @@ export default function AdminUsers() {
                     {u.roleName}
                   </Text>
                 </View>
+                {u.id !== user?.id && u.isActive ? (
+                  <ActionIcon icon={KeyRound} label={`Restablecer contraseña de ${u.name}`} color={t.hex.brand} busy={resetting === u.id} onPress={() => resetPassword(u)} />
+                ) : null}
                 {u.id !== user?.id ? (
                   <LifecycleActions
                     noun={{ label: 'usuario' }}
@@ -127,7 +156,8 @@ export default function AdminUsers() {
           </Card>
         )}
         <Pagination {...pager} />
-        <UserFormSheet visible={formOpen} editing={editing} roles={roles} onClose={() => setFormOpen(false)} onSaved={refresh} />
+        <UserFormSheet visible={formOpen} editing={editing} roles={roles} onClose={() => setFormOpen(false)} onSaved={refresh} onCreated={setAccess} />
+        <AccessResultSheet result={access} onClose={() => setAccess(null)} />
       </Screen>
     </AdminOnly>
   );

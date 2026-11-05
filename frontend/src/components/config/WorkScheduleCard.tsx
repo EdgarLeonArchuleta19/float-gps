@@ -1,37 +1,43 @@
 import { useEffect, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
-import { Minus, Plus } from 'lucide-react-native';
+import { Copy, Minus, Plus } from 'lucide-react-native';
 import { useTheme } from '@/context/ThemeContext';
 import { useToast } from '@/context/ToastContext';
 import { useApi } from '@/hooks/useApi';
-import { api, type WorkSchedule } from '@/lib/api';
+import { api, type DaySchedule, type WorkSchedule } from '@/lib/api';
 import { Button, Card, Loading } from '@/components/ui';
+import Toggle from '@/components/shared/Toggle';
+
+const STEP = 30;
+const DAY_END = 24 * 60;
 
 const DAYS = [
-  { value: 1, label: 'L' },
-  { value: 2, label: 'M' },
-  { value: 3, label: 'M' },
-  { value: 4, label: 'J' },
-  { value: 5, label: 'V' },
-  { value: 6, label: 'S' },
-  { value: 0, label: 'D' },
+  { value: 1, label: 'Lunes' },
+  { value: 2, label: 'Martes' },
+  { value: 3, label: 'Miércoles' },
+  { value: 4, label: 'Jueves' },
+  { value: 5, label: 'Viernes' },
+  { value: 6, label: 'Sábado' },
+  { value: 0, label: 'Domingo' },
 ];
 
-const hourLabel = (h: number) => `${String(h).padStart(2, '0')}:00`;
+const WEEKDAYS = [1, 2, 3, 4, 5];
 
-function HourStepper({ label, value, min, max, onChange }: { label: string; value: number; min: number; max: number; onChange: (v: number) => void }) {
+const timeLabel = (minutes: number) => `${String(Math.floor(minutes / 60)).padStart(2, '0')}:${String(minutes % 60).padStart(2, '0')}`;
+
+function TimeStepper({ label, value, min, max, onChange, disabled }: { label: string; value: number; min: number; max: number; onChange: (v: number) => void; disabled: boolean }) {
   const { t } = useTheme();
   const step = (d: number) => onChange(Math.min(max, Math.max(min, value + d)));
   return (
-    <View className="flex-1 gap-1.5">
-      <Text className={`text-[11px] font-semibold uppercase tracking-wider ${t.subtle}`}>{label}</Text>
-      <View className={`flex-row items-center justify-between rounded-xl border px-2 py-1.5 ${t.input} ${t.border}`}>
-        <Pressable onPress={() => step(-1)} accessibilityLabel={`Restar una hora a ${label}`} className="p-2 active:opacity-60">
-          <Minus size={16} color={t.hex.text} />
+    <View className="flex-1 gap-1">
+      <Text className={`text-[12px] ml-1 ${t.muted}`}>{label}</Text>
+      <View className={`flex-row items-center justify-between rounded-full p-1 ${t.input}`} pointerEvents={disabled ? 'none' : 'auto'}>
+        <Pressable onPress={() => step(-STEP)} disabled={value <= min} accessibilityLabel={`Restar media hora a ${label}`} className={`p-2 active:opacity-60 ${value <= min ? 'opacity-30' : ''}`}>
+          <Minus size={15} color={t.hex.brand} />
         </Pressable>
-        <Text className={`text-[17px] font-bold ${t.text}`}>{hourLabel(value)}</Text>
-        <Pressable onPress={() => step(1)} accessibilityLabel={`Sumar una hora a ${label}`} className="p-2 active:opacity-60">
-          <Plus size={16} color={t.hex.text} />
+        <Text className={`text-[15.5px] font-bold ${t.text}`}>{timeLabel(value)}</Text>
+        <Pressable onPress={() => step(STEP)} disabled={value >= max} accessibilityLabel={`Sumar media hora a ${label}`} className={`p-2 active:opacity-60 ${value >= max ? 'opacity-30' : ''}`}>
+          <Plus size={15} color={t.hex.brand} />
         </Pressable>
       </View>
     </View>
@@ -42,23 +48,44 @@ export default function WorkScheduleCard({ editable }: { editable: boolean }) {
   const { t } = useTheme();
   const toast = useToast();
   const { data, loading } = useApi(() => api.company.schedule(), []);
-  const [schedule, setSchedule] = useState<WorkSchedule | null>(null);
+  const [days, setDays] = useState<DaySchedule[] | null>(null);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (data) setSchedule(data);
+    if (data) setDays(data.days);
   }, [data]);
 
-  if (loading || !schedule) return <Loading />;
+  if (loading || !days) return <Loading />;
 
-  const accent = t.isDark ? '#f87203' : '#032347';
-  const toggleDay = (d: number) =>
-    setSchedule((s) => (s ? { ...s, days: s.days.includes(d) ? s.days.filter((x) => x !== d) : [...s.days, d] } : s));
+  const find = (day: number) => days.find((d) => d.day === day);
+  const lastUsed = days[days.length - 1];
+
+  const toggleDay = (day: number, on: boolean) =>
+    setDays((prev) => {
+      if (!prev) return prev;
+      if (!on) return prev.filter((d) => d.day !== day);
+      const template = prev.find((d) => WEEKDAYS.includes(d.day)) || lastUsed || { start: 7 * 60, end: 19 * 60 };
+      return [...prev, { day, start: template.start, end: template.end }];
+    });
+
+  const setTime = (day: number, field: 'start' | 'end', value: number) =>
+    setDays((prev) => (prev ? prev.map((d) => (d.day === day ? { ...d, [field]: value } : d)) : prev));
+
+  const monday = find(1);
+  const copyMonday = () => {
+    if (!monday) return;
+    setDays((prev) => {
+      if (!prev) return prev;
+      const others = prev.filter((d) => !WEEKDAYS.includes(d.day));
+      return [...others, ...WEEKDAYS.map((day) => ({ day, start: monday.start, end: monday.end }))];
+    });
+  };
 
   const save = async () => {
     setSaving(true);
     try {
-      setSchedule(await api.company.updateSchedule(schedule));
+      const saved: WorkSchedule = await api.company.updateSchedule({ days });
+      setDays(saved.days);
       toast('Horario laboral actualizado', 'success');
     } catch (err: any) {
       toast(err.message, 'error');
@@ -70,34 +97,38 @@ export default function WorkScheduleCard({ editable }: { editable: boolean }) {
   return (
     <Card className="p-4">
       <Text className={`text-[12.5px] mb-3 ${t.muted}`}>
-        Lo que se recorra fuera de este horario se cuenta como "km fuera de horario" en Inicio, el mapa y los reportes.
+        Cada día puede tener su propio horario. Lo que se recorra fuera de él se cuenta como "km fuera de horario" en Inicio, el mapa y los reportes.
       </Text>
-      <View className="flex-row gap-3 mb-3" pointerEvents={editable ? 'auto' : 'none'}>
-        <HourStepper label="Entrada" value={schedule.startHour} min={0} max={schedule.endHour - 1} onChange={(v) => setSchedule({ ...schedule, startHour: v })} />
-        <HourStepper label="Salida" value={schedule.endHour} min={schedule.startHour + 1} max={24} onChange={(v) => setSchedule({ ...schedule, endHour: v })} />
-      </View>
-      <Text className={`text-[11px] font-semibold uppercase tracking-wider mb-1.5 ${t.subtle}`}>Días laborales</Text>
-      <View className="flex-row justify-between mb-4" pointerEvents={editable ? 'auto' : 'none'}>
-        {DAYS.map((d) => {
-          const on = schedule.days.includes(d.value);
-          return (
-            <Pressable
-              key={d.value}
-              onPress={() => toggleDay(d.value)}
-              className="w-10 h-10 rounded-full items-center justify-center border"
-              style={{ backgroundColor: on ? accent : 'transparent', borderColor: on ? accent : t.hex.border }}
-            >
-              <Text className="text-[13px] font-bold" style={{ color: on ? '#ffffff' : t.hex.muted }}>
-                {d.label}
-              </Text>
-            </Pressable>
-          );
-        })}
-      </View>
+      {DAYS.map((d, i) => {
+        const entry = find(d.value);
+        return (
+          <View key={d.value} className={`py-3 ${i < DAYS.length - 1 ? `border-b ${t.border}` : ''}`}>
+            <View className="flex-row items-center gap-3">
+              <Text className={`flex-1 text-[14.5px] font-semibold ${entry ? t.text : t.muted}`}>{d.label}</Text>
+              {entry ? null : <Text className={`text-[12.5px] ${t.subtle}`}>Descanso</Text>}
+              <Toggle value={!!entry} onChange={(on) => toggleDay(d.value, on)} disabled={!editable} label={`${d.label} es laboral`} />
+            </View>
+            {entry ? (
+              <View className="flex-row gap-3 mt-2.5">
+                <TimeStepper label="Entrada" value={entry.start} min={0} max={entry.end - STEP} onChange={(v) => setTime(d.value, 'start', v)} disabled={!editable} />
+                <TimeStepper label="Salida" value={entry.end} min={entry.start + STEP} max={DAY_END} onChange={(v) => setTime(d.value, 'end', v)} disabled={!editable} />
+              </View>
+            ) : null}
+          </View>
+        );
+      })}
       {editable ? (
-        <Button label="Guardar horario" onPress={save} loading={saving} disabled={!schedule.days.length} />
+        <View className="gap-3 mt-3">
+          {monday ? (
+            <Pressable onPress={copyMonday} className="flex-row items-center gap-1.5 self-start py-1">
+              <Copy size={14} color={t.hex.brand} />
+              <Text className={`text-[12.5px] font-bold ${t.brandText}`}>Usar el horario del lunes de lunes a viernes</Text>
+            </Pressable>
+          ) : null}
+          <Button label="Guardar horario" onPress={save} loading={saving} disabled={!days.length} />
+        </View>
       ) : (
-        <Text className={`text-[11.5px] ${t.subtle}`}>Solo un administrador puede cambiar el horario.</Text>
+        <Text className={`text-[11.5px] mt-3 ${t.subtle}`}>Solo un administrador puede cambiar el horario.</Text>
       )}
     </Card>
   );
