@@ -61,8 +61,7 @@ async function moveLegacyOwners() {
 async function ensureFirstOwner() {
   if ((await prisma.staffUser.count()) > 0) return;
   const email = (process.env.OWNER_EMAIL || 'owner@floagps.com').trim().toLowerCase();
-  const isProduction = process.env.NODE_ENV === 'production';
-  const password = process.env.OWNER_PASSWORD || (isProduction ? '' : 'FloaOwner2026!');
+  const password = process.env.OWNER_PASSWORD || '';
   if (password.length < 12) {
     console.warn('[STAFF] OWNER_PASSWORD no configurada o menor a 12 caracteres. No se creó el primer Dueño de la consola.');
     return;
